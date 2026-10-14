@@ -1,5 +1,11 @@
 # Changelog
 
+## 10.0.0 (V10) — 2026-10-14
+
+- Reset the add-on version to 10.0.0 and publish the matching Git tag `V10`, as requested.
+- Existing 40.2.2 installations must be manually removed and reinstalled from the 10.0.0 XPI; Zotero will not treat the lower version as an automatic update.
+
+
 ## 40.2.2 — 2026-10-14
 
 - Add the existing scalable preview-eye SVG as the add-on manager icon at 32 px and 64 px sizes.

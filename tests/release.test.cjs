@@ -10,6 +10,7 @@ const feed=JSON.parse(read('zotero-viewflow-updates.json'));
 const update=feed.addons[manifest.applications.zotero.id].updates[0];
 test('manifest, maintained update feed and versioned package stay aligned',()=>{
  assert.match(manifest.version,/^\d+\.\d+\.\d+$/);
+ assert.equal(manifest.version,'10.0.0');
  assert.equal(manifest.name,'Zotero ViewFlow');
  assert.equal(manifest.applications.zotero.id,'zotero-viewflow@groele');
  assert.equal(manifest.applications.zotero.strict_min_version,'8.0');
