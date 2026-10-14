@@ -4,14 +4,14 @@
       "updates": [
         {
           "version": "40.1.7",
-          "update_link": "https://raw.githubusercontent.com/groele/Zotero-Preview/main/dist/ZoteroPreview-40.1.7.xpi",
+          "update_link": "https://raw.githubusercontent.com/groele/Zotero-ViewFlow/main/dist/ZoteroPreview-40.1.7.xpi",
           "applications": {
             "zotero": {
               "strict_min_version": "8.0",
               "strict_max_version": "10.0.*"
             }
           },
-          "update_hash": "sha256:6ae2ef31ee8203598a038b35569cd3f394b82058f8db488d36c0ed99dd3f8d32"
+          "update_hash": "sha256:0ada0d4a18e64fc3e0ee7f9ebf0ee6a0ae102a82fc05eed0a7300d27a66985a7"
         }
       ]
     }

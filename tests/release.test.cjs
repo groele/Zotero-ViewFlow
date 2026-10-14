@@ -11,8 +11,8 @@ const update=feed.addons[manifest.applications.zotero.id].updates[0];
 test('manifest, maintained update feed and versioned package stay aligned',()=>{
  assert.match(manifest.version,/^\d+\.\d+\.\d+$/);
  assert.equal(update.version,manifest.version);
- assert.equal(manifest.applications.zotero.update_url,'https://raw.githubusercontent.com/groele/Zotero-Preview/main/zoteropreview7-updates.json');
- assert.equal(update.update_link,`https://raw.githubusercontent.com/groele/Zotero-Preview/main/dist/ZoteroPreview-${manifest.version}.xpi`);
+ assert.equal(manifest.applications.zotero.update_url,'https://raw.githubusercontent.com/groele/Zotero-ViewFlow/main/zoteropreview7-updates.json');
+ assert.equal(update.update_link,`https://raw.githubusercontent.com/groele/Zotero-ViewFlow/main/dist/ZoteroPreview-${manifest.version}.xpi`);
  assert.deepEqual(update.applications.zotero,{strict_min_version:manifest.applications.zotero.strict_min_version,strict_max_version:manifest.applications.zotero.strict_max_version});
  const bytes=fs.readFileSync(path.join(root,`dist/ZoteroPreview-${manifest.version}.xpi`));
  assert.equal(update.update_hash,'sha256:'+crypto.createHash('sha256').update(bytes).digest('hex'));
