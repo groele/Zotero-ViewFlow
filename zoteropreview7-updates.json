@@ -4,14 +4,14 @@
       "updates": [
         {
           "version": "40.1.7",
-          "update_link": "https://raw.githubusercontent.com/groele/Zotero-diy/main/zotero%20preview/dist/ZoteroPreview-40.1.7.xpi",
+          "update_link": "https://raw.githubusercontent.com/groele/Zotero-Preview/main/dist/ZoteroPreview-40.1.7.xpi",
           "applications": {
             "zotero": {
               "strict_min_version": "8.0",
               "strict_max_version": "10.0.*"
             }
           },
-          "update_hash": "sha256:3c0e4a78e3d37ca5138e0d809a05fcbf9a6069ee57aeb8ac31694c28b21f2414"
+          "update_hash": "sha256:6ae2ef31ee8203598a038b35569cd3f394b82058f8db488d36c0ed99dd3f8d32"
         }
       ]
     }
