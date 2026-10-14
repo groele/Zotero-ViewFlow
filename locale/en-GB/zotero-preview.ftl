@@ -1,7 +1,7 @@
 # The title of the pane element
 zotero-preview-pane-title =
-    .label = Preview
-    .tooltiptext = Citation Preview
+    .label = Zotero ViewFlow
+    .tooltiptext = Zotero ViewFlow
 
 ######
 # these are all in the Settings

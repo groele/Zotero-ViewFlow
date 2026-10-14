@@ -1,4 +1,4 @@
-# Zotero-ViewFlow (原 ZoteroPreview) 40.1.7
+# Zotero ViewFlow 40.2.0
 
 > **Zotero Flow Series** 系列成员：专注文献参考文献与正文引用侧边栏即时预览。
 
@@ -6,7 +6,9 @@
 
 ## 使用
 
-在 Zotero 的“工具 → 插件”中选择“从文件安装插件”，安装 `dist/ZoteroPreview-40.1.7.xpi`。
+在 Zotero 的“工具 → 插件”中选择“从文件安装插件”，安装 `dist/Zotero-ViewFlow-40.2.0.xpi`。
+
+> **从 ZoteroPreview 迁移：** 本版本的插件 ID 从 `zoteropreview@carter-tod.com` 更改为 `zotero-viewflow@groele`。Zotero 会将其识别为一个新插件，不能通过旧插件的自动更新通道完成迁移。请先安装此 XPI 并确认 ViewFlow 正常显示，再在“工具 → 插件”中禁用并移除旧 ZoteroPreview，避免两个插件同时注册同一侧栏栏目。偏好设置使用原有 `extensions.zoteropreview.*` 键名，通常会保留。之后的更新由本仓库维护的更新 feed 提供。
 主库选择文献或进入主窗口的 PDF / EPUB / 网页阅读标签页后，点击右侧的预览眼睛图标即可打开栏目。
 阅读页始终使用正在阅读的附件所对应的父文献，不使用主库的选中条目。
 没有父文献的独立附件、独立笔记和已删除文献隐藏栏目。

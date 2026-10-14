@@ -1,5 +1,13 @@
 # Changelog
 
+## 40.2.0 — 2026-10-14
+
+- Rebrand the add-on as Zotero ViewFlow and change its ID to `zotero-viewflow@groele`.
+- Publish a new-ID update feed and rename the XPI artifact to `Zotero-ViewFlow-40.2.0.xpi`.
+- Document one-time manual migration from ZoteroPreview; later updates use the ViewFlow feed.
+- Preserve legacy preference keys and native pane registration IDs to retain settings and avoid unnecessary runtime changes.
+
+
 ## 40.1.7 — 2026-10-14
 
 - Serialize native placement work per sidebar and merge mutations received during an asynchronous move.

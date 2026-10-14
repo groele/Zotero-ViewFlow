@@ -2,7 +2,7 @@ param([string]$OutputPath)
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $manifest = Get-Content -Raw -LiteralPath (Join-Path $projectRoot 'manifest.json') | ConvertFrom-Json
-if (-not $OutputPath) { $OutputPath = Join-Path $projectRoot ('dist\ZoteroPreview-' + $manifest.version + '.xpi') }
+if (-not $OutputPath) { $OutputPath = Join-Path $projectRoot ('dist\Zotero-ViewFlow-' + $manifest.version + '.xpi') }
 $runtimeFiles = @('manifest.json','bootstrap.js','prefs.js','prefs.xhtml','style.css','view.svg','zoteropreview.js','zoteropreview_prefs.js','LICENSE')
 $entries = @($runtimeFiles | ForEach-Object {
     [PSCustomObject]@{ Source = Join-Path $projectRoot $_; Name = $_ }
@@ -19,7 +19,7 @@ $archive = [IO.Compression.ZipArchive]::new($stream, [IO.Compression.ZipArchiveM
 try {
     foreach ($entry in $entries) {
         $zipEntry = $archive.CreateEntry($entry.Name, [IO.Compression.CompressionLevel]::Optimal)
-        $zipEntry.LastWriteTime = [DateTimeOffset](Get-Item -LiteralPath $entry.Source).LastWriteTime
+        $zipEntry.LastWriteTime = [DateTimeOffset]::new(1980, 1, 1, 0, 0, 0, [TimeSpan]::Zero)
         $inputStream = [IO.File]::OpenRead($entry.Source)
         $outputStream = $zipEntry.Open()
         try { $inputStream.CopyTo($outputStream) } finally { $inputStream.Dispose(); $outputStream.Dispose() }
@@ -40,7 +40,7 @@ try {
     }
 } finally { $check.Dispose() }
 $hash = (Get-FileHash -LiteralPath $resolvedOutput -Algorithm SHA256).Hash
-$feedPath = Join-Path $projectRoot 'zoteropreview7-updates.json'
+$feedPath = Join-Path $projectRoot 'zotero-viewflow-updates.json'
 $feed = Get-Content -LiteralPath $feedPath -Raw | ConvertFrom-Json
 $update = $feed.addons.($manifest.applications.zotero.id).updates[0]
 if ($update.version -ne $manifest.version) { throw 'Update feed version does not match manifest' }

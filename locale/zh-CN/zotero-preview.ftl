@@ -1,7 +1,7 @@
 # The title of the pane element
 zotero-preview-pane-title =
-    .label = 参考文献样式预览
-    .tooltiptext = 参考文献样式预览
+    .label = Zotero ViewFlow
+    .tooltiptext = Zotero ViewFlow
 
 ######
 # these are all in the Settings
