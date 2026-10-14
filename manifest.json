@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Zotero ViewFlow",
-  "version": "40.2.1",
+  "version": "40.2.2",
   "description": "Citation preview pane for Zotero.",
   "homepage_url": "https://github.com/groele/Zotero-ViewFlow",
   "applications": {
@@ -11,5 +11,9 @@
       "strict_max_version": "11.0.*",
       "update_url": "https://raw.githubusercontent.com/groele/Zotero-ViewFlow/main/zotero-viewflow-updates.json"
     }
+  },
+  "icons": {
+    "32": "view.svg",
+    "64": "view.svg"
   }
 }

@@ -1,5 +1,11 @@
 # Changelog
 
+## 40.2.2 — 2026-10-14
+
+- Add the existing scalable preview-eye SVG as the add-on manager icon at 32 px and 64 px sizes.
+- Add release consistency checks for manifest icon declarations and packaged icon source.
+
+
 ## 40.2.1 — 2026-10-14
 
 - Extend the declared Zotero compatibility range through 11.0.* in the add-on manifest and update feed.
