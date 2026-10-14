@@ -12,6 +12,8 @@ test('manifest, maintained update feed and versioned package stay aligned',()=>{
  assert.match(manifest.version,/^\d+\.\d+\.\d+$/);
  assert.equal(manifest.name,'Zotero ViewFlow');
  assert.equal(manifest.applications.zotero.id,'zotero-viewflow@groele');
+ assert.equal(manifest.applications.zotero.strict_min_version,'8.0');
+ assert.equal(manifest.applications.zotero.strict_max_version,'11.0.*');
  assert.ok(!feed.addons['zoteropreview@carter-tod.com']);
  assert.equal(update.version,manifest.version);
  assert.equal(manifest.applications.zotero.update_url,'https://raw.githubusercontent.com/groele/Zotero-ViewFlow/main/zotero-viewflow-updates.json');

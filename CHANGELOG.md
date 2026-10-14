@@ -1,5 +1,11 @@
 # Changelog
 
+## 40.2.1 — 2026-10-14
+
+- Extend the declared Zotero compatibility range through 11.0.* in the add-on manifest and update feed.
+- Keep Zotero 11 / Firefox 153 real-desktop verification explicitly pending; automated platform and release checks do not replace it.
+
+
 ## 40.2.0 — 2026-10-14
 
 - Rebrand the add-on as Zotero ViewFlow and change its ID to `zotero-viewflow@groele`.

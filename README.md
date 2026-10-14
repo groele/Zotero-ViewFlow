@@ -1,4 +1,4 @@
-# Zotero ViewFlow 40.2.0
+# Zotero ViewFlow 40.2.1
 
 > **Zotero Flow Series** 系列成员：专注文献参考文献与正文引用侧边栏即时预览。
 
@@ -6,7 +6,7 @@
 
 ## 使用
 
-在 Zotero 的“工具 → 插件”中选择“从文件安装插件”，安装 `dist/Zotero-ViewFlow-40.2.0.xpi`。
+在 Zotero 的“工具 → 插件”中选择“从文件安装插件”，安装 `dist/Zotero-ViewFlow-40.2.1.xpi`。
 
 > **从 ZoteroPreview 迁移：** 本版本的插件 ID 从 `zoteropreview@carter-tod.com` 更改为 `zotero-viewflow@groele`。Zotero 会将其识别为一个新插件，不能通过旧插件的自动更新通道完成迁移。请先安装此 XPI 并确认 ViewFlow 正常显示，再在“工具 → 插件”中禁用并移除旧 ZoteroPreview，避免两个插件同时注册同一侧栏栏目。偏好设置使用原有 `extensions.zoteropreview.*` 键名，通常会保留。之后的更新由本仓库维护的更新 feed 提供。
 主库选择文献或进入主窗口的 PDF / EPUB / 网页阅读标签页后，点击右侧的预览眼睛图标即可打开栏目。
@@ -38,9 +38,9 @@
 
 ## 兼容性和更新
 
-声明 Zotero 8–10；已针对本机 10.0.6 及当前官方源码检查接口。8/9 和未发布的未来版本未实测。
+声明兼容 Zotero 8–11（`strict_max_version: 11.0.*`）。代码已做 Zotero 11 / Firefox 153 平台预适配；自动回归和 Gecko 153 静态检查通过。本机 Zotero 10.0.6 的既有观察仅覆盖 10；Zotero 8、9、11 的实机完整验收仍未完成。
 已针对 Zotero 11 / Firefox 153 官方变更补强设置页和生命周期：移除内联事件，通过捕获原生栏目 load 事件初始化设置，显式声明 XUL 解析，并完整清理设置事件监听器。启动期间禁用可取消后续注册，单个清理接口失败不阻断其余清理。
-Zotero 官方目前要求暂不声明 11 兼容，dev/beta 构建不强制最高版本；因此保留 10.0.* 上限用于开发版测试。Firefox 153 运行验证状态见 VALIDATION.md。
+本版本按用户要求将安装和更新范围扩展到 Zotero 11。实机 Zotero 11 / Firefox 153 UI、剪贴板及重启验证尚未完成，自动测试不能替代该验收；详见 VALIDATION.md。
 自动更新源使用 `groele/Zotero-ViewFlow` 仓库的更新清单，下载地址绑定版本化 XPI。
 此发布沿用维护仓库的更新通道，不使用原作者仓库的旧下载地址。
 

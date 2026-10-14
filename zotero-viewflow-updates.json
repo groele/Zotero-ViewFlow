@@ -3,15 +3,15 @@
     "zotero-viewflow@groele": {
       "updates": [
         {
-          "version": "40.2.0",
-          "update_link": "https://raw.githubusercontent.com/groele/Zotero-ViewFlow/main/dist/Zotero-ViewFlow-40.2.0.xpi",
+          "version": "40.2.1",
+          "update_link": "https://raw.githubusercontent.com/groele/Zotero-ViewFlow/main/dist/Zotero-ViewFlow-40.2.1.xpi",
           "applications": {
             "zotero": {
               "strict_min_version": "8.0",
-              "strict_max_version": "10.0.*"
+              "strict_max_version": "11.0.*"
             }
           },
-          "update_hash": "sha256:6399fd678d6e19770110a202fef06b3a8d588336de0928d2d7d18157cf75da88"
+          "update_hash": "sha256:b429ddd34b6751a1fe024f80f05526a569b319f6906c7cf2b3b68b5989aed893"
         }
       ]
     }
