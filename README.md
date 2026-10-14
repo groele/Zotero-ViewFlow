@@ -60,8 +60,6 @@ Update feed: [zotero-viewflow-updates.json](https://github.com/groele/Zotero-Vie
 
 A standalone Zotero reader window may not provide the native item pane needed for this feature. Use a reader tab in the main window where necessary.
 
-**Installation / coexistence note:** The add-on ID is different from the original ZoteroPreview, so installing ViewFlow does not replace it automatically. Disable/remove the older plugin to avoid duplicate panels. Existing 40.x installs may require manual handling before installing 10.0.0.
-
 ## Development & Testing
 
 Run the following commands from the repository root. Follow project-specific test prerequisites before running native desktop validation.
