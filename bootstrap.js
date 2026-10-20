@@ -12,7 +12,13 @@ async function startup({ id, version, rootURI }) {
 			Zotero.ftl.addResourceIds(['zotero-preview.ftl']);
 			preview._ftlRegistered = true;
 		}
-		Zotero.PreferencePanes.register({ pluginID: id, src: rootURI + 'prefs.xhtml', scripts: [rootURI + 'zoteropreview_prefs.js'], defaultXUL: true });
+		Zotero.PreferencePanes.register({
+			pluginID: id,
+			src: rootURI + 'prefs.xhtml',
+			scripts: [rootURI + 'zoteropreview_prefs.js'],
+			stylesheets: [rootURI + 'settings.css'],
+			defaultXUL: true
+		});
 		preview.start();
 	}
 	catch (error) { shutdown(); throw error; }

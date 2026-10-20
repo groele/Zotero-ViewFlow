@@ -1,225 +1,289 @@
+/* Pane-scoped MetaFlow preferences visual language. */
 #zotero-prefpane-zotero-preview.viewflow-settings {
+  --flow-pref-text: var(--fill-primary, CanvasText);
+  --flow-pref-muted: var(
+    --fill-secondary,
+    color-mix(in srgb, var(--flow-pref-text) 68%, transparent)
+  );
+  --flow-pref-accent: var(--accent-blue, #4070f4);
+  --flow-pref-border: color-mix(in srgb, var(--flow-pref-text) 18%, transparent);
+  --flow-pref-divider: color-mix(in srgb, var(--flow-pref-text) 10%, transparent);
+  --flow-pref-surface: color-mix(in srgb, var(--flow-pref-text) 2%, transparent);
+  --flow-pref-hover: color-mix(in srgb, var(--flow-pref-text) 5%, transparent);
   box-sizing: border-box;
   display: block;
   width: min(100%, 780px);
   min-width: 0;
   margin-inline: auto;
-  padding: 10px 14px 22px;
-  color: FieldText;
+  padding: 10px 14px 28px;
+  color: var(--flow-pref-text);
+  font: inherit;
   font-size: 13px;
   line-height: 1.5;
   container: viewflow-settings / inline-size;
 }
 
+#zotero-prefpane-zotero-preview.viewflow-settings *,
+#zotero-prefpane-zotero-preview.viewflow-settings *::before,
+#zotero-prefpane-zotero-preview.viewflow-settings *::after {
+  box-sizing: border-box;
+}
+
 .viewflow-settings-header {
   margin: 0 0 12px;
-  padding: 3px 2px 11px;
-  border-bottom: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+  padding: 2px 2px 10px;
+  border-bottom: 1px solid var(--flow-pref-border);
 }
 
 .viewflow-settings-title-row {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 7px;
 }
 
 .viewflow-settings-header h1 {
   margin: 0;
-  font-size: 1.35em;
-  line-height: 1.3;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.5;
 }
 
 .viewflow-version-badge {
-  padding: 1px 7px;
-  border: 1px solid color-mix(in srgb, AccentColor 36%, transparent);
-  border-radius: 999px;
-  background: color-mix(in srgb, AccentColor 9%, transparent);
-  color: AccentColor;
-  font-size: 0.84em;
-  font-weight: 600;
+  padding: 1px 6px;
+  border: 1px solid var(--flow-pref-border);
+  border-radius: 4px;
+  background: var(--flow-pref-surface);
+  color: var(--flow-pref-muted);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.5;
   white-space: nowrap;
 }
 
 .viewflow-settings-header > p {
   max-width: 58em;
-  margin: 5px 0 0;
-  color: color-mix(in srgb, currentColor 72%, transparent);
+  margin: 4px 0 0;
+  color: var(--flow-pref-muted);
+  font-size: 12px;
 }
 
 #zotero-prefpane-zotero-preview .viewflow-settings-card {
   box-sizing: border-box;
   display: block;
   min-width: 0;
-  margin: 0 0 8px;
-  overflow: clip;
-  border: 1px solid color-mix(in srgb, currentColor 16%, transparent);
-  border-radius: 8px;
-  background: color-mix(in srgb, currentColor 2%, transparent);
+  margin-block: 0 10px;
+  border: 1px solid var(--flow-pref-border);
+  border-radius: 9px;
+  background: var(--flow-pref-surface);
 }
 
 .viewflow-settings-card > summary {
   display: flex;
-  min-height: 38px;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 8px 12px;
-  color: color-mix(in srgb, currentColor 94%, AccentColor 6%);
+  padding: 11px 13px;
+  color: var(--flow-pref-text);
   cursor: pointer;
-  font-weight: 650;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
   list-style: none;
 }
+.viewflow-settings-card:last-of-type { margin-bottom: 0; }
 
 .viewflow-settings-card > summary::-webkit-details-marker {
   display: none;
 }
 
 .viewflow-settings-card > summary::after {
-  width: 7px;
-  height: 7px;
-  flex: 0 0 7px;
-  border-right: 1.5px solid currentColor;
-  border-bottom: 1.5px solid currentColor;
-  content: "";
-  opacity: 0.68;
-  transform: rotate(45deg) translateY(-2px);
-  transition: transform 120ms ease;
+  flex: 0 0 auto;
+  color: var(--flow-pref-muted);
+  content: "›";
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1;
 }
 
 .viewflow-settings-card[open] > summary::after {
-  transform: rotate(225deg) translate(-1px, -1px);
+  transform: rotate(90deg);
 }
 
 .viewflow-settings-card > summary:hover {
-  background: color-mix(in srgb, currentColor 4%, transparent);
+  background: var(--flow-pref-hover);
+}
+
+.viewflow-settings-card > summary:focus-visible {
+  outline: 2px solid var(--flow-pref-accent);
+  outline-offset: -2px;
 }
 
 .viewflow-settings-card-content {
-  padding: 0 12px 11px;
+  min-width: 0;
+  margin: 0;
+  padding: 4px 13px 10px;
+  border-top: 1px solid var(--flow-pref-divider);
 }
 
 .viewflow-settings-description {
-  margin: 0 0 8px;
-  color: color-mix(in srgb, currentColor 70%, transparent);
-  line-height: 1.45;
+  margin: 6px 0 8px;
+  color: var(--flow-pref-muted);
+  font-size: 12px;
+  line-height: 1.6;
 }
 
 .viewflow-settings-card radiogroup {
   display: flex;
-  flex-wrap: wrap;
-  gap: 3px 14px;
+  flex-direction: column;
+  gap: 4px;
   min-width: 0;
 }
 
 .viewflow-settings-card radio {
   max-width: 100%;
-  margin: 2px 0;
+  margin: 0;
+  min-height: 24px;
+  accent-color: var(--flow-pref-accent);
+  line-height: 1.5;
+}
+
+.viewflow-settings-card checkbox {
+  max-width: 100%;
+  white-space: normal;
+}
+
+.viewflow-settings-card input[type="checkbox"],
+.viewflow-settings-card input[type="radio"] {
+  appearance: auto;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--flow-pref-accent);
+}
+
+.viewflow-settings-card select,
+.viewflow-settings-card input:not([type="checkbox"]):not([type="radio"]),
+.viewflow-settings-card button,
+.viewflow-settings-card menulist {
+  color: inherit;
+  background-color: Field;
+  font: inherit;
+}
+
+.viewflow-settings-card select,
+.viewflow-settings-card input:not([type="checkbox"]):not([type="radio"]),
+.viewflow-settings-card menulist {
+  box-sizing: border-box;
+  appearance: auto;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 30px;
+  padding: 4px 8px;
+  border: 1px solid var(--flow-pref-border);
+  border-radius: 4px;
 }
 
 .viewflow-settings-card menulist {
-  box-sizing: border-box;
   width: min(100%, 34em);
-  max-width: 100%;
 }
 
 .viewflow-settings-fields {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 7px;
+  gap: 8px 14px;
   min-width: 0;
+  margin-top: 8px;
 }
 
 .viewflow-settings-field {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 5.5em;
+  grid-template-columns: minmax(0, 1fr) 5em;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
   min-width: 0;
-  padding: 6px 8px;
-  border: 1px solid color-mix(in srgb, currentColor 12%, transparent);
-  border-radius: 6px;
+  padding-block: 4px;
+  border-bottom: 1px solid var(--flow-pref-divider);
 }
 
 .viewflow-settings-field label {
   min-width: 0;
   overflow-wrap: anywhere;
-  line-height: 1.35;
 }
 
 .viewflow-settings-field input {
-  box-sizing: border-box;
   width: 100%;
-  min-width: 0;
-  min-height: 26px;
   margin: 0;
-  padding: 3px 5px;
-  border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
-  border-radius: 4px;
-  background: Field;
-  color: FieldText;
   text-align: end;
-}
-
-.viewflow-settings-card > summary:focus-visible,
-.viewflow-settings-card input:focus-visible,
-.viewflow-settings-card radio:focus-visible,
-.viewflow-settings-card menulist:focus-visible,
-.viewflow-release-info a:focus-visible {
-  outline: 2px solid Highlight;
-  outline-offset: 2px;
 }
 
 .viewflow-release-info {
   display: grid;
-  gap: 5px;
-  margin-top: 13px;
-  padding: 10px 2px 0;
-  border-top: 1px solid color-mix(in srgb, currentColor 14%, transparent);
-  color: color-mix(in srgb, currentColor 72%, transparent);
-  font-size: 0.92em;
+  gap: 0;
+  margin-top: 14px;
+  padding: 10px 13px;
+  border: 1px solid var(--flow-pref-border);
+  border-radius: 9px;
+  background: var(--flow-pref-surface);
+  color: var(--flow-pref-text);
 }
 
 .viewflow-release-row {
   display: grid;
-  grid-template-columns: 6.5em minmax(0, 1fr);
+  grid-template-columns: minmax(6em, 8em) minmax(0, 1fr);
   gap: 8px;
   min-width: 0;
+  font-size: 12px;
+  padding-block: 3px;
+  line-height: 1.5;
+  color: var(--flow-pref-muted);
+}
+
+.viewflow-release-title {
+  margin-bottom: 4px;
+  color: var(--flow-pref-text);
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .viewflow-release-label {
-  color: color-mix(in srgb, currentColor 60%, transparent);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.5;
 }
 
 .viewflow-release-info a {
   min-width: 0;
-  color: LinkText;
+  color: var(--flow-pref-accent);
   overflow-wrap: anywhere;
+  text-decoration: none;
+}
+
+.viewflow-release-info a:hover {
+  text-decoration: underline;
+}
+
+.viewflow-settings-card input:focus-visible,
+.viewflow-settings-card radio:focus-visible,
+.viewflow-settings-card menulist:focus-visible,
+.viewflow-release-info a:focus-visible {
+  outline: 2px solid var(--flow-pref-accent);
+  outline-offset: 2px;
 }
 
 @container viewflow-settings (max-width: 560px) {
-  #zotero-prefpane-zotero-preview.viewflow-settings {
-    padding-inline: 7px;
-  }
-
   .viewflow-settings-fields {
-    grid-template-columns: 1fr;
-    gap: 5px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
   }
 
   .viewflow-settings-field {
-    grid-template-columns: minmax(0, 1fr) 6em;
+    grid-template-columns: minmax(0, 1fr) 5.5em;
   }
 
-  .viewflow-release-row {
-    grid-template-columns: 1fr;
-    gap: 1px;
-  }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  #zotero-prefpane-zotero-preview * {
-    scroll-behavior: auto !important;
-    transition-duration: 0s !important;
+@media (max-width: 560px) {
+  #zotero-prefpane-zotero-preview.viewflow-settings {
+    padding: 8px 8px 20px;
   }
 }
