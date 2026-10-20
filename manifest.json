@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Zotero ViewFlow",
-  "version": "10.0.1",
+  "version": "12.2.0",
   "description": "Citation preview pane for Zotero.",
   "homepage_url": "https://github.com/groele/Zotero-ViewFlow",
   "applications": {

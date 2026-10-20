@@ -1,5 +1,11 @@
 # Changelog
 
+## 12.2.0 — 2026-10-20
+
+- Keep the four settings groups directly visible without adding disclosure panes.
+- Align the manifest, update feed, and README download references with the v12.2.0 Release.
+- Include the final XPI SHA-256 in the update feed.
+
 ## 10.0.1 — 2026-10-20
 
 - Redesign the settings pane with responsive cards, clearer descriptions, and grouped preview controls.
