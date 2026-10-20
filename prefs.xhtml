@@ -1,36 +1,39 @@
-<!--
-    zoteropreview
-    prefs.xhtml
-    adapted from Wiley Yu (zotmoov)
--->
-
+<!-- Zotero ViewFlow settings. Preference names and values are kept stable. -->
 <linkset>
     <html:link rel="localization" href="zotero-preview.ftl"/>
+    <html:link rel="stylesheet" href="settings.css"/>
 </linkset>
 
-<vbox id="zotero-prefpane-zotero-preview">
-    <groupbox>
-        <vbox>
-            <label><html:h2 data-l10n-id="zotero-preview-settings-title"></html:h2></label>
-            <hbox>
-                <menulist id="zotero-preview-style-menulist" native="true"
-                    preference="extensions.zoteropreview.citationstyle">
-                    <menupopup>
-                    </menupopup>
-                </menulist>
-            </hbox>
-        </vbox>
+<vbox id="zotero-prefpane-zotero-preview" class="viewflow-settings">
+    <html:header class="viewflow-settings-header">
+        <html:p class="viewflow-settings-eyebrow">ZOTERO FLOW SERIES</html:p>
+        <html:h1 data-l10n-id="zotero-preview-settings-heading"></html:h1>
+        <html:p data-l10n-id="zotero-preview-settings-intro"></html:p>
+    </html:header>
+
+    <groupbox class="viewflow-settings-card viewflow-settings-style">
+        <label><html:h2 id="viewflow-style-heading" data-l10n-id="zotero-preview-settings-style-heading"></html:h2></label>
+        <description class="viewflow-settings-description" data-l10n-id="zotero-preview-settings-style-description"></description>
+        <menulist id="zotero-preview-style-menulist" native="true"
+            preference="extensions.zoteropreview.citationstyle"
+            aria-labelledby="viewflow-style-heading">
+            <menupopup></menupopup>
+        </menulist>
     </groupbox>
-    <groupbox>
+
+    <groupbox class="viewflow-settings-card">
         <label><html:h2 data-l10n-id="zotero-preview-settings-position"></html:h2></label>
+        <description class="viewflow-settings-description" data-l10n-id="zotero-preview-settings-position-description"></description>
         <radiogroup native="true" id="extensions-zoteropreview-position" preference="extensions.zoteropreview.position">
             <radio id="extensions-zoteropreview-position-top" value="zotero-item-pane-header" data-l10n-id="zotero-preview-settings-position-top"/>
             <radio id="extensions-zoteropreview-position-afterInfo" value="zotero-editpane-item-box" data-l10n-id="zotero-preview-settings-position-afterinfo"/>
             <radio id="extensions-zoteropreview-position-bottom" value="zotero-editpane-related" data-l10n-id="zotero-preview-settings-position-bottom"/>
         </radiogroup>
     </groupbox>
-    <groupbox>
+
+    <groupbox class="viewflow-settings-card">
         <label><html:h2 data-l10n-id="zotero-preview-settings-display"></html:h2></label>
+        <description class="viewflow-settings-description" data-l10n-id="zotero-preview-settings-display-description"></description>
         <radiogroup native="true" id="extensions-zoteropreview-whatToShow" preference="extensions.zoteropreview.whatToShow">
             <radio id="extensions-zoteropreview-whatToShow-both" value="zpboth" data-l10n-id="zotero-preview-settings-whatToShow-both"/>
             <radio id="extensions-zoteropreview-whatToShow-bib" value="zpbib" data-l10n-id="zotero-preview-settings-whatToShow-bib"/>
@@ -38,25 +41,22 @@
         </radiogroup>
     </groupbox>
 
-    <groupbox>
+    <groupbox class="viewflow-settings-card">
         <label><html:h2 data-l10n-id="zotero-preview-settings-display-space"></html:h2></label>
-        <hbox>
-            <hbox align="center">
-            <label data-l10n-id="zotero-preview-settings-display-fontsize" control="zotero-preview-fontsize"/>
-            <html:input class="html-input" id="zotero-preview-fontsize" type="number" min="0.2" max="3" step="0.1" size="2" data-preference="extensions.zoteropreview.fontsize"/>
-                </hbox>
-            </hbox>
-        <hbox>
-            <hbox align="center">
-            <label data-l10n-id="zotero-preview-settings-display-linespacing" control="zotero-preview-spacing"/>
-            <html:input class="html-input" id="zotero-preview-spacing" type="number" min="1" max="3" step="0.1" size="2" data-preference="extensions.zoteropreview.spacing"/>
-                </hbox>
-            </hbox>
-        <hbox>
-            <hbox align="center">
-            <label data-l10n-id="zotero-preview-settings-display-max-items" control="zotero-preview-max-items"/>
-            <html:input class="html-input" id="zotero-preview-max-items" type="number" min="1" max="500" step="1" size="3" data-preference="extensions.zoteropreview.maxPreviewItems"/>
-                </hbox>
-            </hbox>
-        </groupbox>
+        <description class="viewflow-settings-description" data-l10n-id="zotero-preview-settings-layout-description"></description>
+        <html:div class="viewflow-settings-fields">
+            <html:div class="viewflow-settings-field">
+                <label id="viewflow-fontsize-label" data-l10n-id="zotero-preview-settings-display-fontsize" control="zotero-preview-fontsize"/>
+                <html:input class="html-input" id="zotero-preview-fontsize" type="number" min="0.2" max="3" step="0.1" size="4" data-preference="extensions.zoteropreview.fontsize" aria-labelledby="viewflow-fontsize-label"/>
+            </html:div>
+            <html:div class="viewflow-settings-field">
+                <label id="viewflow-spacing-label" data-l10n-id="zotero-preview-settings-display-linespacing" control="zotero-preview-spacing"/>
+                <html:input class="html-input" id="zotero-preview-spacing" type="number" min="1" max="3" step="0.1" size="4" data-preference="extensions.zoteropreview.spacing" aria-labelledby="viewflow-spacing-label"/>
+            </html:div>
+            <html:div class="viewflow-settings-field">
+                <label id="viewflow-max-items-label" data-l10n-id="zotero-preview-settings-display-max-items" control="zotero-preview-max-items"/>
+                <html:input class="html-input" id="zotero-preview-max-items" type="number" min="1" max="500" step="1" size="4" data-preference="extensions.zoteropreview.maxPreviewItems" aria-labelledby="viewflow-max-items-label"/>
+            </html:div>
+        </html:div>
+    </groupbox>
 </vbox>

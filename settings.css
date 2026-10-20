@@ -1,0 +1,139 @@
+#zotero-prefpane-zotero-preview.viewflow-settings {
+  box-sizing: border-box;
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  padding: 8px 12px 20px;
+  color: FieldText;
+  container: viewflow-settings / inline-size;
+}
+
+.viewflow-settings-header {
+  margin: 2px 0 14px;
+  padding: 4px 2px 12px;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+}
+
+.viewflow-settings-header h1 {
+  margin: 0 0 5px;
+  font-size: 1.45em;
+  line-height: 1.2;
+}
+
+.viewflow-settings-header p {
+  max-width: 54em;
+  margin: 0;
+  color: color-mix(in srgb, currentColor 72%, transparent);
+  line-height: 1.45;
+}
+
+.viewflow-settings-header .viewflow-settings-eyebrow {
+  margin-bottom: 5px;
+  color: color-mix(in srgb, currentColor 58%, transparent);
+  font-size: 0.72em;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+}
+
+#zotero-prefpane-zotero-preview .viewflow-settings-card {
+  box-sizing: border-box;
+  min-width: 0;
+  margin: 0 0 10px;
+  padding: 10px 13px 12px;
+  border: 1px solid color-mix(in srgb, currentColor 17%, transparent);
+  border-radius: 9px;
+  background: color-mix(in srgb, currentColor 2.5%, transparent);
+}
+
+.viewflow-settings-card > label > h2 {
+  margin: 0 0 3px;
+  font-size: 1.05em;
+}
+
+.viewflow-settings-description {
+  display: block;
+  max-width: 62em;
+  margin: 0 0 8px;
+  color: color-mix(in srgb, currentColor 68%, transparent);
+  font-size: 0.9em;
+  line-height: 1.4;
+}
+
+.viewflow-settings-card radiogroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px 14px;
+  min-width: 0;
+}
+
+.viewflow-settings-card radio {
+  max-width: 100%;
+  margin: 2px 0;
+}
+
+.viewflow-settings-style menulist {
+  box-sizing: border-box;
+  width: min(100%, 34em);
+  max-width: 100%;
+}
+
+.viewflow-settings-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  min-width: 0;
+}
+
+.viewflow-settings-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 5.5em;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 7px 9px;
+  border: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  border-radius: 6px;
+}
+
+.viewflow-settings-field label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  line-height: 1.3;
+}
+
+.viewflow-settings-field input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  text-align: end;
+}
+
+.viewflow-settings-field input:focus-visible,
+.viewflow-settings-card radio:focus-visible,
+.viewflow-settings-style menulist:focus-visible {
+  outline: 2px solid Highlight;
+  outline-offset: 2px;
+}
+
+@container viewflow-settings (max-width: 620px) {
+  #zotero-prefpane-zotero-preview.viewflow-settings {
+    padding-inline: 7px;
+  }
+
+  .viewflow-settings-fields {
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+
+  .viewflow-settings-field {
+    grid-template-columns: minmax(0, 1fr) 6em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #zotero-prefpane-zotero-preview * {
+    scroll-behavior: auto !important;
+    transition-duration: 0s !important;
+  }
+}

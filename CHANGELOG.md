@@ -1,5 +1,10 @@
 # Changelog
 
+## 10.0.1 — 2026-10-20
+
+- Redesign the settings pane with responsive cards, clearer descriptions, and grouped preview controls.
+- Keep existing preference keys and values so saved settings remain compatible.
+
 ## 10.0.0 (V10) — 2026-10-14
 
 - Reset the add-on version to 10.0.0 and publish the matching Git tag `V10`, as requested.

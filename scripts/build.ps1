@@ -3,7 +3,7 @@ $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $manifest = Get-Content -Raw -LiteralPath (Join-Path $projectRoot 'manifest.json') | ConvertFrom-Json
 if (-not $OutputPath) { $OutputPath = Join-Path $projectRoot ('dist\Zotero-ViewFlow-' + $manifest.version + '.xpi') }
-$runtimeFiles = @('manifest.json','bootstrap.js','prefs.js','prefs.xhtml','style.css','view.svg','zoteropreview.js','zoteropreview_prefs.js','LICENSE')
+$runtimeFiles = @('manifest.json','bootstrap.js','prefs.js','prefs.xhtml','settings.css','style.css','view.svg','zoteropreview.js','zoteropreview_prefs.js','LICENSE')
 $entries = @($runtimeFiles | ForEach-Object {
     [PSCustomObject]@{ Source = Join-Path $projectRoot $_; Name = $_ }
 })

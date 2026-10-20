@@ -5,9 +5,14 @@ zotero-preview-pane-title =
 
 ######
 # these are all in the Settings
+zotero-preview-settings-heading = Paramètres de ViewFlow
+zotero-preview-settings-intro = Adaptez l’aperçu des citations à votre manière de lire et de rédiger.
 zotero-preview-settings-title = Choisir le style d'aperçu
+zotero-preview-settings-style-heading = Style bibliographique
+zotero-preview-settings-style-description = Choisissez le style utilisé pour formater l’aperçu. L’option Quick Copy reprend le style actuel de Zotero.
 
-zotero-preview-settings-position = Position
+zotero-preview-settings-position = Position de l’aperçu
+zotero-preview-settings-position-description = Choisissez l’emplacement de la section dans le panneau latéral de Zotero. Vous pouvez aussi la déplacer dans ce panneau.
 zotero-preview-settings-position-top =
     .label = Première
 zotero-preview-settings-position-afterinfo =
@@ -15,7 +20,8 @@ zotero-preview-settings-position-afterinfo =
 zotero-preview-settings-position-bottom =
     .label = Bas
 
-zotero-preview-settings-display = Visualiser
+zotero-preview-settings-display = Contenu de l’aperçu
+zotero-preview-settings-display-description = Affichez la référence formatée, la citation dans le texte ou les deux pour chaque élément sélectionné.
 zotero-preview-settings-whatToShow-both =
     .label = Les deux
 zotero-preview-settings-whatToShow-bib =
@@ -23,7 +29,8 @@ zotero-preview-settings-whatToShow-bib =
 zotero-preview-settings-whatToShow-intext =
     .label = Citation dans le texte uniquement
 
-zotero-preview-settings-display-space = Espacement et Taille
+zotero-preview-settings-display-space = Texte et taille de l’aperçu
+zotero-preview-settings-layout-description = Réglez la taille du texte et l’interligne, puis le nombre maximal d’éléments affichés.
 zotero-preview-settings-display-fontsize = Taille de police relative
 zotero-preview-settings-display-linespacing = Interligne
 zotero-preview-settings-display-max-items = Maximum items in preview

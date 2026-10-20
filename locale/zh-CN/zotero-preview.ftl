@@ -5,9 +5,14 @@ zotero-preview-pane-title =
 
 ######
 # these are all in the Settings
+zotero-preview-settings-heading = ViewFlow 设置
+zotero-preview-settings-intro = 调整引用预览的格式与显示方式，让预览适合你的阅读和写作流程。
 zotero-preview-settings-title = 选择参考文献预览样式
+zotero-preview-settings-style-heading = 引用格式
+zotero-preview-settings-style-description = 选择预览所用的参考文献格式。启用“跟随 Zotero Quick Copy 设置”后，将使用 Quick Copy 当前格式。
 
-zotero-preview-settings-position = 位置
+zotero-preview-settings-position = 预览位置
+zotero-preview-settings-position-description = 选择预览栏目在 Zotero 条目侧栏中的位置；也可以直接在侧栏中拖动栏目排序。
 zotero-preview-settings-position-top =
     .label = 侧边栏顶部
 zotero-preview-settings-position-afterinfo =
@@ -15,7 +20,8 @@ zotero-preview-settings-position-afterinfo =
 zotero-preview-settings-position-bottom =
     .label = 侧边栏底部
 
-zotero-preview-settings-display = 展示
+zotero-preview-settings-display = 预览内容
+zotero-preview-settings-display-description = 为每个选中条目显示参考文献格式、正文引用，或同时显示两者。
 zotero-preview-settings-whatToShow-both =
     .label = 以下两者都展示
 zotero-preview-settings-whatToShow-bib =
@@ -23,7 +29,8 @@ zotero-preview-settings-whatToShow-bib =
 zotero-preview-settings-whatToShow-intext =
     .label = 仅展示正文内引用样式
 
-zotero-preview-settings-display-space = 字体大小与行间距
+zotero-preview-settings-display-space = 字体与预览数量
+zotero-preview-settings-layout-description = 调整字体缩放和行间距，并设置预览中最多显示多少个选中条目。
 zotero-preview-settings-display-fontsize = 字体大小
 zotero-preview-settings-display-linespacing = 行间距
 zotero-preview-settings-display-max-items = 预览的最大条目数
