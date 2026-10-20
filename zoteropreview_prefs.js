@@ -2,15 +2,23 @@
 (() => {
 const preview = Zotero.zoteropreview;
 const initializedRoots = new WeakSet();
+const initializingRoots = new WeakSet();
+let disposed = false;
 const listeners = [];
 const listen = (target, type, handler, capture = false) => {
     target.addEventListener(type, handler, capture);
     listeners.push(() => target.removeEventListener(type, handler, capture));
 };
 const prefs = {
-    init() {
+    async init() {
         const root = document.getElementById('zotero-prefpane-zotero-preview');
-        if (!preview.initialized || !root || initializedRoots.has(root)) return;
+        if (disposed || !preview.initialized || !root || initializedRoots.has(root) || initializingRoots.has(root)) return;
+        initializingRoots.add(root);
+        try {
+        // A fresh profile can open Preferences before Zotero's style cache is ready.
+        // Await the host's shared initialization promise before calling getVisible().
+        await Zotero.Styles.init();
+        if (disposed || !root.isConnected || !preview.initialized) return;
         const popup = document.querySelector('#zotero-preview-style-menulist menupopup');
         popup.replaceChildren();
         const menu = document.getElementById('zotero-preview-style-menulist');
@@ -45,6 +53,11 @@ const prefs = {
             });
         }
         initializedRoots.add(root);
+        } catch (error) {
+            if (!disposed) Zotero.logError(error);
+        } finally {
+            initializingRoots.delete(root);
+        }
     }
 };
 // Zotero loads pane scripts before inserting the fragment, then dispatches
@@ -53,6 +66,7 @@ listen(document, 'load', event => {
     if (event.target?.id === 'zotero-prefpane-zotero-preview') prefs.init();
 }, true);
 const dispose = () => {
+    disposed = true;
     for (const remove of listeners.splice(0)) remove();
     preview._prefPaneCleanups.delete(dispose);
 };

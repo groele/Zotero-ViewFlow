@@ -1,15 +1,12 @@
 /* Pane-scoped MetaFlow preferences visual language. */
 #zotero-prefpane-zotero-preview.viewflow-settings {
-  --flow-pref-text: var(--fill-primary, CanvasText);
-  --flow-pref-muted: var(
-    --fill-secondary,
-    color-mix(in srgb, var(--flow-pref-text) 68%, transparent)
-  );
-  --flow-pref-accent: var(--accent-blue, #4070f4);
-  --flow-pref-border: color-mix(in srgb, var(--flow-pref-text) 18%, transparent);
-  --flow-pref-divider: color-mix(in srgb, var(--flow-pref-text) 10%, transparent);
-  --flow-pref-surface: color-mix(in srgb, var(--flow-pref-text) 2%, transparent);
-  --flow-pref-hover: color-mix(in srgb, var(--flow-pref-text) 5%, transparent);
+  --flow-pref-text: light-dark(#20242b, #f1f3f5);
+  --flow-pref-muted: light-dark(#505862, #c4c9d1);
+  --flow-pref-accent: light-dark(#245ac7, #9bbcff);
+  --flow-pref-border: light-dark(#c9cdd3, #646a73);
+  --flow-pref-divider: light-dark(#e2e5e9, #565c65);
+  --flow-pref-surface: light-dark(#ffffff, #35383d);
+  --flow-pref-hover: light-dark(#f3f6fc, #414751);
   box-sizing: border-box;
   display: block;
   width: min(100%, 780px);
@@ -17,9 +14,9 @@
   margin-inline: auto;
   padding: 10px 14px 28px;
   color: var(--flow-pref-text);
-  font: inherit;
-  font-size: 13px;
-  line-height: 1.5;
+  font-family: system-ui, 'Microsoft YaHei UI', 'Microsoft YaHei', sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
   container: viewflow-settings / inline-size;
 }
 
@@ -44,7 +41,7 @@
 
 .viewflow-settings-header h1 {
   margin: 0;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
   line-height: 1.5;
 }
@@ -55,7 +52,7 @@
   border-radius: 4px;
   background: var(--flow-pref-surface);
   color: var(--flow-pref-muted);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 400;
   line-height: 1.5;
   white-space: nowrap;
@@ -65,7 +62,8 @@
   max-width: 58em;
   margin: 4px 0 0;
   color: var(--flow-pref-muted);
-  font-size: 12px;
+  font-size: 13px;
+  line-height: 1.6;
 }
 
 #zotero-prefpane-zotero-preview .viewflow-settings-card {
@@ -86,15 +84,18 @@
   padding: 11px 13px;
   color: var(--flow-pref-text);
   cursor: pointer;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
-  line-height: 1.5;
+  line-height: 1.6;
   list-style: none;
 }
 .viewflow-settings-card:last-of-type { margin-bottom: 0; }
 
 .viewflow-settings-card > summary::-webkit-details-marker {
   display: none;
+}
+.viewflow-settings-card > summary::marker {
+  content: "";
 }
 
 .viewflow-settings-card > summary::after {
@@ -129,7 +130,7 @@
 .viewflow-settings-description {
   margin: 6px 0 8px;
   color: var(--flow-pref-muted);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.6;
 }
 
@@ -145,11 +146,18 @@
   margin: 0;
   min-height: 24px;
   accent-color: var(--flow-pref-accent);
-  line-height: 1.5;
+  color: var(--flow-pref-text);
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.6;
 }
 
 .viewflow-settings-card checkbox {
   max-width: 100%;
+  color: var(--flow-pref-text);
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.6;
   white-space: normal;
 }
 
@@ -177,14 +185,22 @@
   appearance: auto;
   min-width: 0;
   max-width: 100%;
-  min-height: 30px;
-  padding: 4px 8px;
+  min-height: 32px;
+  padding: 5px 8px;
   border: 1px solid var(--flow-pref-border);
   border-radius: 4px;
 }
 
 .viewflow-settings-card menulist {
   width: min(100%, 34em);
+}
+
+.viewflow-settings-card button {
+  min-height: 32px;
+  padding: 6px 10px;
+  border: 1px solid var(--flow-pref-border);
+  border-radius: 4px;
+  font-size: 13px;
 }
 
 .viewflow-settings-fields {
@@ -225,6 +241,8 @@
   border-radius: 9px;
   background: var(--flow-pref-surface);
   color: var(--flow-pref-text);
+  font-size: 13px;
+  line-height: 1.6;
 }
 
 .viewflow-release-row {
@@ -232,23 +250,23 @@
   grid-template-columns: minmax(6em, 8em) minmax(0, 1fr);
   gap: 8px;
   min-width: 0;
-  font-size: 12px;
+  font-size: 13px;
   padding-block: 3px;
-  line-height: 1.5;
+  line-height: 1.6;
   color: var(--flow-pref-muted);
 }
 
 .viewflow-release-title {
   margin-bottom: 4px;
   color: var(--flow-pref-text);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
 }
 
 .viewflow-release-label {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 .viewflow-release-info a {
@@ -284,6 +302,6 @@
 
 @media (max-width: 560px) {
   #zotero-prefpane-zotero-preview.viewflow-settings {
-    padding: 8px 8px 20px;
+    padding: 10px 14px 28px;
   }
 }

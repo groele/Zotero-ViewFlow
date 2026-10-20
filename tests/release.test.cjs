@@ -10,7 +10,6 @@ const feed=JSON.parse(read('zotero-viewflow-updates.json'));
 const update=feed.addons[manifest.applications.zotero.id].updates[0];
 test('manifest, maintained update feed and versioned package stay aligned',()=>{
  assert.match(manifest.version,/^\d+\.\d+\.\d+$/);
- assert.equal(manifest.version,'10.0.0');
  assert.equal(manifest.name,'Zotero ViewFlow');
  assert.equal(manifest.applications.zotero.id,'zotero-viewflow@groele');
  assert.equal(manifest.applications.zotero.strict_min_version,'8.0');
@@ -20,7 +19,7 @@ test('manifest, maintained update feed and versioned package stay aligned',()=>{
  assert.ok(!feed.addons['zoteropreview@carter-tod.com']);
  assert.equal(update.version,manifest.version);
  assert.equal(manifest.applications.zotero.update_url,'https://raw.githubusercontent.com/groele/Zotero-ViewFlow/main/zotero-viewflow-updates.json');
- assert.equal(update.update_link,`https://raw.githubusercontent.com/groele/Zotero-ViewFlow/main/dist/Zotero-ViewFlow-${manifest.version}.xpi`);
+ assert.equal(update.update_link,`https://github.com/groele/Zotero-ViewFlow/releases/download/zotero-viewflow-v${manifest.version}/Zotero-ViewFlow-${manifest.version}.xpi`);
  assert.deepEqual(update.applications.zotero,{strict_min_version:manifest.applications.zotero.strict_min_version,strict_max_version:manifest.applications.zotero.strict_max_version});
  const bytes=fs.readFileSync(path.join(root,`dist/Zotero-ViewFlow-${manifest.version}.xpi`));
  assert.equal(update.update_hash,'sha256:'+crypto.createHash('sha256').update(bytes).digest('hex'));

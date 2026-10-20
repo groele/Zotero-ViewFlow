@@ -5,9 +5,9 @@ const path = require('node:path');
 const vm = require('node:vm');
 const read = name => fs.readFileSync(path.join(__dirname, '..', name), 'utf8');
 
-test('preferences initialize on captured fragment load without inline handlers and clean up', () => {
+test('preferences wait for style loading, initialize once, and clean up captured listeners', async () => {
  const nodes = new Map(), handlers = new Map(), values = new Map();
- const target = id => ({ id, value: '',
+ const target = id => ({ id, value: '', isConnected: true,
   addEventListener(type, fn, capture) { handlers.set(`${id}:${type}`, {fn, capture}); },
   removeEventListener(type) { handlers.delete(`${id}:${type}`); },
   setAttribute() {}, appendChild() {}, replaceChildren() {} });
@@ -19,8 +19,13 @@ test('preferences initialize on captured fragment load without inline handlers a
  const preview = { initialized: true, _prefPrefix: 'extensions.zoteropreview.',
   _prefPaneCleanups: new Set(), pref: name => values.get(name), getPosition: () => 'zotero-item-pane-header',
   setPref: (key, value) => values.set(key.replace('extensions.zoteropreview.', ''), value) };
+ let resolveStyles, stylesLoaded = false;
+ const stylesReady = new Promise(resolve => { resolveStyles = resolve; });
  const context = vm.createContext({ document: doc, window: win,
-  Zotero: { zoteropreview: preview, Styles: { getVisible: () => [{styleID:'style',title:'Style'}] } } });
+  Zotero: { zoteropreview: preview, Styles: { init: () => stylesReady, getVisible: () => {
+   assert.equal(stylesLoaded, true, 'must not read an unloaded style cache');
+   return [{styleID:'style',title:'Style'}];
+  } } } });
  // Gecko 153 freezes sandbox built-ins; the script must not monkey-patch them.
  vm.runInContext('Object.freeze(Array.prototype); Object.freeze(JSON); Object.freeze(Promise);', context);
  vm.runInContext(read('zoteropreview_prefs.js'), context);
@@ -32,12 +37,35 @@ test('preferences initialize on captured fragment load without inline handlers a
  const load = handlers.get('document:load').fn;
  load({target:{id:'other-plugin'}}); assert.equal(handlers.size, 3);
  load({target:nodes.get('zotero-prefpane-zotero-preview')});
+ assert.equal(handlers.size, 3, 'control listeners must wait for the style cache');
+ load({target:nodes.get('zotero-prefpane-zotero-preview')});
+ stylesLoaded = true; resolveStyles();
+ await new Promise(setImmediate);
  const count = handlers.size;
  load({target:nodes.get('zotero-prefpane-zotero-preview')}); assert.equal(handlers.size, count);
  const menu = nodes.get('zotero-preview-style-menulist'); menu.value = 'new-style';
  handlers.get(`${menu.id}:command`).fn(); assert.equal(values.get('citationstyle'), 'new-style');
  handlers.get('document:unload').fn({target:nodes.get('zotero-prefpane-zotero-preview')});
  assert.equal(handlers.size, 0); assert.equal(preview._prefPaneCleanups.size, 0);
+});
+
+test('closing preferences while styles load prevents late DOM access and listeners', async () => {
+ const handlers = new Map(); let resolveStyles, domReads = 0;
+ const root = { id: 'zotero-prefpane-zotero-preview', isConnected: true };
+ const target = id => ({ addEventListener(type, fn) { handlers.set(id + ':' + type, fn); },
+  removeEventListener(type) { handlers.delete(id + ':' + type); } });
+ const doc = Object.assign(target('document'), { getElementById: () => root,
+  querySelector() { domReads++; throw new Error('closed preference document accessed'); } });
+ const preview = { initialized: true, _prefPaneCleanups: new Set() };
+ const context = vm.createContext({ document: doc, window: target('window'),
+  Zotero: { zoteropreview: preview, Styles: { init: () => new Promise(resolve => { resolveStyles = resolve; }) },
+   logError(error) { throw error; } } });
+ vm.runInContext(read('zoteropreview_prefs.js'), context);
+ handlers.get('window:unload')();
+ root.isConnected = false; resolveStyles();
+ await new Promise(setImmediate);
+ assert.equal(domReads, 0); assert.equal(handlers.size, 0);
+ assert.equal(preview._prefPaneCleanups.size, 0);
 });
 
 test('shutdown during initialization prevents late startup in a frozen sandbox', async () => {
