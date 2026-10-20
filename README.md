@@ -6,9 +6,9 @@
 
 [English](README.md) · [简体中文](README.zh-CN.md)
 
-![Version](https://img.shields.io/badge/version-12.2.0-blue) ![Zotero](https://img.shields.io/badge/Zotero-8.0%E2%80%9311.0.*-green) ![License](https://img.shields.io/badge/license-Apache-2.0-lightgrey)
+![Version](https://img.shields.io/badge/version-12.3.0-blue) ![Zotero](https://img.shields.io/badge/Zotero-8.0%E2%80%9311.0.*-green) ![License](https://img.shields.io/badge/license-Apache-2.0-lightgrey)
 
-[Download v12.2.0](https://github.com/groele/Zotero-ViewFlow/releases/download/zotero-viewflow-v12.2.0/Zotero-ViewFlow-12.2.0.xpi) · [Report an Issue](https://github.com/groele/Zotero-ViewFlow/issues) · [Releases](https://github.com/groele/Zotero-ViewFlow/releases)
+[Download v12.3.0](https://github.com/groele/Zotero-ViewFlow/releases/download/zotero-viewflow-v12.3.0/Zotero-ViewFlow-12.3.0.xpi) · [Report an Issue](https://github.com/groele/Zotero-ViewFlow/issues) · [Releases](https://github.com/groele/Zotero-ViewFlow/releases)
 
 **Zotero Flow Series**
 
@@ -35,7 +35,7 @@ For interface examples and implementation details, see the [project documentatio
 
 | Item | Details |
 | --- | --- |
-| Add-on version | `12.2.0` |
+| Add-on version | `12.3.0` |
 | Add-on ID | `zotero-viewflow@groele` |
 | Declared Zotero range | `8.0–11.0.*` |
 | Verification | Zotero 10.0.6 desktop behavior has been observed; Zotero 8/9/11 full desktop acceptance remains incomplete. |
@@ -44,7 +44,7 @@ The declared compatibility range is not a guarantee that every Zotero version ha
 
 ## Installation
 
-1. [Download the v12.2.0 XPI](https://github.com/groele/Zotero-ViewFlow/releases/download/zotero-viewflow-v12.2.0/Zotero-ViewFlow-12.2.0.xpi) for the current release (`Zotero-ViewFlow-12.2.0.xpi`).
+1. [Download the v12.3.0 XPI](https://github.com/groele/Zotero-ViewFlow/releases/download/zotero-viewflow-v12.3.0/Zotero-ViewFlow-12.3.0.xpi) for the current release (`Zotero-ViewFlow-12.3.0.xpi`).
 2. Open Zotero → **Tools → Plugins** (or the add-on manager in your version).
 3. Choose **Install Add-on From File**, select the XPI, and restart Zotero if requested.
 

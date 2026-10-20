@@ -6,9 +6,9 @@
 
 [English](README.md) · [简体中文](README.zh-CN.md)
 
-![Version](https://img.shields.io/badge/version-12.2.0-blue) ![Zotero](https://img.shields.io/badge/Zotero-8.0%E2%80%9311.0.*-green) ![License](https://img.shields.io/badge/license-Apache-2.0-lightgrey)
+![Version](https://img.shields.io/badge/version-12.3.0-blue) ![Zotero](https://img.shields.io/badge/Zotero-8.0%E2%80%9311.0.*-green) ![License](https://img.shields.io/badge/license-Apache-2.0-lightgrey)
 
-[下载 v12.2.0](https://github.com/groele/Zotero-ViewFlow/releases/download/zotero-viewflow-v12.2.0/Zotero-ViewFlow-12.2.0.xpi) · [问题反馈](https://github.com/groele/Zotero-ViewFlow/issues) · [版本发布](https://github.com/groele/Zotero-ViewFlow/releases)
+[下载 v12.3.0](https://github.com/groele/Zotero-ViewFlow/releases/download/zotero-viewflow-v12.3.0/Zotero-ViewFlow-12.3.0.xpi) · [问题反馈](https://github.com/groele/Zotero-ViewFlow/issues) · [版本发布](https://github.com/groele/Zotero-ViewFlow/releases)
 
 **Zotero Flow Series**
 
@@ -35,7 +35,7 @@ Zotero ViewFlow 是 Zotero Flow Series 中独立维护的插件，在 Zotero 原
 
 | 项目 | 说明 |
 | --- | --- |
-| 插件版本 | `12.2.0` |
+| 插件版本 | `12.3.0` |
 | 插件 ID | `zotero-viewflow@groele` |
 | 声明兼容范围 | `8.0–11.0.*` |
 | 验证情况 | 已有 Zotero 10.0.6 桌面环境验证记录；Zotero 8/9/11 尚未完成全面实机验收。 |
@@ -44,7 +44,7 @@ Zotero ViewFlow 是 Zotero Flow Series 中独立维护的插件，在 Zotero 原
 
 ## 安装指南
 
-1. [下载当前版本 XPI](https://github.com/groele/Zotero-ViewFlow/releases/download/zotero-viewflow-v12.2.0/Zotero-ViewFlow-12.2.0.xpi)（`Zotero-ViewFlow-12.2.0.xpi`）。
+1. [下载当前版本 XPI](https://github.com/groele/Zotero-ViewFlow/releases/download/zotero-viewflow-v12.3.0/Zotero-ViewFlow-12.3.0.xpi)（`Zotero-ViewFlow-12.3.0.xpi`）。
 2. 打开 Zotero 的 **工具 → 插件**（不同版本的菜单名称可能不同）。
 3. 选择 **从文件安装插件**，选中 XPI，按提示重启。
 

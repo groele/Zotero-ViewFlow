@@ -1,5 +1,11 @@
 # Changelog
 
+## 12.3.0 — 2026-10-20
+
+- Unify the Zotero Settings preferences style with the other Flow plugins.
+- Make the top-level settings groups collapsible, without nested disclosure panes.
+- List version notes, build date, release download and repository links separately.
+
 ## 12.2.0 — 2026-10-20
 
 - Keep the four settings groups directly visible without adding disclosure panes.
