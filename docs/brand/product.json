@@ -1,0 +1,21 @@
+{
+  "name": "Zotero ViewFlow",
+  "series": "Zotero Flow",
+  "role": [
+    "阅读预览",
+    "Preview"
+  ],
+  "shortDescription": [
+    "在 Zotero 侧栏预览并复制格式化引文。",
+    "Preview and copy formatted references in Zotero’s item pane."
+  ],
+  "introduction": [
+    "面向阅读和写作时需要快速查看引用格式的用户，在条目侧栏展示参考文献与文内引文，并提供复制操作。",
+    "For readers and writers who need a quick formatting check: display references and in-text citations in the item pane and copy the formatted output."
+  ],
+  "githubDescription": "Preview and copy formatted references in Zotero’s item pane. Part of Zotero Flow.",
+  "repository": "https://github.com/groele/Zotero-ViewFlow",
+  "addonID": "zotero-viewflow@groele",
+  "version": "12.3.3",
+  "license": "Apache-2.0"
+}
