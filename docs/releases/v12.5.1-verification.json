@@ -1,0 +1,33 @@
+{
+  "product": "Zotero ViewFlow",
+  "version": "12.5.1",
+  "tag": "v12.5.1",
+  "asset": "Zotero-ViewFlow-12.5.1.xpi",
+  "sourceBaseCommit": "7a8e370718c6e79b9bcd8f36007c546efbd9b877",
+  "builtFromWorkingTree": true,
+  "bytes": 24178,
+  "sha256": "4f6782dc146df456edee742b6d0fc5ef1dc2a473e05e09bd10d300d6fb2ed291",
+  "entries": 15,
+  "addonID": "zotero-viewflow@groele",
+  "compatibility": {
+    "id": "zotero-viewflow@groele",
+    "strict_min_version": "8.0",
+    "strict_max_version": "11.0.*",
+    "update_url": "https://raw.githubusercontent.com/groele/Zotero-ViewFlow/main/zotero-viewflow-updates.json"
+  },
+  "checks": {
+    "build": "passed",
+    "archiveIntegrity": "passed",
+    "runtimeResources": "passed",
+    "sourcePayloadEquality": "passed",
+    "manifestAndSettingsVersion": "passed",
+    "updateFeedVersionLinkAndHash": "passed",
+    "unitTests": {
+      "passed": 26,
+      "failed": 0
+    },
+    "liveZoteroInstall": "not run"
+  },
+  "releaseURL": "https://github.com/groele/Zotero-ViewFlow/releases/tag/v12.5.1",
+  "downloadURL": "https://github.com/groele/Zotero-ViewFlow/releases/download/v12.5.1/Zotero-ViewFlow-12.5.1.xpi"
+}
