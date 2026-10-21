@@ -2,6 +2,8 @@
 
 **Zotero Flow Series · Preview**
 
+*让研究的每一步衔接起来。 / Connect each step of research.*
+
 Preview and copy formatted references in Zotero’s item pane.
 
 [简体中文](README.md) · [English](README.en.md)

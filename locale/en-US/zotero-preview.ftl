@@ -5,7 +5,7 @@ zotero-preview-pane-title =
 
 ######
 # these are all in the Settings
-zotero-preview-settings-heading = ViewFlow settings
+zotero-preview-settings-heading = Zotero ViewFlow settings
 zotero-preview-settings-intro = Fine-tune citation previews to fit your reading and writing workflow.
 zotero-preview-settings-title = Pick Preview Style
 zotero-preview-settings-style-heading = Citation style

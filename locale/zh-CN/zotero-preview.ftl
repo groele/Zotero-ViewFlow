@@ -5,7 +5,7 @@ zotero-preview-pane-title =
 
 ######
 # these are all in the Settings
-zotero-preview-settings-heading = ViewFlow 设置
+zotero-preview-settings-heading = Zotero ViewFlow 设置
 zotero-preview-settings-intro = 调整引用预览的格式与显示方式，让预览适合你的阅读和写作流程。
 zotero-preview-settings-title = 选择参考文献预览样式
 zotero-preview-settings-style-heading = 引用格式

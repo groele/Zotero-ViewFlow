@@ -2,6 +2,8 @@
 
 **Zotero Flow Series · 阅读预览**
 
+*让研究的每一步衔接起来。 / Connect each step of research.*
+
 在 Zotero 侧栏预览并复制格式化引文。
 
 [简体中文](README.md) · [English](README.en.md)
