@@ -1,5 +1,7 @@
 # Zotero ViewFlow
 
+> Source metadata is 12.5.0. The latest downloadable XPI remains the previous release until a 12.5.0 package is published.
+
 **Zotero Flow Series · Preview**
 
 *让研究的每一步衔接起来。 / Connect each step of research.*
@@ -8,7 +10,7 @@ Preview and copy formatted references in Zotero’s item pane.
 
 [简体中文](README.md) · [English](README.en.md)
 
-[![Release](https://img.shields.io/badge/version-12.3.4-245ac7?style=flat-square)](https://github.com/groele/Zotero-ViewFlow/releases/tag/zotero-viewflow-v12.3.4) · [Download XPI](https://github.com/groele/Zotero-ViewFlow/releases/download/zotero-viewflow-v12.3.4/Zotero-ViewFlow-12.3.4.xpi) · [Report an issue](https://github.com/groele/Zotero-ViewFlow/issues)
+[![Release](https://img.shields.io/badge/version-12.5.0-245ac7?style=flat-square)](https://github.com/groele/Zotero-ViewFlow/releases/tag/v12.5.0) · [Download XPI](https://github.com/groele/Zotero-ViewFlow/releases/download/zotero-viewflow-v12.3.4/Zotero-ViewFlow-12.3.4.xpi) · [Report an issue](https://github.com/groele/Zotero-ViewFlow/issues)
 
 [Overview](#overview) · [Installation and updates](#installation) · [Quick start](#quick-start) · [Key features](#features) · [Settings](#settings) · [Data, sync, and services](#data) · [Compatibility and validation](#compatibility) · [Troubleshooting](#troubleshooting) · [Development and documentation](#development) · [The Flow series](#series) · [Origin and license](#license)
 
@@ -72,7 +74,7 @@ Settings cover citation format, placement, preview content, font, and item limit
 
 | Item | Scope |
 |---|---|
-| Current add-on version | 12.3.4 |
+| Current add-on version | 12.5.0 |
 | Declared Zotero range | `8.0` through `11.0.*` |
 | Evidence boundary | The 12.3.4 settings pane was checked in Windows Zotero 10.0.6, including sequential navigation and MetaFlow card palette comparison and 26 existing tests passed; this does not establish acceptance on every declared host version. |
 
