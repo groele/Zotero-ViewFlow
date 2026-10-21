@@ -9,7 +9,7 @@ Preview and copy formatted references in Zotero’s item pane.
 
 [简体中文](README.md) · [English](README.en.md)
 
-[![Release](https://img.shields.io/badge/version-12.5.1-245ac7?style=flat-square)](https://github.com/groele/Zotero-ViewFlow/releases/tag/v12.5.1) · [Download XPI](https://github.com/groele/Zotero-ViewFlow/releases/download/v12.5.1/Zotero-ViewFlow-12.5.1.xpi) · [Report an issue](https://github.com/groele/Zotero-ViewFlow/issues)
+[![Release](https://img.shields.io/badge/version-12.5.2-245ac7?style=flat-square)](https://github.com/groele/Zotero-ViewFlow/releases/tag/v12.5.2) · [Download XPI](https://github.com/groele/Zotero-ViewFlow/releases/download/v12.5.2/Zotero-ViewFlow-12.5.2.xpi) · [Report an issue](https://github.com/groele/Zotero-ViewFlow/issues)
 
 [Overview](#overview) · [Installation and updates](#installation) · [Quick start](#quick-start) · [Key features](#features) · [Settings](#settings) · [Data, sync, and services](#data) · [Compatibility and validation](#compatibility) · [Troubleshooting](#troubleshooting) · [Development and documentation](#development) · [The Flow series](#series) · [Origin and license](#license)
 
@@ -25,7 +25,7 @@ Install this add-on independently and combine it with other Flow products as nee
 
 ## Installation and updates
 
-1. Download [Zotero-ViewFlow-12.5.1.xpi](https://github.com/groele/Zotero-ViewFlow/releases/download/v12.5.1/Zotero-ViewFlow-12.5.1.xpi) (add-on version **12.5.1**), not the Source code ZIP.
+1. Download [Zotero-ViewFlow-12.5.2.xpi](https://github.com/groele/Zotero-ViewFlow/releases/download/v12.5.2/Zotero-ViewFlow-12.5.2.xpi) (add-on version **12.5.2**), not the Source code ZIP.
 2. In Zotero, open **Tools → Plugins/Add-ons**, then choose **Install Add-on From File** from the gear menu.
 3. Select the XPI, complete installation, and restart if requested.
 
@@ -73,7 +73,7 @@ Settings cover citation format, placement, preview content, font, and item limit
 
 | Item | Scope |
 |---|---|
-| Current add-on version | 12.5.1 |
+| Current add-on version | 12.5.2 |
 | Declared Zotero range | `8.0` through `11.0.*` |
 | Evidence boundary | The 12.3.4 settings pane was checked in Windows Zotero 10.0.6, including sequential navigation and MetaFlow card palette comparison and 26 existing tests passed; this does not establish acceptance on every declared host version. |
 
@@ -98,9 +98,11 @@ pwsh -NoProfile -File ./test.ps1
 pwsh -NoProfile -File ./build.ps1
 ```
 
+`node --test tests/*.test.cjs` and `test.ps1` build and verify the current XPI in a temporary directory. They require no pre-existing `dist` installer and do not modify the published update feed. To verify an existing release artifact, use `pwsh -NoProfile -File ./test.ps1 -PackagePath <XPI-path>`. Run `pwsh -NoProfile -File ./build.ps1 -UpdateFeed` only when preparing a release and intentionally updating its installer SHA-256.
+
 - [验证记录 / Validation](VALIDATION.md)
 - [历史记录 / Changelog](CHANGELOG.md)
-- [版本说明 / Release notes](docs/releases/v12.5.1.md)
+- [版本说明 / Release notes](docs/releases/v12.5.2.md)
 - [产品简介 / Product profile](docs/brand/PRODUCT.md)
 - [品牌规范 / Brand guide](docs/brand/BRAND.md)
 - [README 模板 / README template](docs/brand/README-TEMPLATE.md)

@@ -1,5 +1,11 @@
 # Changelog
 
+## 12.5.2 — 2026-10-21
+
+- Build missing test installers in a temporary directory while preserving strict source and checksum checks.
+- Make update-feed writes explicit with `build.ps1 -UpdateFeed`; normal builds and tests keep published metadata unchanged.
+- Align release metadata and correct the settings-pane installer link.
+
 ## 12.3.0 — 2026-10-20
 
 - Unify the Zotero Settings preferences style with the other Flow plugins.
