@@ -10,7 +10,7 @@
 
 ![Version](https://img.shields.io/badge/version-12.3.3-blue) ![Zotero](https://img.shields.io/badge/Zotero-8.0%E2%80%9311.0.*-green) ![License](https://img.shields.io/badge/license-Apache-2.0-lightgrey)
 
-[Download v12.3.3](https://github.com/groele/Zotero-ViewFlow/releases/download/zotero-viewflow-v12.3.3/Zotero-ViewFlow-12.3.3.xpi) · [Report an Issue](https://github.com/groele/Zotero-ViewFlow/issues) · [Releases](https://github.com/groele/Zotero-ViewFlow/releases)
+[Download v12.3.3](https://github.com/groele/Zotero-ViewFlow/releases/download/v12.3.3/Zotero-ViewFlow-12.3.3.xpi) · [Report an Issue](https://github.com/groele/Zotero-ViewFlow/issues) · [Releases](https://github.com/groele/Zotero-ViewFlow/releases)
 
 **Zotero Flow Series**
 
@@ -46,7 +46,7 @@ The declared compatibility range is not a guarantee that every Zotero version ha
 
 ## Installation
 
-1. [Download the v12.3.3 XPI](https://github.com/groele/Zotero-ViewFlow/releases/download/zotero-viewflow-v12.3.3/Zotero-ViewFlow-12.3.3.xpi) for the current release (`Zotero-ViewFlow-12.3.3.xpi`).
+1. [Download the v12.3.3 XPI](https://github.com/groele/Zotero-ViewFlow/releases/download/v12.3.3/Zotero-ViewFlow-12.3.3.xpi) for the current release (`Zotero-ViewFlow-12.3.3.xpi`).
 2. Open Zotero → **Tools → Plugins** (or the add-on manager in your version).
 3. Choose **Install Add-on From File**, select the XPI, and restart Zotero if requested.
 

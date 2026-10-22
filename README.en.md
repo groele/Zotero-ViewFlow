@@ -137,3 +137,5 @@ Independently maintained derivative of David Carter’s ZoteroPreview (dcarterto
 License: [Apache-2.0](LICENSE).
 
 This series is independently maintained and is not an official Zotero product. Zotero and third-party names, trademarks, and materials belong to their respective rights holders.
+
+[Release/tag policy](docs/release-tag-policy.md)
