@@ -30,7 +30,8 @@ function setup(clock = {setTimeout, clearTimeout}) {
  const transferable = { init() {}, addDataFlavor() {}, setTransferData: (f,s) => copied.push([f,s.data]) };
  const Components = { classes: new Proxy({}, {get: (t,k) => ({createInstance: () => k.includes('transferable') ? transferable : {data:''}})}),
   interfaces: {nsIClipboard:{kGlobalClipboard:1}} };
- const context=vm.createContext({Zotero,Components,Services:{clipboard:{setData(){}}},setTimeout:clock.setTimeout,clearTimeout:clock.clearTimeout});
+ const Services={clipboard:{setData(){}}};
+ const context=vm.createContext({Zotero,Components,Services,setTimeout:clock.setTimeout,clearTimeout:clock.clearTimeout});
  vm.runInContext('Object.freeze(Array.prototype); Object.freeze(JSON); Object.freeze(Promise);',context);
  vm.runInContext(source,context);
  const plugin=Zotero.zoteropreview;
@@ -50,8 +51,24 @@ function setup(clock = {setTimeout, clearTimeout}) {
   plugin._changeItem(props); plugin._prepareRender(props);
   return {body,doc,props,listeners,refreshes:()=>refreshes};
  }
- return {plugin,Zotero,item,section,calls,prefs,observers,copied};
+ return {plugin,Zotero,item,section,calls,prefs,observers,copied,Services};
 }
+
+test('successful clipboard retry removes the previous failure instead of retaining a stale error', async()=>{
+ const h=setup(), s=h.section(h.item(1));
+ let status;
+ s.body.querySelector=()=>status;
+ s.body.appendChild=node=>{status=node;};
+ s.doc.createElementNS=()=>({setAttribute(){},remove(){status=null;}});
+ await h.plugin._renderSection(s.props);
+ h.Services.clipboard.setData=()=>{throw new Error('clipboard busy');};
+ assert.equal(h.plugin.copyCitation(false,s.body),false);
+ assert.match(status.textContent,/Copy unavailable/);
+ h.Services.clipboard.setData=()=>{};
+ assert.equal(h.plugin.copyCitation(false,s.body),true);
+ assert.equal(status,null);
+ h.plugin.shutdown();
+});
 test('native section registers library and reader lifecycle without window hooks',()=>{
  const h=setup(); assert.equal(h.Zotero.options.pluginID,'test@example.com');
  for(const hook of ['onInit','onDestroy','onItemChange','onRender','onAsyncRender']) assert.equal(typeof h.Zotero.options[hook],'function');

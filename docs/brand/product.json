@@ -16,6 +16,6 @@
   "githubDescription": "Preview and copy formatted references in Zotero’s item pane. Part of Zotero Flow.",
   "repository": "https://github.com/groele/Zotero-ViewFlow",
   "addonID": "zotero-viewflow@groele",
-  "version": "12.5.1",
+  "version": "12.5.3",
   "license": "Apache-2.0"
 }

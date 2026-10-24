@@ -1,0 +1,28 @@
+{
+  "product": "Zotero ViewFlow",
+  "version": "12.5.3",
+  "addonID": "zotero-viewflow@groele",
+  "file": "Zotero-ViewFlow-12.5.3.xpi",
+  "bytes": 24173,
+  "sha256": "114a65da18aa29466da04a4cd55200d056c92525ef69658ec5cbaa2075d389e2",
+  "sha512": "7e79695ac833620971a4d87e3e6670d3b6015b7d781838ffbb10a40839ecce9d87acffe8ecf7b18fd62ce8f7318cffede0d20b520ebb6e3857f170b4c921a594",
+  "entries": 15,
+  "sourcePayloadVerified": true,
+  "updateFeedsVerified": [
+    "zotero-viewflow-updates.json"
+  ],
+  "sourceBaseCommit": "b2df7b744caa781c414fb5f5e51cd511e3e87d3a",
+  "automatedTests": {
+    "passed": 28,
+    "failed": 0
+  },
+  "nativeZotero": {
+    "version": "10.0.6",
+    "profile": "isolated",
+    "initial": 11,
+    "restart": 11,
+    "boundary": "Combined five-plugin controlled checks. RefFlow/MetaFlow lifetime helpers bundled from maintained sources. Not a full workflow or visual audit."
+  },
+  "mainProfileInstalled": false,
+  "automaticUpdateInstallation": "not performed"
+}

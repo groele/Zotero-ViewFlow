@@ -392,6 +392,7 @@ Zotero.zoteropreview = {
 				transferable.setTransferData(flavor, str);
 			}
 			Services.clipboard.setData(transferable, null, Ci.nsIClipboard.kGlobalClipboard);
+			body.querySelector?.('.zotero-preview-copy-status')?.remove();
 			if (button) this._showCopyFeedback(state, button);
 			return true;
 		}
