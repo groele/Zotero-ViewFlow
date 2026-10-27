@@ -54,13 +54,12 @@ zotero-preview-copy-citation =
 
 zotero-preview-style-missing = 所选引用样式尚未安装。请在 Zotero 中安装，或在 Zotero ViewFlow 设置中选择其他样式。
 zotero-preview-retry = 重新生成预览
-zotero-preview-copied = 已复制。
 zotero-preview-settings-missing-style =
     .label = 已保存的样式未安装，请选择其他样式
 zotero-preview-release-heading = 版本信息
 zotero-preview-release-notes-label = 版本说明
-zotero-preview-release-notes = 复制前核对条目、样式错误恢复、即时调整字体与行距；保留原有设置与复制图标。
+zotero-preview-release-notes = 复制成功仅使用图标响应；复制前核对条目、样式错误恢复、即时调整字体与行距。
 zotero-preview-release-date = 构建日期
 zotero-preview-release-download = 安装包
-zotero-preview-release-download-link = 下载 Zotero ViewFlow 12.6.0
+zotero-preview-release-download-link = 下载 Zotero ViewFlow 12.6.1
 zotero-preview-release-repository = 项目仓库

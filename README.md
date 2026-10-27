@@ -9,7 +9,7 @@
 
 [简体中文](README.md) · [English](README.en.md)
 
-[![当前版本](https://img.shields.io/badge/version-12.6.0-245ac7?style=flat-square)](https://github.com/groele/Zotero-ViewFlow/releases/tag/v12.6.0) · [下载 XPI](https://github.com/groele/Zotero-ViewFlow/releases/download/v12.6.0/Zotero-ViewFlow-12.6.0.xpi) · [问题反馈](https://github.com/groele/Zotero-ViewFlow/issues)
+[![当前版本](https://img.shields.io/badge/version-12.6.1-245ac7?style=flat-square)](https://github.com/groele/Zotero-ViewFlow/releases/tag/v12.6.1) · [下载 XPI](https://github.com/groele/Zotero-ViewFlow/releases/download/v12.6.1/Zotero-ViewFlow-12.6.1.xpi) · [问题反馈](https://github.com/groele/Zotero-ViewFlow/issues)
 
 [产品定位](#overview) · [安装与更新](#installation) · [快速开始](#quick-start) · [核心功能](#features) · [设置与使用](#settings) · [数据、同步与外部服务](#data) · [兼容性与验证范围](#compatibility) · [常见问题](#troubleshooting) · [开发与详细文档](#development) · [系列产品](#series) · [项目来源与许可](#license)
 
@@ -25,7 +25,7 @@
 
 ## 安装与更新
 
-1. 下载 [Zotero-ViewFlow-12.6.0.xpi](https://github.com/groele/Zotero-ViewFlow/releases/download/v12.6.0/Zotero-ViewFlow-12.6.0.xpi)（插件版本 **12.6.0**），不要安装 Source code ZIP。
+1. 下载 [Zotero-ViewFlow-12.6.1.xpi](https://github.com/groele/Zotero-ViewFlow/releases/download/v12.6.1/Zotero-ViewFlow-12.6.1.xpi)（插件版本 **12.6.1**），不要安装 Source code ZIP。
 2. 在 Zotero 打开 **工具 → 插件／附加组件**，从齿轮菜单选择 **从文件安装插件**。
 3. 选择 XPI，完成安装；按提示重启 Zotero。
 
@@ -73,7 +73,7 @@
 
 | 项目 | 范围 |
 |---|---|
-| 当前插件版本 | 12.6.0 |
+| 当前插件版本 | 12.6.1 |
 | 清单声明的 Zotero 范围 | `8.0` 至 `11.0.*` |
 | 当前说明 | 40 项自动检查通过；隔离 Windows Zotero 10.0.6 首次启动及重启各通过 16 项定向检查，覆盖真实主库/PDF 侧栏、HTML/纯文本剪贴板、错误重试、键盘操作及亮暗主题/窄窗设置。未覆盖 Zotero 11、其他操作系统、真实读屏软件或主 profile 安装。 |
 
@@ -102,7 +102,7 @@ pwsh -NoProfile -File ./build.ps1
 
 - [验证记录 / Validation](VALIDATION.md)
 - [历史记录 / Changelog](CHANGELOG.md)
-- [版本说明 / Release notes](docs/releases/v12.6.0.md)
+- [版本说明 / Release notes](docs/releases/v12.6.1.md)
 - [产品简介 / Product profile](docs/brand/PRODUCT.md)
 - [品牌规范 / Brand guide](docs/brand/BRAND.md)
 - [README 模板 / README template](docs/brand/README-TEMPLATE.md)

@@ -62,7 +62,7 @@ test('all Fluent resources provide unique required runtime and copy messages',()
   const keys=[...text.matchAll(/^([a-z][\w-]*)\s*=/gm)].map(m=>m[1]);
   assert.equal(keys.length,new Set(keys).size,locale);
   for(const key of ['zotero-preview-pane-title','zotero-preview-loading','zotero-preview-native-position','zotero-preview-copy-bibliography','zotero-preview-copy-citation','zotero-preview-truncated',
-   'zotero-preview-retry','zotero-preview-style-missing','zotero-preview-copied','zotero-preview-settings-missing-style',
+   'zotero-preview-retry','zotero-preview-style-missing','zotero-preview-settings-missing-style',
    ...[...read('prefs.xhtml').matchAll(/data-l10n-id="([^"]+)"/g)].map(m=>m[1])])assert.ok(keys.includes(key),`${locale}: ${key}`);
  }
 });

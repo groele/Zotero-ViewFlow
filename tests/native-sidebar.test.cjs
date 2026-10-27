@@ -67,6 +67,7 @@ test('successful clipboard retry removes the previous failure instead of retaini
  h.Services.clipboard.setData=()=>{};
  assert.equal(h.plugin.copyCitation(false,s.body),true);
  assert.equal(status,null);
+ assert.doesNotMatch(s.body.innerHTML,/zotero-preview-announcement|zotero-preview-copied/);
  h.plugin.shutdown();
 });
 

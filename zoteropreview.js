@@ -406,7 +406,7 @@ Zotero.zoteropreview = {
 		const { body, config } = state;
 		body.style.setProperty('--zotero-preview-font-size', config.font + 'em');
 		body.style.setProperty('--zotero-preview-line-height', config.spacing);
-		const wrapped = `<div class="zotero-preview-content">${html}<span class="zotero-preview-announcement" role="status" aria-live="polite" aria-atomic="true"></span></div>`;
+		const wrapped = `<div class="zotero-preview-content">${html}</div>`;
 		// Fluent modifies attributes; compare our source rather than live innerHTML.
 		if (state.lastHTML !== wrapped) { this._setHTML(state, wrapped); state.lastHTML = wrapped; }
 		this._fitWidth(state);
@@ -449,11 +449,6 @@ Zotero.zoteropreview = {
 			}
 			Services.clipboard.setData(transferable, null, Ci.nsIClipboard.kGlobalClipboard);
 			body.querySelector?.('.zotero-preview-copy-status')?.remove();
-			const announcement = body.querySelector?.('.zotero-preview-announcement');
-			if (announcement) {
-				announcement.setAttribute('data-l10n-id', 'zotero-preview-copied');
-				announcement.textContent = 'Copied.';
-			}
 			if (button) this._showCopyFeedback(state, button);
 			return true;
 		}

@@ -9,7 +9,7 @@ Preview and copy formatted references in Zotero’s item pane.
 
 [简体中文](README.md) · [English](README.en.md)
 
-[![Release](https://img.shields.io/badge/version-12.6.0-245ac7?style=flat-square)](https://github.com/groele/Zotero-ViewFlow/releases/tag/v12.6.0) · [Download XPI](https://github.com/groele/Zotero-ViewFlow/releases/download/v12.6.0/Zotero-ViewFlow-12.6.0.xpi) · [Report an issue](https://github.com/groele/Zotero-ViewFlow/issues)
+[![Release](https://img.shields.io/badge/version-12.6.1-245ac7?style=flat-square)](https://github.com/groele/Zotero-ViewFlow/releases/tag/v12.6.1) · [Download XPI](https://github.com/groele/Zotero-ViewFlow/releases/download/v12.6.1/Zotero-ViewFlow-12.6.1.xpi) · [Report an issue](https://github.com/groele/Zotero-ViewFlow/issues)
 
 [Overview](#overview) · [Installation and updates](#installation) · [Quick start](#quick-start) · [Key features](#features) · [Settings](#settings) · [Data, sync, and services](#data) · [Compatibility and validation](#compatibility) · [Troubleshooting](#troubleshooting) · [Development and documentation](#development) · [The Flow series](#series) · [Origin and license](#license)
 
@@ -25,7 +25,7 @@ Install this add-on independently and combine it with other Flow products as nee
 
 ## Installation and updates
 
-1. Download [Zotero-ViewFlow-12.6.0.xpi](https://github.com/groele/Zotero-ViewFlow/releases/download/v12.6.0/Zotero-ViewFlow-12.6.0.xpi) (add-on version **12.6.0**), not the Source code ZIP.
+1. Download [Zotero-ViewFlow-12.6.1.xpi](https://github.com/groele/Zotero-ViewFlow/releases/download/v12.6.1/Zotero-ViewFlow-12.6.1.xpi) (add-on version **12.6.1**), not the Source code ZIP.
 2. In Zotero, open **Tools → Plugins/Add-ons**, then choose **Install Add-on From File** from the gear menu.
 3. Select the XPI, complete installation, and restart if requested.
 
@@ -73,7 +73,7 @@ Settings cover citation format, placement, preview content, font, and item limit
 
 | Item | Scope |
 |---|---|
-| Current add-on version | 12.6.0 |
+| Current add-on version | 12.6.1 |
 | Declared Zotero range | `8.0` through `11.0.*` |
 | Evidence boundary | 40 automated checks passed. Initial launch and restart each passed 16 targeted checks in isolated Windows Zotero 10.0.6, covering real library/PDF sidebars, HTML/plain-text clipboard, retry, keyboard operation and light/dark/narrow settings. Zotero 11, other operating systems, real screen readers and main-profile installation remain unverified. |
 
@@ -102,7 +102,7 @@ pwsh -NoProfile -File ./build.ps1
 
 - [验证记录 / Validation](VALIDATION.md)
 - [历史记录 / Changelog](CHANGELOG.md)
-- [版本说明 / Release notes](docs/releases/v12.6.0.md)
+- [版本说明 / Release notes](docs/releases/v12.6.1.md)
 - [产品简介 / Product profile](docs/brand/PRODUCT.md)
 - [品牌规范 / Brand guide](docs/brand/BRAND.md)
 - [README 模板 / README template](docs/brand/README-TEMPLATE.md)

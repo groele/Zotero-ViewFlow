@@ -54,13 +54,12 @@ zotero-preview-copy-citation =
 
 zotero-preview-style-missing = The selected citation style is not installed. Install it in Zotero or choose another style in Zotero ViewFlow settings.
 zotero-preview-retry = Retry preview
-zotero-preview-copied = Copied.
 zotero-preview-settings-missing-style =
     .label = Saved style is not installed — choose another style
 zotero-preview-release-heading = Version information
 zotero-preview-release-notes-label = Changes
-zotero-preview-release-notes = Safer copying, citation-style recovery and instant font/spacing updates. Existing settings and copy icons are preserved.
+zotero-preview-release-notes = Successful copying uses icon feedback only. Selection checks, style recovery and instant text layout are preserved.
 zotero-preview-release-date = Build date
 zotero-preview-release-download = Installer
-zotero-preview-release-download-link = Download Zotero ViewFlow 12.6.0
+zotero-preview-release-download-link = Download Zotero ViewFlow 12.6.1
 zotero-preview-release-repository = Repository

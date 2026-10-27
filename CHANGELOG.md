@@ -1,5 +1,9 @@
 # Changelog
 
+## 12.6.1 — 2026-10-27
+
+- Remove successful-copy text feedback; keep the original checkmark/icon animation and clipboard failure message.
+
 ## 12.6.0 — 2026-10-27
 
 - Add localized recovery guidance and a retry action for failed previews and missing styles.
