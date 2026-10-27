@@ -12,11 +12,11 @@ function setup(clock = {setTimeout, clearTimeout}) {
   'extensions.zoteropreview.maxPreviewItems': 100,
   'export.quickCopy.dragLimit': 100,
  }));
- const items = new Map(); const calls = []; const observers = new Set();
+ const items = new Map(); const calls = []; const observers = new Set(), preferenceCallbacks=new Map();
  const copied = [];
  const Zotero = {
   Prefs: { get: k => prefs.get(k), set: (k,v) => prefs.set(k,v),
-   registerObserver: () => { const id = Symbol(); observers.add(id); return id; },
+   registerObserver: (key,callback) => { const id = Symbol(); observers.add(id); preferenceCallbacks.set(key,callback);return id; },
    unregisterObserver: id => observers.delete(id) },
   Items: { get: id => items.get(id) }, debug() {},
   Notifier: { registerObserver: (o,types) => { for(const type of types) assert.ok(['item','tab'].includes(type)); return 1; }, unregisterObserver: () => {} },
@@ -51,7 +51,7 @@ function setup(clock = {setTimeout, clearTimeout}) {
   plugin._changeItem(props); plugin._prepareRender(props);
   return {body,doc,props,listeners,refreshes:()=>refreshes};
  }
- return {plugin,Zotero,item,section,calls,prefs,observers,copied,Services};
+ return {plugin,Zotero,item,section,calls,prefs,observers,preferenceCallbacks,copied,Services};
 }
 
 test('successful clipboard retry removes the previous failure instead of retaining a stale error', async()=>{
@@ -67,6 +67,18 @@ test('successful clipboard retry removes the previous failure instead of retaini
  h.Services.clipboard.setData=()=>{};
  assert.equal(h.plugin.copyCitation(false,s.body),true);
  assert.equal(status,null);
+ h.plugin.shutdown();
+});
+
+for (const action of ['destroy', 'shutdown']) test(`queued refresh cannot run after section ${action}`, async()=>{
+ const timers=new Map(); let next=0;
+ const h=setup({setTimeout:fn=>{timers.set(++next,fn);return next;},clearTimeout:id=>timers.delete(id)});
+ const s=h.section(h.item(1)), state=h.plugin._states.get(s.body);
+ h.plugin._scheduleRefresh(state);
+ const callback=timers.get(state.refreshTimer); timers.delete(state.refreshTimer); callback();
+ if(action==='destroy') h.plugin._destroySection(s.body); else h.plugin.shutdown();
+ await Promise.resolve(); await Promise.resolve();
+ assert.equal(s.refreshes(),0);
  h.plugin.shutdown();
 });
 test('native section registers library and reader lifecycle without window hooks',()=>{
@@ -277,4 +289,95 @@ test('observer disconnect failures do not strand states or timers',()=>{
  h.plugin.shutdown();assert.equal(h.plugin._states.size,0);assert.equal(s.listeners.size,0);
  assert.equal(h.plugin._positionObservers.size,0);assert.equal(h.plugin._positionTimers.size,0);
  assert.equal(errors.length,2);
+});
+
+test('a dedicated preview style works even when Quick Copy has an invalid setting',async()=>{
+ const h=setup(),s=h.section(h.item(1));
+ h.prefs.set('extensions.zoteropreview.citationstyle','chosen-style');
+ h.Zotero.QuickCopy.unserializeSetting=()=>{throw Error('invalid Quick Copy setting');};
+ await h.plugin._renderSection(s.props);
+ assert.ok(h.plugin._states.get(s.body).payload); assert.equal(h.calls.length,2);
+ h.plugin.shutdown();
+});
+
+test('preview waits for style initialization and cancels if the section changes while waiting',async()=>{
+ const h=setup(),s=h.section(h.item(1)); let ready,started;
+ const waiting=new Promise(resolve=>{started=resolve;});
+ h.Zotero.Styles={init:()=>{started();return new Promise(resolve=>{ready=resolve;});},get:()=>({})};
+ const pending=h.plugin._renderSection(s.props);
+ await Promise.race([waiting,new Promise((_,reject)=>setTimeout(()=>reject(Error('style init was not awaited')),300))]);
+ assert.equal(h.calls.length,0);
+ h.plugin._destroySection(s.body); ready(); await pending;
+ assert.equal(h.calls.length,0); h.plugin.shutdown();
+});
+
+test('copy refuses a changed library selection before the next native render',async()=>{
+ const h=setup(),a=h.item(1),b=h.item(2),selection=[a],s=h.section(a,'library',selection);
+ await h.plugin._renderSection(s.props); selection.splice(0,1,b);
+ assert.equal(h.plugin.copyCitation(false,s.body),false); assert.equal(h.copied.length,0);
+ h.plugin.shutdown();
+});
+
+test('copy refuses a trashed item even before the notifier arrives',async()=>{
+ const h=setup(),a=h.item(1),s=h.section(a);
+ await h.plugin._renderSection(s.props); a.deleted=true;
+ assert.equal(h.plugin.copyCitation(false,s.body),false); assert.equal(h.copied.length,0);
+ h.plugin.shutdown();
+});
+
+test('missing styles have a specific recovery message and a keyboard retry action',async()=>{
+ const h=setup(),s=h.section(h.item(1)); h.Zotero.Styles={get:()=>null};
+ await h.plugin._renderSection(s.props);
+ assert.match(s.body.innerHTML,/zotero-preview-style-missing/);
+ assert.match(s.body.innerHTML,/data-preview-retry/);
+ let prevented=0,refreshes=0; h.plugin._states.get(s.body).refresh=()=>{refreshes++;};
+ const button={dataset:{previewRetry:''}};
+ s.listeners.get('keydown')({type:'keydown',key:'Enter',target:{closest:()=>button},preventDefault(){prevented++;}});
+ await new Promise(resolve=>setTimeout(resolve,110));
+ assert.equal(prevented,1); assert.equal(refreshes,1); h.plugin.shutdown();
+});
+
+test('layout preferences reuse CSL payloads and leave copy feedback intact',async()=>{
+ const h=setup(),s=h.section(h.item(1)); await h.plugin._renderSection(s.props);
+ const state=h.plugin._states.get(s.body),payload=state.payload,cache=h.plugin._cache.size;
+ let writes=0; s.body.style.setProperty=()=>writes++;
+ h.prefs.set('extensions.zoteropreview.fontsize',1.7); h.prefs.set('extensions.zoteropreview.spacing',2);
+ h.preferenceCallbacks.get('extensions.zoteropreview.fontsize')();
+ assert.equal(state.payload,payload); assert.equal(h.plugin._cache.size,cache);
+ assert.equal(state.config.font,1.7); assert.equal(state.config.spacing,2);
+ assert.equal(writes,2); assert.equal(h.calls.length,2); h.plugin.shutdown();
+});
+
+test('HTML without plain text is reported as unavailable instead of copying undefined',async()=>{
+ const h=setup(),s=h.section(h.item(1)); h.Zotero.QuickCopy.getContentFromItems=()=>({html:'<i>incomplete</i>'});
+ await h.plugin._renderSection(s.props);
+ assert.match(s.body.innerHTML,/zotero-preview-quickcopy-unavailable/);
+ assert.equal(h.plugin.copyCitation(false,s.body),false); h.plugin.shutdown();
+});
+
+test('a late style initialization failure cannot replace a newer item preview',async()=>{
+ const h=setup(),s=h.section(h.item(1));let rejectOld,ready;
+ const started=new Promise(resolve=>{ready=resolve;});
+ h.Zotero.Styles={init:()=>{ready();return new Promise((_,reject)=>{rejectOld=reject;});},get:()=>({})};
+ const old=h.plugin._renderSection(s.props);await started;
+ h.Zotero.Styles.init=()=>Promise.resolve();
+ s.props.item=h.item(2);h.plugin._changeItem(s.props);await h.plugin._renderSection(s.props);
+ const latest=s.body.innerHTML;rejectOld(Error('style initialization failed'));await old;
+ assert.equal(s.body.innerHTML,latest);assert.match(latest,/bib:2/);h.plugin.shutdown();
+});
+
+test('no-style guidance distinguishes a Quick Copy export format from a missing installed style',async()=>{
+ const h=setup(),s=h.section(h.item(1));
+ h.Zotero.QuickCopy.getFormatFromURL=()=>({mode:'export',id:'translator'});
+ await h.plugin._renderSection(s.props);
+ assert.match(s.body.innerHTML,/zotero-preview-no-style/);assert.equal(h.calls.length,0);
+ h.plugin.shutdown();
+});
+
+test('a dedicated style retains the existing Quick Copy HTML-source copy preference',async()=>{
+ const h=setup(),s=h.section(h.item(1));
+ h.prefs.set('extensions.zoteropreview.citationstyle','chosen-style');
+ h.Zotero.QuickCopy.getFormatFromURL=()=>({mode:'bibliography',id:'quickcopy-style',contentType:'html'});
+ await h.plugin._renderSection(s.props);assert.equal(h.plugin.copyCitation(false,s.body),true);
+ assert.deepEqual(h.copied,[['text/html','<i>bib:1</i>'],['text/plain','<i>bib:1</i>']]);h.plugin.shutdown();
 });

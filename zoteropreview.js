@@ -48,7 +48,11 @@ Zotero.zoteropreview = {
 		this._prefObservers.push(Zotero.Prefs.registerObserver(this._prefPrefix + 'position', () => {
 			for (const state of this._states.values()) this._queuePosition(state.body.closest('item-details'));
 		}, true));
-		for (const name of ['citationstyle', 'whatToShow', 'fontsize', 'spacing', 'maxPreviewItems']) {
+		for (const name of ['fontsize', 'spacing']) {
+			this._prefObservers.push(Zotero.Prefs.registerObserver(this._prefPrefix + name,
+				() => this._updateLayout(), true));
+		}
+		for (const name of ['citationstyle', 'whatToShow', 'maxPreviewItems']) {
 			this._prefObservers.push(Zotero.Prefs.registerObserver(this._prefPrefix + name,
 				() => this._queueAllPreviews(), true));
 		}
@@ -73,11 +77,19 @@ Zotero.zoteropreview = {
 			generation: 0, key: null, payload: null, timer: null, resolve: null,
 			refreshTimer: null, feedbackTimers: new Set(), copyFeedback: new Map(), destroyed: false };
 		state.handler = event => {
-			const button = event.target?.closest?.('[data-copy-citation]');
+			const button = event.target?.closest?.('[data-copy-citation], [data-preview-retry]');
 			if (!button || !body.contains(button)) return;
 			if (event.type === 'keydown' && !['Enter', ' '].includes(event.key)) return;
+			if (event.repeat) return;
+			// Native HTML buttons synthesize click for Enter/Space. The original
+			// copy spans need our explicit keyboard handling.
+			if ('previewRetry' in button.dataset && event.type === 'keydown' && button.localName === 'button') return;
 			event.preventDefault();
-			this.copyCitation(button.dataset.copyCitation === 'true', body, button);
+			if ('previewRetry' in button.dataset) {
+				this._message(state, 'zotero-preview-loading', 'Loading preview…');
+				this._scheduleRefresh(state);
+			}
+			else this.copyCitation(button.dataset.copyCitation === 'true', body, button);
 		};
 		body.addEventListener('click', state.handler);
 		body.addEventListener('keydown', state.handler);
@@ -211,25 +223,46 @@ Zotero.zoteropreview = {
 			const selection = state.doc.defaultView?.ZoteroPane?.getSelectedItems() || [];
 			const items = [...new Map(selection.map(item => this._normalizeItem(item))
 				.filter(Boolean).map(item => [item.id, item])).values()];
-			if (items.some(item => item.id === state.item?.id)) return items;
+			return items.some(item => item.id === state.item?.id) ? items : [];
 		}
-		return state.item ? [state.item] : [];
+		const item = this._normalizeItem(state.item);
+		return item ? [item] : [];
 	},
 	_config(item) {
 		const qc = Zotero.QuickCopy;
 		const override = this.pref('citationstyle');
-		const format = { ...qc.unserializeSetting(qc.getFormatFromURL(item?.getField('url') || '')) };
+		let format;
+		try {
+			format = { ...qc.unserializeSetting(qc.getFormatFromURL(item?.getField('url') || '')) };
+		}
+		catch (error) {
+			if (!override) throw this._previewError('no-style', error.message);
+			format = {};
+		}
 		if (override) Object.assign(format, { id: override, mode: 'bibliography' });
-		if (format.mode !== 'bibliography' || !format.id) throw new Error('No bibliography style configured');
+		if (format.mode !== 'bibliography' || !format.id) throw this._previewError('no-style', 'No bibliography style configured');
+		if (Zotero.Styles?.get && !Zotero.Styles.get(format.id)) throw this._previewError('style-missing', 'Citation style is not installed');
 		format.locale = format.locale || Zotero.Prefs.get('export.quickCopy.locale');
 		const asHTML = format.contentType === 'html';
 		format.contentType = 'text';
 		const show = this.pref('whatToShow');
 		return { format, asHTML, show: ['zpboth', 'zpbib', 'zpintext'].includes(show) ? show : 'zpboth',
-			font: this._number(this.pref('fontsize'), 1, 0.2, 3),
-			spacing: this._number(this.pref('spacing'), 1.5, 1, 3),
+			...this._layoutConfig(),
 			limit: Math.min(this._number(this.pref('maxPreviewItems'), 100, 1, 500),
 				this._number(Zotero.Prefs.get('export.quickCopy.dragLimit'), 100, 1, 10000)) };
+	},
+	_previewError(code, message) { return Object.assign(new Error(message), { previewCode: code }); },
+	_layoutConfig() {
+		return { font: this._number(this.pref('fontsize'), 1, 0.2, 3),
+			spacing: this._number(this.pref('spacing'), 1.5, 1, 3) };
+	},
+	_updateLayout() {
+		for (const state of this._states.values()) {
+			if (!state.config || state.destroyed) continue;
+			Object.assign(state.config, this._layoutConfig());
+			state.body.style.setProperty('--zotero-preview-font-size', state.config.font + 'em');
+			state.body.style.setProperty('--zotero-preview-line-height', state.config.spacing);
+		}
 	},
 	_number(value, fallback, min, max) {
 		const parsed = Number.parseFloat(value);
@@ -263,8 +296,15 @@ Zotero.zoteropreview = {
 		});
 		if (state.destroyed || generation !== state.generation || !this.initialized) return;
 		try {
+			await Zotero.Styles?.init?.();
+			if (state.destroyed || generation !== state.generation || !this.initialized) return;
 			const allItems = this._items(state);
 			state.ids = allItems.map(item => item.id);
+			if (!allItems.length) {
+				state.payload = null;
+				this._message(state, 'zotero-preview-select-items', 'Select one or more items to preview.');
+				return;
+			}
 			const config = this._config(state.item);
 			const items = allItems.slice(0, Math.floor(config.limit));
 			const key = JSON.stringify([items.map(item => [item.id, item.getField('dateModified')]),
@@ -291,9 +331,16 @@ Zotero.zoteropreview = {
 			this._renderPayload(state, payload, allItems.length - items.length);
 		}
 		catch (error) {
+			if (state.destroyed || generation !== state.generation || !this.initialized) return;
 			state.payload = null;
 			this.log(error.stack || error);
-			this._message(state, 'zotero-preview-unavailable', 'Preview unavailable. Check the selected citation style.', true);
+			const messages = {
+				'no-style': ['zotero-preview-no-style', 'Choose a bibliography style in ViewFlow or Zotero Quick Copy settings.'],
+				'style-missing': ['zotero-preview-style-missing', 'This citation style is not installed. Install it or choose another style in ViewFlow settings.'],
+				'quickcopy-unavailable': ['zotero-preview-quickcopy-unavailable', 'Quick Copy could not format these items. Check the style and try again.']
+			};
+			const [id, fallback] = messages[error.previewCode] || ['zotero-preview-unavailable', 'Preview unavailable. Check the selected citation style and retry.'];
+			this._message(state, id, fallback, true);
 		}
 	},
 	_generate(items, { format, show }) {
@@ -303,7 +350,9 @@ Zotero.zoteropreview = {
 			if (!enabled) continue;
 			// QuickCopy uses Zotero's cached CSL processors and returns HTML + text.
 			const result = Zotero.QuickCopy.getContentFromItems(items, format, null, citation);
-			if (!result?.html) throw new Error(`QuickCopy returned no ${kind}`);
+			if (!result?.html || typeof result.html !== 'string' || typeof result.text !== 'string') {
+				throw this._previewError('quickcopy-unavailable', `QuickCopy returned incomplete ${kind}`);
+			}
 			payload[kind] = { html: result.html, text: result.text };
 		}
 		return payload;
@@ -357,7 +406,7 @@ Zotero.zoteropreview = {
 		const { body, config } = state;
 		body.style.setProperty('--zotero-preview-font-size', config.font + 'em');
 		body.style.setProperty('--zotero-preview-line-height', config.spacing);
-		const wrapped = `<div class="zotero-preview-content">${html}</div>`;
+		const wrapped = `<div class="zotero-preview-content">${html}<span class="zotero-preview-announcement" role="status" aria-live="polite" aria-atomic="true"></span></div>`;
 		// Fluent modifies attributes; compare our source rather than live innerHTML.
 		if (state.lastHTML !== wrapped) { this._setHTML(state, wrapped); state.lastHTML = wrapped; }
 		this._fitWidth(state);
@@ -373,12 +422,19 @@ Zotero.zoteropreview = {
 	},
 	_message(state, id, fallback, error = false) {
 		state.lastHTML = null;
-		this._setHTML(state, `<div class="zotero-preview-message${error ? ' zotero-preview-message-error' : ''}" role="status" data-l10n-id="${id}">${fallback}</div>`);
+		this._setHTML(state, `<div class="zotero-preview-message${error ? ' zotero-preview-message-error' : ''}" role="status" data-l10n-id="${id}">${fallback}</div>`
+			+ (error ? '<button type="button" class="zotero-preview-retry" data-preview-retry="" data-l10n-id="zotero-preview-retry">Retry preview</button>' : ''));
 	},
 	copyCitation(asCitations, body, button) {
 		const state = this._states.get(body);
 		const content = state?.payload?.[asCitations ? 'citation' : 'bibliography'];
 		if (!content) return false;
+		const ids = this._items(state).map(item => item.id);
+		if (state.destroyed || !this.initialized || !ids.length || ids.length !== state.ids.length || ids.some((id, index) => id !== state.ids[index])) {
+			state.payload = null;
+			this._scheduleRefresh(state);
+			return false;
+		}
 		try {
 			// Rich clipboard still uses XPCOM in Zotero. No window-mediator or
 			// private File_Interface lookup; setTransferData uses the modern signature.
@@ -393,6 +449,11 @@ Zotero.zoteropreview = {
 			}
 			Services.clipboard.setData(transferable, null, Ci.nsIClipboard.kGlobalClipboard);
 			body.querySelector?.('.zotero-preview-copy-status')?.remove();
+			const announcement = body.querySelector?.('.zotero-preview-announcement');
+			if (announcement) {
+				announcement.setAttribute('data-l10n-id', 'zotero-preview-copied');
+				announcement.textContent = 'Copied.';
+			}
 			if (button) this._showCopyFeedback(state, button);
 			return true;
 		}
@@ -434,7 +495,9 @@ Zotero.zoteropreview = {
 			if (!this.initialized || state.destroyed) return;
 			// Dirty hidden/collapsed sections render when next opened.
 			if (!state.body.getClientRects().length || state.body.closest('collapsible-section')?.open === false) return;
-			Promise.resolve().then(() => state.refresh()).catch(error => this.log(error));
+			Promise.resolve().then(() => {
+				if (this.initialized && !state.destroyed) return state.refresh();
+			}).catch(error => this.log(error));
 		}, 80);
 	},
 	_queueAllPreviews() {

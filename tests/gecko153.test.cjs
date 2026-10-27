@@ -6,11 +6,11 @@ const vm = require('node:vm');
 const read = name => fs.readFileSync(path.join(__dirname, '..', name), 'utf8');
 
 test('preferences wait for style loading, initialize once, and clean up captured listeners', async () => {
- const nodes = new Map(), handlers = new Map(), values = new Map();
- const target = id => ({ id, value: '', isConnected: true,
+ const nodes = new Map(), handlers = new Map(), values = new Map([['citationstyle','missing-style']]);
+ const target = id => ({ id, value: '', isConnected: true, attributes:{},children:[],
   addEventListener(type, fn, capture) { handlers.set(`${id}:${type}`, {fn, capture}); },
   removeEventListener(type) { handlers.delete(`${id}:${type}`); },
-  setAttribute() {}, appendChild() {}, replaceChildren() {} });
+  setAttribute(key,value) {this.attributes[key]=value;}, appendChild(node) {this.children.push(node);}, replaceChildren() {this.children=[];} });
  const doc = Object.assign(target('document'), {
   getElementById: id => nodes.get(id),
   querySelector: () => nodes.get('popup'), createXULElement: () => target('entry')
@@ -41,6 +41,10 @@ test('preferences wait for style loading, initialize once, and clean up captured
  load({target:nodes.get('zotero-prefpane-zotero-preview')});
  stylesLoaded = true; resolveStyles();
  await new Promise(setImmediate);
+ assert.equal(nodes.get('zotero-preview-style-menulist').value,'missing-style');
+ const missing=nodes.get('popup').children.find(n=>n.attributes.value==='missing-style');
+ assert.equal(missing.attributes['data-l10n-id'],'zotero-preview-settings-missing-style');
+ assert.equal(values.get('citationstyle'),'missing-style','must preserve the saved style without silently switching to Quick Copy');
  const count = handlers.size;
  load({target:nodes.get('zotero-prefpane-zotero-preview')}); assert.equal(handlers.size, count);
  const menu = nodes.get('zotero-preview-style-menulist'); menu.value = 'new-style';

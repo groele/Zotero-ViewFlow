@@ -26,13 +26,21 @@ const prefs = {
         automatic.setAttribute('value', '');
         automatic.setAttribute('data-l10n-id', 'zotero-preview-follow-quickcopy');
         popup.appendChild(automatic);
-        for (const style of Zotero.Styles.getVisible()) {
+        const styles = Zotero.Styles.getVisible();
+        const selectedStyle = preview.pref('citationstyle') || '';
+        if (selectedStyle && !styles.some(style => style.styleID === selectedStyle)) {
+            const missing = document.createXULElement('menuitem');
+            missing.setAttribute('value', selectedStyle);
+            missing.setAttribute('data-l10n-id', 'zotero-preview-settings-missing-style');
+            popup.appendChild(missing);
+        }
+        for (const style of styles) {
             const entry = document.createXULElement('menuitem');
             entry.setAttribute('value', style.styleID);
             entry.setAttribute('label', style.title);
             popup.appendChild(entry);
         }
-        menu.value = preview.pref('citationstyle') || '';
+        menu.value = selectedStyle;
         listen(menu, 'command', () => preview.setPref(preview._prefPrefix + 'citationstyle', menu.value));
         const position = document.getElementById('extensions-zoteropreview-position');
         position.value = preview.getPosition();

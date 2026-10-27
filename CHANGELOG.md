@@ -1,5 +1,14 @@
 # Changelog
 
+## 12.6.0 — 2026-10-27
+
+- Add localized recovery guidance and a retry action for failed previews and missing styles.
+- Recheck current selection and deleted state before copying; retain rich-text and HTML-source copy behavior.
+- Apply font and line spacing instantly without regenerating CSL; honour spacing over inline CSL styles.
+- Wait for style initialization and cancel stale success/failure paths after item changes or shutdown.
+- Preserve missing saved styles in settings, add copy status announcements, and scope preference styling.
+- Validate 40 automated checks plus isolated Zotero 10.0.6 initial/restart and native settings cases. Existing data and settings remain compatible.
+
 ## 12.5.2 — 2026-10-21
 
 - Build missing test installers in a temporary directory while preserving strict source and checksum checks.
