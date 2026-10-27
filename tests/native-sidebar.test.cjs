@@ -88,6 +88,17 @@ test('native section registers library and reader lifecycle without window hooks
  assert.equal(h.plugin.addToReaderWindow,undefined); h.plugin.shutdown(); assert.equal(h.observers.size,0);
 });
 
+test('native panel restores a missing title without replacing a populated header or citation content',()=>{
+ const h=setup(),s=h.section(h.item(1));let label=null;
+ const section={getAttribute:()=>label,setAttribute:(name,value)=>{assert.equal(name,'label');label=value;}};
+ s.body.closest=selector=>selector==='collapsible-section'?section:null;
+ const before=s.body.innerHTML;
+ h.plugin._prepareRender(s.props);assert.equal(label,'Zotero ViewFlow');
+ label='Existing localized label';h.plugin._prepareRender(s.props);assert.equal(label,'Existing localized label');
+ label='';h.plugin._prepareRender(s.props);assert.equal(label,'Zotero ViewFlow');
+ assert.equal(s.body.innerHTML,before);assert.equal(h.calls.length,0);h.plugin.shutdown();
+});
+
 test('placement restores top by default, after Info and bottom without changing other section order',async()=>{
  const h=setup();
  const panes=['info','abstract','other-plugin','native-id'].map(pane=>({dataset:{pane}}));

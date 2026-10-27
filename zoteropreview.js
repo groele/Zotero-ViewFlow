@@ -63,6 +63,7 @@ Zotero.zoteropreview = {
 	_initSection({ doc, body, refresh }) {
 		if (this._states.has(body)) return;
 		doc.defaultView?.MozXULElement?.insertFTLIfNeeded?.('zotero-preview.ftl');
+		this._ensureSectionHeader(body);
 		let sheet = this._stylesheets.get(doc);
 		if (!sheet) {
 			const link = doc.createElementNS('http://www.w3.org/1999/xhtml', 'link');
@@ -268,9 +269,18 @@ Zotero.zoteropreview = {
 		const parsed = Number.parseFloat(value);
 		return Number.isFinite(parsed) ? Math.max(min, Math.min(max, parsed)) : fallback;
 	},
+	_ensureSectionHeader(body) {
+		const section = body.closest('collapsible-section');
+		// The native header can render before Fluent supplies its label. Keep the
+		// stable product name visible while leaving an existing label untouched.
+		if (section?.getAttribute && !section.getAttribute('label')?.trim()) {
+			section.setAttribute('label', 'Zotero ViewFlow');
+		}
+	},
 	_prepareRender(props) {
 		const state = this._states.get(props.body);
 		if (!state) return;
+		this._ensureSectionHeader(props.body);
 		this._queuePosition(props.body.closest('item-details'));
 		if (state.item?.id !== this._normalizeItem(props.item)?.id || state.tabType !== props.tabType) this._changeItem(props);
 		if (!state.payload) this._message(state, 'zotero-preview-loading', 'Loading preview…');

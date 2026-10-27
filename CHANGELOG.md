@@ -1,5 +1,9 @@
 # Changelog
 
+## 12.6.2 — 2026-10-27
+
+- Restore native sidebar panel titles when localization has not supplied a label yet; preserve existing labels, citation formatting, content layout and icon-only copying.
+
 ## 12.6.1 — 2026-10-27
 
 - Remove successful-copy text feedback; keep the original checkmark/icon animation and clipboard failure message.
