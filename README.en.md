@@ -1,3 +1,5 @@
+> Local development candidate: **12.6.3** (not published). Stable download links and their existing validation statements below remain for **12.6.2**; this candidate expands product capability and development-origin documentation without updating an online XPI or update feed.
+
 # Zotero ViewFlow
 
 
@@ -45,12 +47,13 @@ Update feed: [zotero-viewflow-updates.json](https://github.com/groele/Zotero-Vie
 
 ## Key features
 
-| Feature | Scope |
-|---|---|
-| Formatted previews | Preview references and in-text citations from the library or reader tabs in the main window. |
-| Citation styles | Choose an installed Zotero style or follow Quick Copy settings. |
-| Placement and content | Adjust pane placement, preview content, font, and item limits. |
-| Copy | Copy displayed text and supported rich-text output. |
+| Differentiator | What it does | Boundary |
+|---|---|---|
+| Immediate native item-pane preview | Displays the selected item’s bibliography and in-text citation in the main-library item pane, without switching to an external formatting tool. | A standalone reader window may lack the required native ItemPane; use a reader tab in the main window in that case. |
+| Alignment with Zotero styles and Quick Copy | Uses an installed Zotero CSL style or follows Quick Copy settings to inspect formatted output before writing. | Output depends on installed styles and Zotero’s formatting engine; it neither installs, repairs, nor validates a CSL style. |
+| Reader and library context | Shows the relevant preview for the current main-library selection or reader tab, bringing reading and citation checking into one interface. | Injects only its own container and does not alter Zotero’s other panes or another add-on’s UI. |
+| Adjustable layout and information density | Adjusts pane placement, visible content, font, and item limit for different workspaces and narrow windows. | Host zoom, window size, and Zotero theme still affect layout; it does not hide overflow by shrinking critical text. |
+| Text and supported rich-text copy | Copies the currently displayed formatted text and available rich-text representation for pasting into a destination. | Copy fidelity is constrained by Zotero and the destination application; it does not replace Zotero’s formal citation-insertion workflow. |
 
 <a id="settings"></a>
 
@@ -132,7 +135,7 @@ Each add-on installs and updates separately. A shared brand does not imply a sha
 
 ## Origin and license
 
-Independently maintained derivative of David Carter’s ZoteroPreview (dcartertod/zotero-plugins); original copyright and applicable notices remain in force.
+**Derivative notice:** Zotero ViewFlow is an independently maintained derivative of David Carter’s open-source [ZoteroPreview (dcartertod/zotero-plugins)](https://github.com/dcartertod/zotero-plugins). Original copyright and applicable notices remain in force; this project is neither an upstream nor an official Zotero release.
 
 License: [Apache-2.0](LICENSE).
 

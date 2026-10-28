@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Zotero ViewFlow",
-  "version": "12.6.2",
+  "version": "12.6.3",
   "description": "Preview and copy formatted references in Zotero’s item pane.",
   "homepage_url": "https://github.com/groele/Zotero-ViewFlow",
   "applications": {
