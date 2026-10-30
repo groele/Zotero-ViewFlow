@@ -215,6 +215,75 @@ test('shared LRU reuses CSL results between two sections and ignores unrelated i
  h.plugin.notify('modify','item',[1]); assert.equal(h.plugin._cache.size,0);
  await h.plugin._renderSection(b.props); assert.equal(h.calls.length,4); h.plugin.shutdown();
 });
+
+test('repeated PDF context callbacks preserve preview, clipboard feedback and expired-cache results',async()=>{
+ const h=setup(),parent=h.item(1),s=h.section(h.item(2,1));
+ await h.plugin._renderSection(s.props);
+ const state=h.plugin._states.get(s.body),payload=state.payload;
+ let writes=0;h.plugin._setHTML=()=>{writes++;};
+ for(const entry of h.plugin._cache.values())entry.created=0;
+ for(let n=0;n<8;n++) {
+  h.Zotero.options.onItemChange({...s.props,item:parent});
+  h.Zotero.options.onRender(s.props);
+  await h.Zotero.options.onAsyncRender(s.props);
+ }
+ assert.equal(writes,0);assert.equal(state.payload,payload);assert.equal(h.calls.length,2);
+ assert.equal(h.plugin.copyCitation(false,s.body),true);h.plugin.shutdown();
+});
+
+test('same PDF context notification does not cancel an in-flight style initialization',async()=>{
+ const h=setup(),s=h.section(h.item(1));let ready,started;
+ const waiting=new Promise(resolve=>{started=resolve;});
+ h.Zotero.Styles={init:()=>{started();return new Promise(resolve=>{ready=resolve;});},get:()=>({})};
+ const pending=h.plugin._renderSection(s.props);await waiting;
+ h.Zotero.options.onItemChange(s.props);h.Zotero.options.onRender(s.props);
+ ready();await pending;
+ assert.ok(h.plugin._states.get(s.body).payload);assert.equal(h.calls.length,2);h.plugin.shutdown();
+});
+
+test('reader refresh notifications target citation items and coalesce real invalidations without loading flashes',async()=>{
+ const h=setup(),s=h.section(h.item(1));await h.plugin._renderSection(s.props);
+ const state=h.plugin._states.get(s.body),payload=state.payload,html=s.body.innerHTML;
+ h.plugin.notify('refresh','item',[99]);assert.equal(state.payload,payload);
+ assert.equal(state.refreshTimer,null);assert.equal(h.plugin._cache.size,1);
+ let writes=0;const setHTML=h.plugin._setHTML;
+ h.plugin._setHTML=(...args)=>{writes++;setHTML(...args);};
+ for(let n=0;n<20;n++) {h.plugin.notify('modify','item',[1]);h.plugin._prepareRender(s.props);}
+ assert.equal(state.payload,null);assert.equal(h.plugin.copyCitation(false,s.body),false);
+ assert.equal(s.body.innerHTML,html);assert.equal(writes,0);
+ await new Promise(resolve=>setTimeout(resolve,110));assert.equal(s.refreshes(),1);
+ await h.plugin._renderSection(s.props);assert.equal(h.calls.length,4);assert.equal(writes,0);
+ h.plugin.notify('refresh','item',[]);assert.equal(state.payload,null);h.plugin.shutdown();
+});
+
+test('loading messages and unchanged resize widths do not mutate the DOM repeatedly',()=>{
+ const h=setup(),s=h.section(h.item(1)),state=h.plugin._states.get(s.body);
+ let writes=0;h.plugin._setHTML=()=>{writes++;};
+ for(let n=0;n<20;n++)h.plugin._prepareRender(s.props);
+ assert.equal(writes,0);
+ let widthWrites=0,maxWidth='';
+ state.sizingOwner={getBoundingClientRect:()=>({width:300,right:300})};
+ s.body.getBoundingClientRect=()=>({left:0});
+ Object.defineProperty(s.body.style,'maxWidth',{get:()=>maxWidth,set:value=>{maxWidth=value;widthWrites++;}});
+ for(let n=0;n<20;n++)h.plugin._fitWidth(state);
+ assert.equal(widthWrites,1);assert.equal(maxWidth,'292px');h.plugin.shutdown();
+});
+
+test('same-item callbacks still update metadata, style, selection and omitted-count changes',async()=>{
+ const h=setup(),a=h.item(1),b=h.item(2),selection=[a],s=h.section(a,'library',selection);
+ h.prefs.set('extensions.zoteropreview.maxPreviewItems',1);
+ await h.plugin._renderSection(s.props);
+ let modified='later';a.getField=f=>f==='dateModified'?modified:'';
+ h.plugin._changeItem(s.props);await h.plugin._renderSection(s.props);assert.equal(h.calls.length,4);
+ selection.push(b);h.plugin._changeItem(s.props);await h.plugin._renderSection(s.props);
+ assert.match(s.body.innerHTML,/1 additional items omitted/);assert.equal(h.calls.length,4);
+ h.prefs.set('extensions.zoteropreview.citationstyle','new-style');
+ h.preferenceCallbacks.get('extensions.zoteropreview.citationstyle')();
+ await h.plugin._renderSection(s.props);assert.equal(h.calls.length,6);
+ s.props.item=b;selection.splice(0,2,b);h.plugin._changeItem(s.props);h.plugin._prepareRender(s.props);
+ assert.match(s.body.innerHTML,/zotero-preview-loading/);
+ await h.plugin._renderSection(s.props);assert.match(s.body.innerHTML,/bib:2/);h.plugin.shutdown();
+});
 test('rapid item changes cancel stale renders; shutdown resolves pending work',async()=>{
  const h=setup(), a=h.item(1), b=h.item(2), s=h.section(a);
  const old=h.plugin._renderSection(s.props);

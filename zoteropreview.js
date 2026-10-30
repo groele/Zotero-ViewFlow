@@ -193,7 +193,8 @@ Zotero.zoteropreview = {
 		const bounds = state.sizingOwner.getBoundingClientRect();
 		if (!bounds.width) return;
 		const width = Math.max(0, Math.min(bounds.width, bounds.right - state.body.getBoundingClientRect().left - 8));
-		state.body.style.maxWidth = `${width}px`;
+		const maxWidth = `${width}px`;
+		if (state.body.style.maxWidth !== maxWidth) state.body.style.maxWidth = maxWidth;
 	},
 	_normalizeItem(item) {
 		const seen = new Set();
@@ -209,13 +210,22 @@ Zotero.zoteropreview = {
 	_changeItem({ body, item, tabType, setEnabled }) {
 		const state = this._states.get(body);
 		if (!state) return;
+		const normalized = this._normalizeItem(item);
+		// Native reader updates can repeat the same parent context. They are not
+		// citation invalidations; keep the preview and any pending render intact.
+		if (state.item?.id === normalized?.id && state.tabType === tabType) {
+			state.item = normalized;
+			state.setEnabled = setEnabled;
+			return;
+		}
 		this._cancelRender(state);
-		state.item = this._normalizeItem(item);
+		state.item = normalized;
 		state.tabType = tabType;
 		state.setEnabled = setEnabled;
 		state.ids = state.item ? [state.item.id] : [];
 		state.key = null;
 		state.payload = null;
+		state.lastHTML = null;
 		setEnabled(!!state.item);
 	},
 	_items(state) {
@@ -283,7 +293,7 @@ Zotero.zoteropreview = {
 		this._ensureSectionHeader(props.body);
 		this._queuePosition(props.body.closest('item-details'));
 		if (state.item?.id !== this._normalizeItem(props.item)?.id || state.tabType !== props.tabType) this._changeItem(props);
-		if (!state.payload) this._message(state, 'zotero-preview-loading', 'Loading preview…');
+		if (!state.payload && !state.lastHTML) this._message(state, 'zotero-preview-loading', 'Loading preview…');
 	},
 	_cancelRender(state) {
 		state.generation++;
@@ -319,6 +329,15 @@ Zotero.zoteropreview = {
 			const items = allItems.slice(0, Math.floor(config.limit));
 			const key = JSON.stringify([items.map(item => [item.id, item.getField('dateModified')]),
 				config.format, config.show, Zotero.Styles?.get(config.format.id)?.updated || '']);
+			const omitted = allItems.length - items.length;
+			// The visible result stays valid until its inputs change or a notifier
+			// invalidates it, even after the shared cache's eviction/TTL.
+			if (state.payload && state.key === key && state.omitted === omitted) {
+				const layoutChanged = state.config.font !== config.font || state.config.spacing !== config.spacing;
+				state.config = config;
+				if (layoutChanged) this._renderPayload(state, state.payload, omitted);
+				return;
+			}
 			if (this._cache.has(key) && Date.now() - this._cache.get(key).created > this._cacheTTL) this._cacheDelete(key);
 			let payload = this._cache.get(key)?.payload;
 			if (payload) {
@@ -338,7 +357,8 @@ Zotero.zoteropreview = {
 			state.key = key;
 			state.payload = payload;
 			state.config = config;
-			this._renderPayload(state, payload, allItems.length - items.length);
+			state.omitted = omitted;
+			this._renderPayload(state, payload, omitted);
 		}
 		catch (error) {
 			if (state.destroyed || generation !== state.generation || !this.initialized) return;
@@ -431,9 +451,11 @@ Zotero.zoteropreview = {
 			node => state.doc.importNode(node, true)));
 	},
 	_message(state, id, fallback, error = false) {
-		state.lastHTML = null;
-		this._setHTML(state, `<div class="zotero-preview-message${error ? ' zotero-preview-message-error' : ''}" role="status" data-l10n-id="${id}">${fallback}</div>`
-			+ (error ? '<button type="button" class="zotero-preview-retry" data-preview-retry="" data-l10n-id="zotero-preview-retry">Retry preview</button>' : ''));
+		const html = `<div class="zotero-preview-message${error ? ' zotero-preview-message-error' : ''}" role="status" data-l10n-id="${id}">${fallback}</div>`
+			+ (error ? '<button type="button" class="zotero-preview-retry" data-preview-retry="" data-l10n-id="zotero-preview-retry">Retry preview</button>' : '');
+		if (state.lastHTML === html) return;
+		this._setHTML(state, html);
+		state.lastHTML = html;
 	},
 	copyCitation(asCitations, body, button) {
 		const state = this._states.get(body);
@@ -483,7 +505,7 @@ Zotero.zoteropreview = {
 			return;
 		}
 		if (!this.initialized || type !== 'item' || !['modify', 'delete', 'trash', 'refresh', 'add'].includes(event)) return;
-		const changed = event === 'refresh' ? null : new Set((ids || []).map(Number));
+		const changed = event === 'refresh' && !ids?.length ? null : new Set((ids || []).map(Number));
 		if (changed && event === 'add') return;
 		for (const [key, entry] of this._cache) if (!changed || entry.ids.some(id => changed.has(id))) this._cacheDelete(key);
 		for (const state of this._states.values()) {

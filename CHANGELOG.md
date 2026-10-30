@@ -1,5 +1,12 @@
 # Changelog
 
+## 12.6.4 — 2026-10-30 (unreleased)
+
+- Preserve valid previews and in-flight work on repeated native PDF parent-context callbacks.
+- Reuse unchanged visible results after shared-cache expiry; avoid repeated loading DOM replacements and identical width writes.
+- Scope item refresh notifications to their supplied IDs and keep the preview visible during coalesced background invalidation; copying stays disabled until refreshed.
+- Retain metadata, style, selection, deletion and item-switch invalidation.
+
 ## 12.6.2 — 2026-10-27
 
 - Restore native sidebar panel titles when localization has not supplied a label yet; preserve existing labels, citation formatting, content layout and icon-only copying.
