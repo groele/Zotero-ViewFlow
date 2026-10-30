@@ -1,4 +1,4 @@
-> Local development candidate: **12.6.5** (not published). Stable download links and their existing validation statements below remain for **12.6.2**; this candidate strengthens PDF sidebar refresh, cancellation and clipboard validation without updating an online XPI or update feed.
+> Current version: **12.6.5**. This release strengthens PDF reader sidebar refresh, cancellation and clipboard validation.
 
 # Zotero ViewFlow
 
@@ -11,7 +11,7 @@ Preview and copy formatted references in Zotero’s item pane.
 
 [简体中文](README.md) · [English](README.en.md)
 
-[![Release](https://img.shields.io/badge/version-12.6.2-245ac7?style=flat-square)](https://github.com/groele/Zotero-ViewFlow/releases/tag/v12.6.2) · [Download XPI](https://github.com/groele/Zotero-ViewFlow/releases/download/v12.6.2/Zotero-ViewFlow-12.6.2.xpi) · [Report an issue](https://github.com/groele/Zotero-ViewFlow/issues)
+[![Release](https://img.shields.io/badge/version-12.6.5-245ac7?style=flat-square)](https://github.com/groele/Zotero-ViewFlow/releases/tag/v12.6.5) · [Download XPI](https://github.com/groele/Zotero-ViewFlow/releases/download/v12.6.5/Zotero-ViewFlow-12.6.5.xpi) · [Report an issue](https://github.com/groele/Zotero-ViewFlow/issues)
 
 [Overview](#overview) · [Installation and updates](#installation) · [Quick start](#quick-start) · [Key features](#features) · [Settings](#settings) · [Data, sync, and services](#data) · [Compatibility and validation](#compatibility) · [Troubleshooting](#troubleshooting) · [Development and documentation](#development) · [The Flow series](#series) · [Origin and license](#license)
 
@@ -27,7 +27,7 @@ Install this add-on independently and combine it with other Flow products as nee
 
 ## Installation and updates
 
-1. Download [Zotero-ViewFlow-12.6.2.xpi](https://github.com/groele/Zotero-ViewFlow/releases/download/v12.6.2/Zotero-ViewFlow-12.6.2.xpi) (add-on version **12.6.2**), not the Source code ZIP.
+1. Download [Zotero-ViewFlow-12.6.5.xpi](https://github.com/groele/Zotero-ViewFlow/releases/download/v12.6.5/Zotero-ViewFlow-12.6.5.xpi) (add-on version **12.6.2**), not the Source code ZIP.
 2. In Zotero, open **Tools → Plugins/Add-ons**, then choose **Install Add-on From File** from the gear menu.
 3. Select the XPI, complete installation, and restart if requested.
 

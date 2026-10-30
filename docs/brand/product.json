@@ -17,6 +17,6 @@
   "repository": "https://github.com/groele/Zotero-ViewFlow",
   "addonID": "zotero-viewflow@groele",
   "version": "12.6.5",
-  "releaseStatus": "candidate",
+  "releaseStatus": "released",
   "license": "Apache-2.0"
 }

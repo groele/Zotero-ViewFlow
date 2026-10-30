@@ -1,6 +1,6 @@
 # Changelog
 
-## 12.6.5 — 2026-10-30 (unreleased)
+## 12.6.5 — 2026-10-30
 
 - Join concurrent section renders; bound style-initialization waits and release them on item changes, destruction or shutdown.
 - Hold formatting errors until explicit retry or input invalidation; serialize native refresh requests with one trailing request.

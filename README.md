@@ -1,4 +1,4 @@
-> 本地开发候选：**12.6.5**（尚未发布）。下方稳定版下载及其既有验收说明仍对应 **12.6.2**；本候选增强 PDF 阅读侧栏的刷新、取消与复制校验稳定性，不更新在线安装包或更新源。
+> 当前版本：**12.6.5**。本版增强 PDF 阅读侧栏的刷新、取消与复制校验稳定性。
 
 # Zotero ViewFlow
 
@@ -11,7 +11,7 @@
 
 [简体中文](README.md) · [English](README.en.md)
 
-[![当前版本](https://img.shields.io/badge/version-12.6.2-245ac7?style=flat-square)](https://github.com/groele/Zotero-ViewFlow/releases/tag/v12.6.2) · [下载 XPI](https://github.com/groele/Zotero-ViewFlow/releases/download/v12.6.2/Zotero-ViewFlow-12.6.2.xpi) · [问题反馈](https://github.com/groele/Zotero-ViewFlow/issues)
+[![当前版本](https://img.shields.io/badge/version-12.6.5-245ac7?style=flat-square)](https://github.com/groele/Zotero-ViewFlow/releases/tag/v12.6.5) · [下载 XPI](https://github.com/groele/Zotero-ViewFlow/releases/download/v12.6.5/Zotero-ViewFlow-12.6.5.xpi) · [问题反馈](https://github.com/groele/Zotero-ViewFlow/issues)
 
 [产品定位](#overview) · [安装与更新](#installation) · [快速开始](#quick-start) · [核心功能](#features) · [设置与使用](#settings) · [数据、同步与外部服务](#data) · [兼容性与验证范围](#compatibility) · [常见问题](#troubleshooting) · [开发与详细文档](#development) · [系列产品](#series) · [项目来源与许可](#license)
 
@@ -27,7 +27,7 @@
 
 ## 安装与更新
 
-1. 下载 [Zotero-ViewFlow-12.6.2.xpi](https://github.com/groele/Zotero-ViewFlow/releases/download/v12.6.2/Zotero-ViewFlow-12.6.2.xpi)（插件版本 **12.6.2**），不要安装 Source code ZIP。
+1. 下载 [Zotero-ViewFlow-12.6.5.xpi](https://github.com/groele/Zotero-ViewFlow/releases/download/v12.6.5/Zotero-ViewFlow-12.6.5.xpi)（插件版本 **12.6.5**），不要安装 Source code ZIP。
 2. 在 Zotero 打开 **工具 → 插件／附加组件**，从齿轮菜单选择 **从文件安装插件**。
 3. 选择 XPI，完成安装；按提示重启 Zotero。
 
