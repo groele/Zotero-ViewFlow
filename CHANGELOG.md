@@ -1,5 +1,11 @@
 # Changelog
 
+## 12.6.5 — 2026-10-30 (unreleased)
+
+- Join concurrent section renders; bound style-initialization waits and release them on item changes, destruction or shutdown.
+- Hold formatting errors until explicit retry or input invalidation; serialize native refresh requests with one trailing request.
+- Revalidate citation metadata, style and copy mode before clipboard writes when observer delivery is delayed.
+
 ## 12.6.4 — 2026-10-30 (unreleased)
 
 - Preserve valid previews and in-flight work on repeated native PDF parent-context callbacks.

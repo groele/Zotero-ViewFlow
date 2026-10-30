@@ -1,4 +1,4 @@
-> Local development candidate: **12.6.4** (not published). Stable download links and their existing validation statements below remain for **12.6.2**; this candidate fixes repeated PDF reader sidebar refreshes without updating an online XPI or update feed.
+> Local development candidate: **12.6.5** (not published). Stable download links and their existing validation statements below remain for **12.6.2**; this candidate strengthens PDF sidebar refresh, cancellation and clipboard validation without updating an online XPI or update feed.
 
 # Zotero ViewFlow
 

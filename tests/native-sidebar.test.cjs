@@ -462,3 +462,80 @@ test('a dedicated style retains the existing Quick Copy HTML-source copy prefere
  await h.plugin._renderSection(s.props);assert.equal(h.plugin.copyCitation(false,s.body),true);
  assert.deepEqual(h.copied,[['text/html','<i>bib:1</i>'],['text/plain','<i>bib:1</i>']]);h.plugin.shutdown();
 });
+
+test('concurrent reader renders share one task and one style waiter',async()=>{
+ const h=setup(),s=h.section(h.item(1));let ready,started,initializations=0;
+ const waiting=new Promise(resolve=>{started=resolve;});
+ h.Zotero.Styles={init:()=>{initializations++;started();return new Promise(resolve=>{ready=resolve;});},get:()=>({})};
+ const first=h.plugin._renderSection(s.props);await waiting;
+ for(let n=0;n<100;n++)assert.equal(h.plugin._renderSection(s.props),first);
+ ready();await first;assert.equal(initializations,1);assert.equal(h.calls.length,2);
+ assert.equal(h.plugin._states.get(s.body).renderTask,null);h.plugin.shutdown();
+});
+
+for(const action of ['destroy','shutdown','switch']) test(`hung style initialization settles promptly on ${action}`,async()=>{
+ const h=setup(),s=h.section(h.item(1));let started;
+ const waiting=new Promise(resolve=>{started=resolve;});
+ h.Zotero.Styles={init:()=>{started();return new Promise(()=>{});},get:()=>({})};
+ const pending=h.plugin._renderSection(s.props);await waiting;
+ if(action==='destroy')h.plugin._destroySection(s.body);
+ if(action==='shutdown')h.plugin.shutdown();
+ if(action==='switch'){s.props.item=h.item(2);h.plugin._changeItem(s.props);}
+ let deadline;
+ try {await Promise.race([pending,new Promise((_,reject)=>{deadline=setTimeout(()=>reject(Error('cancel did not settle')),150);})]);}
+ finally{clearTimeout(deadline);h.plugin.shutdown();}
+ assert.equal(h.calls.length,0);
+});
+
+test('style timeout is recoverable, consumes late failures and does not retry on native render storms',async(t)=>{
+ const h=setup(),s=h.section(h.item(1));let rejectLate,initializations=0;
+	t.after(()=>h.plugin.shutdown());
+ h.plugin._styleInitTimeout=15;
+ h.Zotero.Styles={init:()=>{initializations++;return new Promise((_,reject)=>{rejectLate=reject;});},get:()=>({})};
+ let deadline;
+ try {await Promise.race([h.plugin._renderSection(s.props),new Promise((_,reject)=>{deadline=setTimeout(()=>reject(Error('style timeout did not settle')),250);})]);}
+ finally{clearTimeout(deadline);}
+ assert.match(s.body.innerHTML,/zotero-preview-unavailable/);
+ const state=h.plugin._states.get(s.body);assert.equal(state.cancelStyles,null);
+ for(let n=0;n<40;n++){h.plugin._prepareRender(s.props);await h.plugin._renderSection(s.props);h.plugin._scheduleRefresh(state);}
+ assert.equal(initializations,1);assert.equal(state.refreshTimer,null);
+ rejectLate(Error('late init rejection'));await Promise.resolve();
+ h.Zotero.Styles.init=()=>Promise.resolve();
+ const button={dataset:{previewRetry:''},localName:'button'};
+ s.listeners.get('click')({type:'click',target:{closest:()=>button},preventDefault(){}});
+ await h.plugin._renderSection(s.props);assert.ok(state.payload);assert.equal(state.failed,false);h.plugin.shutdown();
+});
+
+test('a real item invalidation clears the failure latch and allows recovery',async()=>{
+ const h=setup(),s=h.section(h.item(1)),format=h.Zotero.QuickCopy.getContentFromItems;
+ h.Zotero.QuickCopy.getContentFromItems=()=>{throw Error('bad style');};
+ await h.plugin._renderSection(s.props);assert.equal(h.plugin._states.get(s.body).failed,true);
+ h.Zotero.QuickCopy.getContentFromItems=format;h.plugin.notify('modify','item',[1]);
+ await h.plugin._renderSection(s.props);assert.ok(h.plugin._states.get(s.body).payload);h.plugin.shutdown();
+});
+
+for(const change of ['metadata','style','copy-mode']) test(`copy refuses stale ${change} inputs before observer delivery`,async()=>{
+ const h=setup(),i=h.item(1),s=h.section(i);await h.plugin._renderSection(s.props);
+ if(change==='metadata')i.getField=f=>f==='dateModified'?'new-date':'';
+ if(change==='style')h.prefs.set('extensions.zoteropreview.citationstyle','other-style');
+ if(change==='copy-mode')h.Zotero.QuickCopy.getFormatFromURL=()=>({mode:'bibliography',id:'style',contentType:'html'});
+ assert.equal(h.plugin.copyCitation(false,s.body),false);assert.equal(h.copied.length,0);
+ assert.equal(h.plugin._states.get(s.body).payload,null);
+ await h.plugin._renderSection(s.props);assert.equal(h.plugin.copyCitation(false,s.body),true);h.plugin.shutdown();
+});
+
+test('native refresh requests serialize, retain one trailing request and stop after destroy',async()=>{
+ const timers=new Map();let next=0;
+ const h=setup({setTimeout:fn=>{timers.set(++next,fn);return next;},clearTimeout:id=>timers.delete(id)});
+ const s=h.section(h.item(1)),state=h.plugin._states.get(s.body);let refreshed=0,release;
+ state.refresh=()=>{refreshed++;return new Promise(resolve=>{release=resolve;});};
+ const flush=async()=>{for(let n=0;n<8;n++)await Promise.resolve();};
+ const fire=()=>{const id=state.refreshTimer,fn=timers.get(id);timers.delete(id);fn();};
+ h.plugin._scheduleRefresh(state);fire();await flush();assert.equal(refreshed,1);
+ for(let n=0;n<100;n++)h.plugin._scheduleRefresh(state);
+ assert.equal(state.refreshTimer,null);assert.equal(state.refreshAgain,true);
+ release();await flush();assert.notEqual(state.refreshTimer,null);
+ fire();await flush();assert.equal(refreshed,2);
+ h.plugin._scheduleRefresh(state);h.plugin._destroySection(s.body);release();await flush();
+ assert.equal(timers.size,0);assert.equal(state.refreshTask,null);h.plugin.shutdown();
+});

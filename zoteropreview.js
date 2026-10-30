@@ -5,6 +5,7 @@ Zotero.zoteropreview = {
 	_cacheLimit: 64,
 	_cacheByteLimit: 2 * 1024 * 1024,
 	_cacheTTL: 60000,
+	_styleInitTimeout: 10000,
 	init({ id, version, rootURI }) {
 		if (this.initialized) return;
 		Object.assign(this, { id, version, rootURI });
@@ -87,6 +88,7 @@ Zotero.zoteropreview = {
 			if ('previewRetry' in button.dataset && event.type === 'keydown' && button.localName === 'button') return;
 			event.preventDefault();
 			if ('previewRetry' in button.dataset) {
+				this._cancelRender(state);
 				this._message(state, 'zotero-preview-loading', 'Loading preview…');
 				this._scheduleRefresh(state);
 			}
@@ -297,17 +299,47 @@ Zotero.zoteropreview = {
 	},
 	_cancelRender(state) {
 		state.generation++;
+		state.failed = false;
+		state.renderTask = null;
+		state.cancelStyles?.();
 		if (state.timer !== null) clearTimeout(state.timer);
 		state.timer = null;
 		state.resolve?.();
 		state.resolve = null;
 	},
-	async _renderSection({ body }) {
+	_renderSection({ body }) {
 		const state = this._states.get(body);
-		if (!this.initialized || !state || state.destroyed || !state.item) return;
+		if (!this.initialized || !state || state.destroyed || !state.item || state.failed) return Promise.resolve();
+		// One task per section/revision. Repeated native renders join it instead
+		// of restarting debounce or creating more style-initialization waiters.
+		if (state.renderTask) return state.renderTask;
+		const task = this._runRender(state).finally(() => {
+			if (state.renderTask === task) state.renderTask = null;
+		});
+		state.renderTask = task;
+		return task;
+	},
+	_waitForStyles(state) {
+		return new Promise((resolve, reject) => {
+			let settled = false;
+			const finish = (ready, error) => {
+				if (settled) return;
+				settled = true;
+				clearTimeout(timer);
+				if (state.cancelStyles === cancel) state.cancelStyles = null;
+				if (error) reject(error); else resolve(ready);
+			};
+			const cancel = () => finish(false);
+			const timer = setTimeout(() => finish(false, new Error('Citation style initialization timed out')), this._styleInitTimeout);
+			state.cancelStyles = cancel;
+			// Consume late success/rejection even after cancellation or timeout.
+			Promise.resolve().then(() => { if (!settled) return Zotero.Styles?.init?.(); }).then(
+				() => finish(true), error => finish(false, error));
+		});
+	},
+	async _runRender(state) {
 		state.item = this._normalizeItem(state.item);
 		if (!state.item) { state.payload = null; state.setEnabled?.(false); return; }
-		this._cancelRender(state);
 		const generation = state.generation;
 		// Coalesce rapid changes and yield before synchronous CSL work.
 		await new Promise(resolve => {
@@ -316,7 +348,7 @@ Zotero.zoteropreview = {
 		});
 		if (state.destroyed || generation !== state.generation || !this.initialized) return;
 		try {
-			await Zotero.Styles?.init?.();
+			if (!await this._waitForStyles(state)) return;
 			if (state.destroyed || generation !== state.generation || !this.initialized) return;
 			const allItems = this._items(state);
 			state.ids = allItems.map(item => item.id);
@@ -327,8 +359,7 @@ Zotero.zoteropreview = {
 			}
 			const config = this._config(state.item);
 			const items = allItems.slice(0, Math.floor(config.limit));
-			const key = JSON.stringify([items.map(item => [item.id, item.getField('dateModified')]),
-				config.format, config.show, Zotero.Styles?.get(config.format.id)?.updated || '']);
+			const key = this._previewKey(items, config);
 			const omitted = allItems.length - items.length;
 			// The visible result stays valid until its inputs change or a notifier
 			// invalidates it, even after the shared cache's eviction/TTL.
@@ -363,6 +394,7 @@ Zotero.zoteropreview = {
 		catch (error) {
 			if (state.destroyed || generation !== state.generation || !this.initialized) return;
 			state.payload = null;
+			state.failed = true;
 			this.log(error.stack || error);
 			const messages = {
 				'no-style': ['zotero-preview-no-style', 'Choose a bibliography style in ViewFlow or Zotero Quick Copy settings.'],
@@ -372,6 +404,10 @@ Zotero.zoteropreview = {
 			const [id, fallback] = messages[error.previewCode] || ['zotero-preview-unavailable', 'Preview unavailable. Check the selected citation style and retry.'];
 			this._message(state, id, fallback, true);
 		}
+	},
+	_previewKey(items, config) {
+		return JSON.stringify([items.map(item => [item.id, item.getField('dateModified')]),
+			config.format, config.show, Zotero.Styles?.get(config.format.id)?.updated || '']);
 	},
 	_generate(items, { format, show }) {
 		const payload = {};
@@ -464,6 +500,20 @@ Zotero.zoteropreview = {
 		const ids = this._items(state).map(item => item.id);
 		if (state.destroyed || !this.initialized || !ids.length || ids.length !== state.ids.length || ids.some((id, index) => id !== state.ids[index])) {
 			state.payload = null;
+			this._cancelRender(state);
+			this._scheduleRefresh(state);
+			return false;
+		}
+		// A save or preference change can precede delivery of its observer.
+		// Fail closed rather than copying a result whose inputs have changed.
+		try {
+			const config = this._config(state.item);
+			const items = this._items(state).slice(0, Math.floor(config.limit));
+			if (this._previewKey(items, config) !== state.key || config.asHTML !== state.config.asHTML) throw new Error('Preview inputs changed');
+		}
+		catch (error) {
+			state.payload = null;
+			this._cancelRender(state);
 			this._scheduleRefresh(state);
 			return false;
 		}
@@ -516,15 +566,24 @@ Zotero.zoteropreview = {
 		}
 	},
 	_scheduleRefresh(state) {
-		if (state.destroyed || state.refreshTimer !== null) return;
+		if (!this.initialized || state.destroyed || state.failed || state.refreshTimer !== null) return;
+		if (state.refreshTask) { state.refreshAgain = true; return; }
 		state.refreshTimer = setTimeout(() => {
 			state.refreshTimer = null;
 			if (!this.initialized || state.destroyed) return;
 			// Dirty hidden/collapsed sections render when next opened.
 			if (!state.body.getClientRects().length || state.body.closest('collapsible-section')?.open === false) return;
-			Promise.resolve().then(() => {
+			const task = Promise.resolve().then(() => {
 				if (this.initialized && !state.destroyed) return state.refresh();
-			}).catch(error => this.log(error));
+			}).catch(error => this.log(error)).finally(() => {
+				if (state.refreshTask !== task) return;
+				state.refreshTask = null;
+				if (state.refreshAgain) {
+					state.refreshAgain = false;
+					this._scheduleRefresh(state);
+				}
+			});
+			state.refreshTask = task;
 		}, 80);
 	},
 	_queueAllPreviews() {
@@ -541,6 +600,8 @@ Zotero.zoteropreview = {
 		const state = this._states.get(body);
 		if (!state) return;
 		state.destroyed = true; this._cancelRender(state);
+		state.refreshAgain = false;
+		state.refreshTask = null;
 		this._cleanup(() => state.widthObserver?.disconnect());
 		const positionEntry = this._positionObservers.get(state.positionOwner);
 		if (positionEntry && --positionEntry.count === 0) {
