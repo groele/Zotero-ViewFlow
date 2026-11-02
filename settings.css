@@ -1,4 +1,11 @@
-/* Pane-scoped MetaFlow preferences visual language. */
+/* Zotero ViewFlow - Standardized Preferences Visual Language
+   Aligned with Workspace AGENTS.md 4.2 Standard (2026-11-02 Unified Baseline):
+   - Container Base: Card Outer Border x=0, padding-inline: 16px
+   - Level 1: Card Heading summary margin: -16px; padding: 12px 16px;
+   - Level 2: Primary Control Icon at 16px, Label text at 40px (16px icon + 8px gap)
+   - Level 3: Subordinate Description & Inputs indented at 24px (aligned with 40px Golden Line)
+*/
+
 #zotero-prefpane-zotero-preview.viewflow-settings {
   --flow-pref-text: var(--fill-primary, light-dark(#262626, #eeeeee));
   --flow-pref-muted: light-dark(#555555, #cccccc);
@@ -12,7 +19,7 @@
   width: min(100%, 780px);
   min-width: 0;
   margin-inline: auto;
-  padding: 10px 14px 28px;
+  padding: 12px 16px 28px;
   color: var(--flow-pref-text);
   font-family: system-ui, 'Microsoft YaHei UI', 'Microsoft YaHei', sans-serif;
   font-size: 14px;
@@ -27,23 +34,23 @@
 }
 
 #zotero-prefpane-zotero-preview .viewflow-settings-header {
-  margin: 0 0 12px;
-  padding: 2px 2px 10px;
-  border-bottom: 1px solid var(--flow-pref-border);
+  margin: 0 0 14px;
+  padding: 0 0 10px;
+  border-bottom: 1px solid var(--flow-pref-divider);
 }
 
 #zotero-prefpane-zotero-preview .viewflow-settings-title-row {
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
-  gap: 7px;
+  gap: 8px;
 }
 
 #zotero-prefpane-zotero-preview .viewflow-settings-header h1 {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  line-height: 1.5;
+  line-height: 1.45;
 }
 
 #zotero-prefpane-zotero-preview .viewflow-version-badge {
@@ -66,30 +73,38 @@
   line-height: 1.6;
 }
 
+/* Card Container: Base x=0, horizontal padding-inline: 16px */
 #zotero-prefpane-zotero-preview .viewflow-settings-card {
   box-sizing: border-box;
   display: block;
   min-width: 0;
-  margin-block: 0 10px;
+  margin-block: 0 12px;
+  padding: 16px;
   border: 1px solid var(--flow-pref-border);
   border-radius: 9px;
   background: var(--flow-pref-surface);
 }
 
+#zotero-prefpane-zotero-preview .viewflow-settings-card:last-of-type {
+  margin-bottom: 0;
+}
+
+/* Level 1: Full-width Header with 16px padding */
 #zotero-prefpane-zotero-preview .viewflow-settings-card > summary {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 11px 13px;
+  margin: -16px;
+  padding: 12px 16px;
   color: var(--flow-pref-text);
   cursor: pointer;
   font-size: 14px;
   font-weight: 600;
-  line-height: 1.6;
+  line-height: 1.5;
   list-style: none;
+  user-select: none;
 }
-#zotero-prefpane-zotero-preview .viewflow-settings-card:last-of-type { margin-bottom: 0; }
 
 #zotero-prefpane-zotero-preview .viewflow-settings-card > summary::-webkit-details-marker {
   display: none;
@@ -105,6 +120,8 @@
   font-size: 18px;
   font-weight: 400;
   line-height: 1;
+  transform: rotate(0);
+  transition: transform 120ms ease;
 }
 
 #zotero-prefpane-zotero-preview .viewflow-settings-card[open] > summary::after {
@@ -118,26 +135,33 @@
 #zotero-prefpane-zotero-preview .viewflow-settings-card > summary:focus-visible {
   outline: 2px solid var(--flow-pref-accent);
   outline-offset: -2px;
+  border-radius: 8px;
 }
 
+#zotero-prefpane-zotero-preview .viewflow-settings-card[open] > summary {
+  border-bottom: 1px solid var(--flow-pref-divider);
+}
+
+/* Card Content: Starts at Content Line (x=16px inside card) */
 #zotero-prefpane-zotero-preview .viewflow-settings-card-content {
   min-width: 0;
   margin: 0;
-  padding: 4px 13px 10px;
-  border-top: 1px solid var(--flow-pref-divider);
+  padding-top: 14px;
 }
 
+/* Level 1 Intro / Level 2 Sub-description */
 #zotero-prefpane-zotero-preview .viewflow-settings-description {
-  margin: 6px 0 8px;
+  margin: 0 0 10px;
   color: var(--flow-pref-muted);
   font-size: 13px;
   line-height: 1.6;
 }
 
+/* Level 2: Primary Radio Group & Options */
 #zotero-prefpane-zotero-preview .viewflow-settings-card radiogroup {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   min-width: 0;
 }
 
@@ -166,6 +190,7 @@
   appearance: auto;
   width: 16px;
   height: 16px;
+  margin: 0 8px 0 0;
   accent-color: var(--flow-pref-accent);
 }
 
@@ -203,12 +228,14 @@
   font-size: 14px;
 }
 
+/* Level 3: Layout Settings Grid - 24px Indent to Align with 40px Line */
 #zotero-prefpane-zotero-preview .viewflow-settings-fields {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px 14px;
+  gap: 8px 16px;
   min-width: 0;
   margin-top: 8px;
+  margin-inline-start: 24px;
 }
 
 #zotero-prefpane-zotero-preview .viewflow-settings-field {
@@ -223,6 +250,8 @@
 
 #zotero-prefpane-zotero-preview .viewflow-settings-field label {
   min-width: 0;
+  font-size: 13px;
+  color: var(--flow-pref-text);
   overflow-wrap: anywhere;
 }
 
@@ -232,11 +261,12 @@
   text-align: end;
 }
 
+/* Release Info Card: 16px padding */
 #zotero-prefpane-zotero-preview .viewflow-release-info {
   display: grid;
   gap: 0;
   margin-top: 14px;
-  padding: 10px 13px;
+  padding: 16px;
   border: 1px solid var(--flow-pref-border);
   border-radius: 9px;
   background: var(--flow-pref-surface);
@@ -257,7 +287,7 @@
 }
 
 #zotero-prefpane-zotero-preview .viewflow-release-title {
-  margin-bottom: 4px;
+  margin-bottom: 6px;
   color: var(--flow-pref-text);
   font-size: 14px;
   font-weight: 600;
@@ -292,16 +322,10 @@
   #zotero-prefpane-zotero-preview .viewflow-settings-fields {
     grid-template-columns: minmax(0, 1fr);
     gap: 4px;
+    margin-inline-start: 0;
   }
 
   #zotero-prefpane-zotero-preview .viewflow-settings-field {
     grid-template-columns: minmax(0, 1fr) 5.5em;
-  }
-
-}
-
-@media (max-width: 560px) {
-  #zotero-prefpane-zotero-preview.viewflow-settings {
-    padding: 10px 14px 28px;
   }
 }
