@@ -1,2 +1,3 @@
-# Local build outputs; historical tracked installers are retained.
 /dist/*.xpi
+node_modules/
+

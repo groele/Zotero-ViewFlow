@@ -16,8 +16,8 @@ test('manifest keeps an unpublished local candidate separate from the maintained
  assert.match(manifest.version,/^\d+\.\d+\.\d+$/);
  assert.equal(manifest.name,'Zotero ViewFlow');
  assert.equal(manifest.applications.zotero.id,'zotero-viewflow@groele');
- assert.equal(manifest.applications.zotero.strict_min_version,'8.0');
- assert.equal(manifest.applications.zotero.strict_max_version,'11.0.*');
+ assert.equal(manifest.applications.zotero.strict_min_version,'10.0');
+ assert.equal(manifest.applications.zotero.strict_max_version,'12.*');
  assert.deepEqual(manifest.icons,{'32':'view.svg','64':'view.svg'});
  assert.ok(fs.existsSync(path.join(root,'view.svg')));
  assert.ok(!feed.addons['zoteropreview@carter-tod.com']);

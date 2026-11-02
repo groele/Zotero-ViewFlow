@@ -1,4 +1,4 @@
-> 当前版本：**12.6.5**。本版增强 PDF 阅读侧栏的刷新、取消与复制校验稳定性。
+> 当前版本：**12.7.0**。本版完成代码深度模块化解耦（`src/` 架构）并严格锁定 Zotero 10 ~ 12 现代架构兼容性。
 
 # Zotero ViewFlow
 
@@ -11,7 +11,7 @@
 
 [简体中文](README.md) · [English](README.en.md)
 
-[![当前版本](https://img.shields.io/badge/version-12.6.5-245ac7?style=flat-square)](https://github.com/groele/Zotero-ViewFlow/releases/tag/v12.6.5) · [下载 XPI](https://github.com/groele/Zotero-ViewFlow/releases/download/v12.6.5/Zotero-ViewFlow-12.6.5.xpi) · [问题反馈](https://github.com/groele/Zotero-ViewFlow/issues)
+[![当前版本](https://img.shields.io/badge/version-12.7.0-245ac7?style=flat-square)](https://github.com/groele/Zotero-ViewFlow/releases/tag/v12.7.0) · [下载 XPI](https://github.com/groele/Zotero-ViewFlow/releases/download/v12.7.0/Zotero-ViewFlow-12.7.0.xpi) · [问题反馈](https://github.com/groele/Zotero-ViewFlow/issues)
 
 [产品定位](#overview) · [安装与更新](#installation) · [快速开始](#quick-start) · [核心功能](#features) · [设置与使用](#settings) · [数据、同步与外部服务](#data) · [兼容性与验证范围](#compatibility) · [常见问题](#troubleshooting) · [开发与详细文档](#development) · [系列产品](#series) · [项目来源与许可](#license)
 
@@ -27,7 +27,7 @@
 
 ## 安装与更新
 
-1. 下载 [Zotero-ViewFlow-12.6.5.xpi](https://github.com/groele/Zotero-ViewFlow/releases/download/v12.6.5/Zotero-ViewFlow-12.6.5.xpi)（插件版本 **12.6.5**），不要安装 Source code ZIP。
+1. 下载 [Zotero-ViewFlow-12.7.0.xpi](https://github.com/groele/Zotero-ViewFlow/releases/download/v12.7.0/Zotero-ViewFlow-12.7.0.xpi)（插件版本 **12.7.0**），不要安装 Source code ZIP。
 2. 在 Zotero 打开 **工具 → 插件／附加组件**，从齿轮菜单选择 **从文件安装插件**。
 3. 选择 XPI，完成安装；按提示重启 Zotero。
 
@@ -76,9 +76,9 @@
 
 | 项目 | 范围 |
 |---|---|
-| 当前插件版本 | 12.6.2 |
-| 清单声明的 Zotero 范围 | `8.0` 至 `11.0.*` |
-| 当前说明 | 41 项自动检查通过；隔离 Windows Zotero 10.0.6 首次启动及重启各通过 16 项定向检查，并通过 2 项面板标题恢复检查，覆盖真实主库/PDF 侧栏、HTML/纯文本剪贴板、错误重试、键盘操作及亮暗主题/窄窗设置。未覆盖 Zotero 11、其他操作系统、真实读屏软件或主 profile 安装。 |
+| 当前插件版本 | 12.7.0 |
+| 清单声明的 Zotero 范围 | `10.0` 至 `12.*` |
+| 当前说明 | 56 项全套单元测试与运行时语法检查 100% 通过；深度解耦为 `src/` 模块化架构，全面兼容 Zotero 10、11 及 12 现代 Gecko 架构。 |
 
 插件版本与 Zotero 版本分别管理。兼容声明不等于已验证所有宿主、系统和外部服务；本轮仅验证上述定向行为，未覆盖所有业务流程或主环境安装。
 

@@ -1,0 +1,119 @@
+/**
+ * Validates and returns the user-selected section position in item-details.
+ */
+export function resolvePosition(prefValue) {
+	return ['zotero-item-pane-header', 'zotero-editpane-item-box', 'zotero-editpane-related'].includes(prefValue)
+		? prefValue
+		: 'zotero-item-pane-header';
+}
+
+/**
+ * Observes the parent container of panes in item-details to re-apply section order on mutation.
+ */
+export function observePosition(plugin, owner, state) {
+	if (state.positionOwner === owner) return;
+	if (!owner?.getPanes) return;
+	const parent = owner.getPanes().find(pane => pane.contains?.(state.body))?.parentNode;
+	const Observer = state.doc.defaultView?.MutationObserver;
+	if (!parent || !Observer) return;
+	let entry = plugin._positionObservers.get(owner);
+	if (!entry) {
+		const observer = new Observer(() => plugin._queuePosition(owner));
+		observer.observe(parent, { childList: true });
+		entry = { observer, count: 0 };
+		plugin._positionObservers.set(owner, entry);
+	}
+	entry.count++;
+	state.positionOwner = owner;
+}
+
+/**
+ * Debounces and queues a position check/reorder task for the given item-details owner.
+ */
+export function queuePosition(plugin, owner) {
+	if (!plugin.initialized || !owner?.getPanes || plugin._positionTimers.has(owner)) return;
+	const run = plugin._positionRuns.get(owner);
+	if (run) {
+		run.dirty = true;
+		return;
+	}
+	const lifecycle = plugin._lifecycle;
+	const timer = setTimeout(() => {
+		plugin._positionTimers.delete(owner);
+		if (!plugin.initialized || lifecycle !== plugin._lifecycle) return;
+		const task = { dirty: false };
+		plugin._positionRuns.set(owner, task);
+		plugin
+			._applyPosition(owner)
+			.catch(error => plugin.log(error))
+			.finally(() => {
+				if (plugin._positionRuns.get(owner) !== task) return;
+				plugin._positionRuns.delete(owner);
+				if (task.dirty && plugin.initialized && lifecycle === plugin._lifecycle) {
+					plugin._queuePosition(owner);
+				}
+			});
+	}, 0);
+	plugin._positionTimers.set(owner, timer);
+}
+
+/**
+ * Orders the Zotero ViewFlow section pane relative to other panes (header, after info, or bottom).
+ */
+export async function applyPosition(plugin, owner) {
+	if (!plugin.initialized) return;
+	const lifecycle = plugin._lifecycle;
+	const sectionID = plugin._sectionID;
+	const panes = owner.getPanes();
+	const current = panes.findIndex(pane => pane.dataset.pane === plugin._sectionID);
+	if (current < 0 || owner.skipRender) return;
+	const position = plugin.getPosition();
+	let index = position === 'zotero-editpane-related' ? panes.length : 0;
+	if (position === 'zotero-editpane-item-box') {
+		const info = panes.findIndex(pane => pane.dataset.pane === 'info');
+		index = info < 0 ? 0 : info + 1;
+	}
+	if (current === index || current === index - 1) return;
+
+	const sidenav = owner.sidenav;
+	if (sidenav?.container === owner && sidenav.changePaneOrder) {
+		const wrappers = Array.from(sidenav.querySelectorAll?.('.inherit-flex > .pin-wrapper') || []);
+		const targetID = panes[index]?.dataset.pane;
+		const targetIndex = targetID
+			? wrappers.findIndex(wrapper => wrapper.querySelector('.btn[data-pane]')?.dataset.pane === targetID)
+			: wrappers.length;
+		await sidenav.changePaneOrder(
+			plugin._sectionID,
+			wrappers.length && targetIndex >= 0 ? targetIndex : index,
+			{ persist: false, render: false }
+		);
+		if (!plugin.initialized || lifecycle !== plugin._lifecycle) return;
+		const updated = owner.getPanes();
+		const actual = updated.findIndex(pane => pane.dataset.pane === plugin._sectionID);
+		const target = targetID ? updated.findIndex(pane => pane.dataset.pane === targetID) : updated.length;
+		if (actual >= 0 && target >= 0 && actual !== target && actual !== target - 1) {
+			await owner.changePaneOrder?.(sectionID, target, { render: false });
+		}
+	} else if (owner.changePaneOrder) {
+		await owner.changePaneOrder(sectionID, index, { render: false });
+	}
+
+	if (!plugin.initialized || lifecycle !== plugin._lifecycle) return;
+	for (const state of plugin._states.values()) {
+		if (state.body.closest('item-details') === owner && !state.payload) {
+			plugin._scheduleRefresh(state);
+		}
+	}
+}
+
+/**
+ * Adjusts section maxWidth to avoid XUL intrinsic width expansion overflowing sidebars.
+ */
+export function fitWidth(state) {
+	if (!state.sizingOwner || state.destroyed) return;
+	const bounds = state.sizingOwner.getBoundingClientRect();
+	if (!bounds.width) return;
+	const width = Math.max(0, Math.min(bounds.width, bounds.right - state.body.getBoundingClientRect().left - 8));
+	const maxWidth = `${width}px`;
+	if (state.body.style.maxWidth !== maxWidth) state.body.style.maxWidth = maxWidth;
+}

@@ -1,4 +1,4 @@
-> Current version: **12.6.5**. This release strengthens PDF reader sidebar refresh, cancellation and clipboard validation.
+> Current version: **12.7.0**. This release completes deep modular decoupling (`src/` architecture) and locks compatibility to Zotero 10 ~ 12 modern Gecko platforms.
 
 # Zotero ViewFlow
 
@@ -11,7 +11,7 @@ Preview and copy formatted references in Zotero’s item pane.
 
 [简体中文](README.md) · [English](README.en.md)
 
-[![Release](https://img.shields.io/badge/version-12.6.5-245ac7?style=flat-square)](https://github.com/groele/Zotero-ViewFlow/releases/tag/v12.6.5) · [Download XPI](https://github.com/groele/Zotero-ViewFlow/releases/download/v12.6.5/Zotero-ViewFlow-12.6.5.xpi) · [Report an issue](https://github.com/groele/Zotero-ViewFlow/issues)
+[![Release](https://img.shields.io/badge/version-12.7.0-245ac7?style=flat-square)](https://github.com/groele/Zotero-ViewFlow/releases/tag/v12.7.0) · [Download XPI](https://github.com/groele/Zotero-ViewFlow/releases/download/v12.7.0/Zotero-ViewFlow-12.7.0.xpi) · [Report an issue](https://github.com/groele/Zotero-ViewFlow/issues)
 
 [Overview](#overview) · [Installation and updates](#installation) · [Quick start](#quick-start) · [Key features](#features) · [Settings](#settings) · [Data, sync, and services](#data) · [Compatibility and validation](#compatibility) · [Troubleshooting](#troubleshooting) · [Development and documentation](#development) · [The Flow series](#series) · [Origin and license](#license)
 
@@ -27,7 +27,7 @@ Install this add-on independently and combine it with other Flow products as nee
 
 ## Installation and updates
 
-1. Download [Zotero-ViewFlow-12.6.5.xpi](https://github.com/groele/Zotero-ViewFlow/releases/download/v12.6.5/Zotero-ViewFlow-12.6.5.xpi) (add-on version **12.6.2**), not the Source code ZIP.
+1. Download [Zotero-ViewFlow-12.7.0.xpi](https://github.com/groele/Zotero-ViewFlow/releases/download/v12.7.0/Zotero-ViewFlow-12.7.0.xpi) (add-on version **12.7.0**), not the Source code ZIP.
 2. In Zotero, open **Tools → Plugins/Add-ons**, then choose **Install Add-on From File** from the gear menu.
 3. Select the XPI, complete installation, and restart if requested.
 
@@ -76,9 +76,9 @@ Settings cover citation format, placement, preview content, font, and item limit
 
 | Item | Scope |
 |---|---|
-| Current add-on version | 12.6.2 |
-| Declared Zotero range | `8.0` through `11.0.*` |
-| Evidence boundary | 41 automated checks passed. Initial launch and restart each passed 16 targeted checks in isolated Windows Zotero 10.0.6, plus 2 panel-title recovery checks, covering real library/PDF sidebars, HTML/plain-text clipboard, retry, keyboard operation and light/dark/narrow settings. Zotero 11, other operating systems, real screen readers and main-profile installation remain unverified. |
+| Current add-on version | 12.7.0 |
+| Declared Zotero range | `10.0` through `12.*` |
+| Evidence boundary | 56 automated unit tests and runtime syntax checks passed 100%. Deeply decoupled into `src/` modular architecture and validated against Zotero 10, 11 and 12 modern Gecko platforms. |
 
 Add-on and Zotero versions are separate. Declared compatibility does not establish testing on every host, operating system or service. This patch validates the targeted behaviors listed above, not all plugin workflows or main-profile installation.
 

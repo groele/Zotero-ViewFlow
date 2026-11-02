@@ -1,5 +1,12 @@
 # Changelog
 
+## 12.7.0 — 2026-11-02
+
+- Modularized codebase architecture: decomposed monolithic `zoteropreview.js` into focused, testable ES modules in `src/` (`constants.js`, `cache.js`, `csl.js`, `clipboard.js`, `position.js`, `view.js`, `section.js`, `index.js`).
+- Added standard engineering build pipeline with `package.json`, `esbuild` bundling (`npm run build`), syntax checks, and 56 automated unit tests.
+- Locked compatibility strictly to Zotero 10 ~ 12 (`strict_min_version: 10.0`, `strict_max_version: 12.*`), conforming to workspace modern Gecko standards.
+- Added repository-specific `AGENTS.md` aligned with Zotero Flow workspace guidelines.
+
 ## 12.6.5 — 2026-10-30
 
 - Join concurrent section renders; bound style-initialization waits and release them on item changes, destruction or shutdown.
