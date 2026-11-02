@@ -105,7 +105,7 @@ pwsh -NoProfile -File ./build.ps1
 
 - [验证记录 / Validation](VALIDATION.md)
 - [历史记录 / Changelog](CHANGELOG.md)
-- [版本说明 / Release notes](docs/releases/v12.6.1.md)
+- [版本说明 / Release notes](docs/releases/v12.6.2.md)
 - [产品简介 / Product profile](docs/brand/PRODUCT.md)
 - [品牌规范 / Brand guide](docs/brand/BRAND.md)
 - [README 模板 / README template](docs/brand/README-TEMPLATE.md)
