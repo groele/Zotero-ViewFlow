@@ -1,5 +1,17 @@
 # Changelog
 
+## 13.1.0 — 2026-11-03
+
+- Modular Settings Architecture: refactored settings panel into cohesive, top-down business flow cards: Citation & Content, Layout & Appearance, Interaction & Diagnostics, and Release Information.
+- Standard Mathematical Alignment: strictly aligned settings containers and controls to Workspace AGENTS.md 4.2 Standard (Level 1 16px padding, Level 2 40px golden baseline line, Level 3 24px indent).
+- Diagnostic Controls: added user-facing debug logging toggle (`extensions.zoteropreview.debug`) and one-click manual cache purge and preview refresh action button.
+- Comprehensive Localization Sync: updated Fluent resources across all 5 locales (`zh-CN`, `en-US`, `en-GB`, `es-ES`, `fr-FR`) with synchronized release links, notes, and new settings labels.
+- Robust Lifecycle Cleanup: preference handlers ensure null-safe element binding, automatic style cache wait guard, and clean listener release.
+
+## 13.0.1 — 2026-11-02
+
+- Settings Grid Alignment: aligned settings.css with section 4.2 hierarchy grid baseline.
+
 ## 13.0.0 — 2026-11-02
 
 - Major Architecture Overhaul: fully modularized codebase, decomposing monolithic `zoteropreview.js` into focused, testable ES modules under `src/` (`constants.js`, `cache.js`, `csl.js`, `clipboard.js`, `position.js`, `view.js`, `section.js`, `index.js`).

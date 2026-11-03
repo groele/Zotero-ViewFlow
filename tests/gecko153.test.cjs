@@ -18,7 +18,8 @@ test('preferences wait for style loading, initialize once, and clean up captured
  const win = target('window');
  const preview = { initialized: true, _prefPrefix: 'extensions.zoteropreview.',
   _prefPaneCleanups: new Set(), pref: name => values.get(name), getPosition: () => 'zotero-item-pane-header',
-  setPref: (key, value) => values.set(key.replace('extensions.zoteropreview.', ''), value) };
+  setPref: (key, value) => values.set(key.replace('extensions.zoteropreview.', ''), value),
+  _queueAllPreviews: () => { values.set('refreshed', true); } };
  let resolveStyles, stylesLoaded = false;
  const stylesReady = new Promise(resolve => { resolveStyles = resolve; });
  const context = vm.createContext({ document: doc, window: win,
@@ -33,7 +34,8 @@ test('preferences wait for style loading, initialize once, and clean up captured
  assert.equal(handlers.get('document:load').capture, true);
  for (const id of ['zotero-prefpane-zotero-preview', 'popup', 'zotero-preview-style-menulist',
   'extensions-zoteropreview-position', 'extensions-zoteropreview-whatToShow',
-  'zotero-preview-fontsize', 'zotero-preview-spacing', 'zotero-preview-max-items']) nodes.set(id, target(id));
+  'zotero-preview-fontsize', 'zotero-preview-spacing', 'zotero-preview-max-items',
+  'extensions-zoteropreview-debug', 'zotero-preview-clear-cache-btn']) nodes.set(id, target(id));
  const load = handlers.get('document:load').fn;
  load({target:{id:'other-plugin'}}); assert.equal(handlers.size, 3);
  load({target:nodes.get('zotero-prefpane-zotero-preview')});
@@ -49,6 +51,10 @@ test('preferences wait for style loading, initialize once, and clean up captured
  load({target:nodes.get('zotero-prefpane-zotero-preview')}); assert.equal(handlers.size, count);
  const menu = nodes.get('zotero-preview-style-menulist'); menu.value = 'new-style';
  handlers.get(`${menu.id}:command`).fn(); assert.equal(values.get('citationstyle'), 'new-style');
+ const debug = nodes.get('extensions-zoteropreview-debug'); debug.checked = true;
+ handlers.get(`${debug.id}:command`).fn(); assert.equal(values.get('debug'), true);
+ const clearBtn = nodes.get('zotero-preview-clear-cache-btn');
+ handlers.get(`${clearBtn.id}:command`).fn(); assert.equal(values.get('refreshed'), true);
  handlers.get('document:unload').fn({target:nodes.get('zotero-prefpane-zotero-preview')});
  assert.equal(handlers.size, 0); assert.equal(preview._prefPaneCleanups.size, 0);
 });

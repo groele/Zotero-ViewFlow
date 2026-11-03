@@ -7,68 +7,103 @@
     <html:header class="viewflow-settings-header">
         <html:div class="viewflow-settings-title-row">
             <html:h1 data-l10n-id="zotero-preview-settings-heading"></html:h1>
-            <html:span class="viewflow-version-badge">v13.0.1</html:span>
+            <html:span class="viewflow-version-badge">v13.1.0</html:span>
         </html:div>
         <html:p data-l10n-id="zotero-preview-settings-intro"></html:p>
     </html:header>
 
+    <!-- 卡片 1：引用格式与预览内容 (默认展开) -->
     <html:details class="viewflow-settings-card" open="open">
-        <html:summary><html:span id="viewflow-style-heading" data-l10n-id="zotero-preview-settings-style-heading"></html:span></html:summary>
+        <html:summary>
+            <html:span id="viewflow-card-content-heading" data-l10n-id="zotero-preview-card-content-heading"></html:span>
+        </html:summary>
         <html:div class="viewflow-settings-card-content">
-            <html:p class="viewflow-settings-description" data-l10n-id="zotero-preview-settings-style-description"></html:p>
-            <menulist id="zotero-preview-style-menulist" native="true"
-                preference="extensions.zoteropreview.citationstyle"
-                aria-labelledby="viewflow-style-heading">
-                <menupopup></menupopup>
-            </menulist>
-        </html:div>
-    </html:details>
-
-    <html:details class="viewflow-settings-card">
-        <html:summary><html:span data-l10n-id="zotero-preview-settings-position"></html:span></html:summary>
-        <html:div class="viewflow-settings-card-content">
-            <html:p class="viewflow-settings-description" data-l10n-id="zotero-preview-settings-position-description"></html:p>
-            <radiogroup native="true" id="extensions-zoteropreview-position" preference="extensions.zoteropreview.position">
-                <radio id="extensions-zoteropreview-position-top" value="zotero-item-pane-header" data-l10n-id="zotero-preview-settings-position-top"/>
-                <radio id="extensions-zoteropreview-position-afterInfo" value="zotero-editpane-item-box" data-l10n-id="zotero-preview-settings-position-afterinfo"/>
-                <radio id="extensions-zoteropreview-position-bottom" value="zotero-editpane-related" data-l10n-id="zotero-preview-settings-position-bottom"/>
-            </radiogroup>
-        </html:div>
-    </html:details>
-
-    <html:details class="viewflow-settings-card">
-        <html:summary><html:span data-l10n-id="zotero-preview-settings-display"></html:span></html:summary>
-        <html:div class="viewflow-settings-card-content">
-            <html:p class="viewflow-settings-description" data-l10n-id="zotero-preview-settings-display-description"></html:p>
-            <radiogroup native="true" id="extensions-zoteropreview-whatToShow" preference="extensions.zoteropreview.whatToShow">
-                <radio id="extensions-zoteropreview-whatToShow-both" value="zpboth" data-l10n-id="zotero-preview-settings-whatToShow-both"/>
-                <radio id="extensions-zoteropreview-whatToShow-bib" value="zpbib" data-l10n-id="zotero-preview-settings-whatToShow-bib"/>
-                <radio id="extensions-zoteropreview-whatToShow-intext" value="zpintext" data-l10n-id="zotero-preview-settings-whatToShow-intext"/>
-            </radiogroup>
-        </html:div>
-    </html:details>
-
-    <html:details class="viewflow-settings-card">
-        <html:summary><html:span data-l10n-id="zotero-preview-settings-display-space"></html:span></html:summary>
-        <html:div class="viewflow-settings-card-content">
-            <html:p class="viewflow-settings-description" data-l10n-id="zotero-preview-settings-layout-description"></html:p>
-            <html:div class="viewflow-settings-fields">
-                <html:div class="viewflow-settings-field">
-                    <label id="viewflow-fontsize-label" data-l10n-id="zotero-preview-settings-display-fontsize" control="zotero-preview-fontsize"></label>
-                    <html:input class="html-input" id="zotero-preview-fontsize" type="number" min="0.2" max="3" step="0.1" size="4" data-preference="extensions.zoteropreview.fontsize" aria-labelledby="viewflow-fontsize-label"/>
+            <html:div class="viewflow-subgroup">
+                <label class="viewflow-subgroup-title" id="viewflow-style-heading" data-l10n-id="zotero-preview-settings-style-heading"></label>
+                <description class="viewflow-settings-description" data-l10n-id="zotero-preview-settings-style-description"></description>
+                <html:div class="viewflow-level3-indent">
+                    <menulist id="zotero-preview-style-menulist" native="true"
+                        preference="extensions.zoteropreview.citationstyle"
+                        aria-labelledby="viewflow-style-heading">
+                        <menupopup></menupopup>
+                    </menulist>
                 </html:div>
-                <html:div class="viewflow-settings-field">
-                    <label id="viewflow-spacing-label" data-l10n-id="zotero-preview-settings-display-linespacing" control="zotero-preview-spacing"></label>
-                    <html:input class="html-input" id="zotero-preview-spacing" type="number" min="1" max="3" step="0.1" size="4" data-preference="extensions.zoteropreview.spacing" aria-labelledby="viewflow-spacing-label"/>
-                </html:div>
-                <html:div class="viewflow-settings-field">
-                    <label id="viewflow-max-items-label" data-l10n-id="zotero-preview-settings-display-max-items" control="zotero-preview-max-items"></label>
-                    <html:input class="html-input" id="zotero-preview-max-items" type="number" min="1" max="500" step="1" size="4" data-preference="extensions.zoteropreview.maxPreviewItems" aria-labelledby="viewflow-max-items-label"/>
+            </html:div>
+
+            <html:div class="viewflow-subgroup">
+                <label class="viewflow-subgroup-title" data-l10n-id="zotero-preview-settings-display"></label>
+                <description class="viewflow-settings-description" data-l10n-id="zotero-preview-settings-display-description"></description>
+                <radiogroup native="true" id="extensions-zoteropreview-whatToShow" preference="extensions.zoteropreview.whatToShow">
+                    <radio id="extensions-zoteropreview-whatToShow-both" value="zpboth" data-l10n-id="zotero-preview-settings-whatToShow-both"/>
+                    <radio id="extensions-zoteropreview-whatToShow-bib" value="zpbib" data-l10n-id="zotero-preview-settings-whatToShow-bib"/>
+                    <radio id="extensions-zoteropreview-whatToShow-intext" value="zpintext" data-l10n-id="zotero-preview-settings-whatToShow-intext"/>
+                </radiogroup>
+            </html:div>
+        </html:div>
+    </html:details>
+
+    <!-- 卡片 2：界面位置与版式排版 (默认折叠) -->
+    <html:details class="viewflow-settings-card">
+        <html:summary>
+            <html:span data-l10n-id="zotero-preview-card-layout-heading"></html:span>
+        </html:summary>
+        <html:div class="viewflow-settings-card-content">
+            <html:div class="viewflow-subgroup">
+                <label class="viewflow-subgroup-title" data-l10n-id="zotero-preview-settings-position"></label>
+                <description class="viewflow-settings-description" data-l10n-id="zotero-preview-settings-position-description"></description>
+                <radiogroup native="true" id="extensions-zoteropreview-position" preference="extensions.zoteropreview.position">
+                    <radio id="extensions-zoteropreview-position-top" value="zotero-item-pane-header" data-l10n-id="zotero-preview-settings-position-top"/>
+                    <radio id="extensions-zoteropreview-position-afterInfo" value="zotero-editpane-item-box" data-l10n-id="zotero-preview-settings-position-afterinfo"/>
+                    <radio id="extensions-zoteropreview-position-bottom" value="zotero-editpane-related" data-l10n-id="zotero-preview-settings-position-bottom"/>
+                </radiogroup>
+            </html:div>
+
+            <html:div class="viewflow-subgroup">
+                <label class="viewflow-subgroup-title" data-l10n-id="zotero-preview-settings-display-space"></label>
+                <description class="viewflow-settings-description" data-l10n-id="zotero-preview-settings-layout-description"></description>
+                <html:div class="viewflow-settings-fields">
+                    <html:div class="viewflow-settings-field">
+                        <label id="viewflow-fontsize-label" data-l10n-id="zotero-preview-settings-display-fontsize" control="zotero-preview-fontsize"></label>
+                        <html:input class="html-input" id="zotero-preview-fontsize" type="number" min="0.2" max="3" step="0.1" size="5" data-preference="extensions.zoteropreview.fontsize" aria-labelledby="viewflow-fontsize-label"/>
+                    </html:div>
+                    <html:div class="viewflow-settings-field">
+                        <label id="viewflow-spacing-label" data-l10n-id="zotero-preview-settings-display-linespacing" control="zotero-preview-spacing"></label>
+                        <html:input class="html-input" id="zotero-preview-spacing" type="number" min="1" max="3" step="0.1" size="5" data-preference="extensions.zoteropreview.spacing" aria-labelledby="viewflow-spacing-label"/>
+                    </html:div>
+                    <html:div class="viewflow-settings-field">
+                        <label id="viewflow-max-items-label" data-l10n-id="zotero-preview-settings-display-max-items" control="zotero-preview-max-items"></label>
+                        <html:input class="html-input" id="zotero-preview-max-items" type="number" min="1" max="500" step="1" size="5" data-preference="extensions.zoteropreview.maxPreviewItems" aria-labelledby="viewflow-max-items-label"/>
+                    </html:div>
                 </html:div>
             </html:div>
         </html:div>
     </html:details>
 
+    <!-- 卡片 3：交互与维护选项 (默认折叠) -->
+    <html:details class="viewflow-settings-card">
+        <html:summary>
+            <html:span data-l10n-id="zotero-preview-card-advanced-heading"></html:span>
+        </html:summary>
+        <html:div class="viewflow-settings-card-content">
+            <html:div class="viewflow-subgroup">
+                <checkbox id="extensions-zoteropreview-debug"
+                    preference="extensions.zoteropreview.debug"
+                    native="true"
+                    data-l10n-id="zotero-preview-settings-debug-label"/>
+                <description class="viewflow-settings-description viewflow-indented-desc" data-l10n-id="zotero-preview-settings-debug-description"></description>
+            </html:div>
+
+            <html:div class="viewflow-subgroup">
+                <label class="viewflow-subgroup-title" data-l10n-id="zotero-preview-settings-cache-heading"></label>
+                <description class="viewflow-settings-description" data-l10n-id="zotero-preview-settings-cache-description"></description>
+                <html:div class="viewflow-level3-indent">
+                    <button id="zotero-preview-clear-cache-btn" native="true" data-l10n-id="zotero-preview-settings-clear-cache-btn"></button>
+                </html:div>
+            </html:div>
+        </html:div>
+    </html:details>
+
+    <!-- 底部发行信息卡片 -->
     <html:section class="viewflow-release-info" aria-labelledby="viewflow-release-heading">
         <html:div id="viewflow-release-heading" class="viewflow-release-title" data-l10n-id="zotero-preview-release-heading"></html:div>
         <html:div class="viewflow-release-row">
@@ -77,11 +112,11 @@
         </html:div>
         <html:div class="viewflow-release-row">
             <html:span class="viewflow-release-label" data-l10n-id="zotero-preview-release-date"></html:span>
-            <html:time datetime="2026-11-02">2026-11-02</html:time>
+            <html:time datetime="2026-11-03">2026-11-03</html:time>
         </html:div>
         <html:div class="viewflow-release-row">
             <html:span class="viewflow-release-label" data-l10n-id="zotero-preview-release-download"></html:span>
-            <html:a href="https://github.com/groele/Zotero-ViewFlow/releases/download/v13.0.1/Zotero-ViewFlow-13.0.1.xpi" data-l10n-id="zotero-preview-release-download-link"></html:a>
+            <html:a href="https://github.com/groele/Zotero-ViewFlow/releases/download/v13.1.0/Zotero-ViewFlow-13.1.0.xpi" data-l10n-id="zotero-preview-release-download-link"></html:a>
         </html:div>
         <html:div class="viewflow-release-row">
             <html:span class="viewflow-release-label" data-l10n-id="zotero-preview-release-repository"></html:span>
