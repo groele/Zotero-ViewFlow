@@ -1,5 +1,10 @@
 # Changelog
 
+## 13.1.2 — 2026-11-04
+
+- Unified CacheManager Reuse: streamlined `src/section.js` render cycle to uniformly reuse `CacheManager.get()`, `put()`, and `clear()`, eliminating redundant manual Map queries and LRU reordering.
+- Aligned Update Hash to SHA-512: upgraded `scripts/build.ps1`, `tests/release.test.cjs`, and `zotero-viewflow-updates.json` to generate and enforce `sha512:` checksum format per workspace root specification Section 6.
+
 ## 13.1.1 — 2026-11-04
 
 - Safe QuickCopy Resolution: reinforced CSL format resolution against item types lacking URL fields, avoiding false-positive style errors.

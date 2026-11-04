@@ -72,5 +72,5 @@ zotero-preview-release-notes-label = Cambios
 zotero-preview-release-notes = Refuerza el ciclo de vida DOM en multiventana, asegura la resolución de formato QuickCopy y bloquea la compatibilidad con Zotero 10 ~ 12.
 zotero-preview-release-date = Fecha de compilación
 zotero-preview-release-download = Instalador
-zotero-preview-release-download-link = Descargar el instalador 13.1.1
+zotero-preview-release-download-link = Descargar el instalador 13.1.2
 zotero-preview-release-repository = Repositorio

@@ -1,4 +1,4 @@
-> 当前版本：**13.1.1**。加固多窗口与独立阅读器 DOM 自愈能力，优化 QuickCopy 字段安全解析与重排几何性能，严格锁定 Zotero 10 ~ 12 现代架构兼容性。
+> 当前版本：**13.1.2**。统一复用 CacheManager 缓存生命周期管理，更新发布源校验哈希对齐 sha512: 根规范，持续加固 Zotero 10 ~ 12 现代架构稳定性。
 
 # Zotero ViewFlow
 
@@ -11,7 +11,7 @@
 
 [简体中文](README.md) · [English](README.en.md)
 
-[![当前版本](https://img.shields.io/badge/version-13.1.1-245ac7?style=flat-square)](https://github.com/groele/Zotero-ViewFlow/releases/tag/v13.1.1) · [下载 XPI](https://github.com/groele/Zotero-ViewFlow/releases/download/v13.1.1/Zotero-ViewFlow-13.1.1.xpi) · [问题反馈](https://github.com/groele/Zotero-ViewFlow/issues)
+[![当前版本](https://img.shields.io/badge/version-13.1.2-245ac7?style=flat-square)](https://github.com/groele/Zotero-ViewFlow/releases/tag/v13.1.2) · [下载 XPI](https://github.com/groele/Zotero-ViewFlow/releases/download/v13.1.2/Zotero-ViewFlow-13.1.2.xpi) · [问题反馈](https://github.com/groele/Zotero-ViewFlow/issues)
 
 [产品定位](#overview) · [安装与更新](#installation) · [快速开始](#quick-start) · [核心功能](#features) · [设置与使用](#settings) · [数据、同步与外部服务](#data) · [兼容性与验证范围](#compatibility) · [常见问题](#troubleshooting) · [开发与详细文档](#development) · [系列产品](#series) · [项目来源与许可](#license)
 
@@ -27,7 +27,7 @@
 
 ## 安装与更新
 
-1. 下载 [Zotero-ViewFlow-13.1.1.xpi](https://github.com/groele/Zotero-ViewFlow/releases/download/v13.1.1/Zotero-ViewFlow-13.1.1.xpi)（插件版本 **13.1.1**），不要安装 Source code ZIP。
+1. 下载 [Zotero-ViewFlow-13.1.2.xpi](https://github.com/groele/Zotero-ViewFlow/releases/download/v13.1.2/Zotero-ViewFlow-13.1.2.xpi)（插件版本 **13.1.2**），不要安装 Source code ZIP。
 2. 在 Zotero 打开 **工具 → 插件／附加组件**，从齿轮菜单选择 **从文件安装插件**。
 3. 选择 XPI，完成安装；按提示重启 Zotero。
 
@@ -76,7 +76,7 @@
 
 | 项目 | 范围 |
 |---|---|
-| 当前插件版本 | 13.1.1 |
+| 当前插件版本 | 13.1.2 |
 | 清单声明的 Zotero 范围 | `10.0` 至 `12.*` |
 | 当前说明 | 61 项全套单元测试与运行时语法检查 100% 通过；深度解耦为 `src/` 模块化架构，全面兼容 Zotero 10、11 及 12 现代 Gecko 架构。 |
 
@@ -101,7 +101,7 @@ pwsh -NoProfile -File ./test.ps1
 pwsh -NoProfile -File ./build.ps1
 ```
 
-`node --test tests/*.test.cjs` 和 `test.ps1` 会在临时目录构建并校验当前版本的 XPI，无需预先存在 `dist` 安装包，也不会修改正式更新清单。校验已有发布包时使用 `pwsh -NoProfile -File ./test.ps1 -PackagePath <XPI路径>`。只有准备发布并需要更新安装包 SHA-256 时才使用 `pwsh -NoProfile -File ./build.ps1 -UpdateFeed`。
+`node --test tests/*.test.cjs` 和 `test.ps1` 会在临时目录构建并校验当前版本的 XPI，无需预先存在 `dist` 安装包，也不会修改正式更新清单。校验已有发布包时使用 `pwsh -NoProfile -File ./test.ps1 -PackagePath <XPI路径>`。只有准备发布并需要更新安装包 SHA-512 时才使用 `pwsh -NoProfile -File ./build.ps1 -UpdateFeed`。
 
 - [验证记录 / Validation](VALIDATION.md)
 - [历史记录 / Changelog](CHANGELOG.md)

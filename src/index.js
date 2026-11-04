@@ -260,12 +260,20 @@ export const preview = {
 		return generateCSL(items, config, (c, m) => this._previewError(c, m));
 	},
 
+	_cacheGet(key) {
+		return this._cacheManager.get(key);
+	},
+
 	_cachePut(key, payload, ids) {
 		this._cacheManager.put(key, payload, ids);
 	},
 
 	_cacheDelete(key) {
 		this._cacheManager.delete(key);
+	},
+
+	_cacheClear() {
+		this._cacheManager.clear();
 	},
 
 	_clipboardIconSVG() {

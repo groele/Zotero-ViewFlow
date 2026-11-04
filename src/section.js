@@ -187,19 +187,9 @@ export async function runRender(plugin, state) {
 			return;
 		}
 
-		if (
-			plugin._cache.has(key) &&
-			Date.now() - plugin._cache.get(key).created > plugin._cacheTTL
-		) {
-			plugin._cacheDelete(key);
-		}
-
-		let payload = plugin._cache.get(key)?.payload;
+		let payload = plugin._cacheGet ? plugin._cacheGet(key) : plugin._cacheManager?.get(key);
 		if (payload) {
 			plugin._stats.cacheHits++;
-			const entry = plugin._cache.get(key);
-			plugin._cache.delete(key);
-			plugin._cache.set(key, entry);
 		} else {
 			const started = Date.now();
 			payload = plugin._generate(items, config);
@@ -295,8 +285,14 @@ export function destroySection(plugin, body) {
  * Clears cache and schedules preview refresh across all registered sections.
  */
 export function queueAllPreviews(plugin) {
-	plugin._cache.clear();
-	plugin._cacheBytes = 0;
+	if (typeof plugin._cacheClear === 'function') {
+		plugin._cacheClear();
+	} else if (plugin._cacheManager) {
+		plugin._cacheManager.clear();
+	} else {
+		plugin._cache?.clear();
+		plugin._cacheBytes = 0;
+	}
 	for (const state of plugin._states.values()) {
 		state.payload = null;
 		plugin._cancelRender(state);

@@ -42,13 +42,14 @@ try {
     }
 } finally { $check.Dispose() }
 $hash = (Get-FileHash -LiteralPath $resolvedOutput -Algorithm SHA256).Hash
+$hash512 = (Get-FileHash -LiteralPath $resolvedOutput -Algorithm SHA512).Hash
 if ($UpdateFeed) {
     $feedPath = Join-Path $projectRoot 'zotero-viewflow-updates.json'
     $feed = Get-Content -LiteralPath $feedPath -Raw | ConvertFrom-Json
     $update = $feed.addons.($manifest.applications.zotero.id).updates[0]
     if ($update.version -ne $manifest.version) { throw 'Update feed version does not match manifest' }
-    $update | Add-Member -NotePropertyName update_hash -NotePropertyValue ('sha256:' + $hash.ToLowerInvariant()) -Force
+    $update | Add-Member -NotePropertyName update_hash -NotePropertyValue ('sha512:' + $hash512.ToLowerInvariant()) -Force
     $feedText = ($feed | ConvertTo-Json -Depth 12).Replace("`r`n", "`n") + "`n"
     [IO.File]::WriteAllText($feedPath, $feedText, [Text.UTF8Encoding]::new($false))
 }
-[PSCustomObject]@{ Path = $resolvedOutput; Bytes = (Get-Item -LiteralPath $resolvedOutput).Length; SHA256 = $hash; RuntimeFiles = $entries.Count } | Format-List
+[PSCustomObject]@{ Path = $resolvedOutput; Bytes = (Get-Item -LiteralPath $resolvedOutput).Length; SHA512 = $hash512; SHA256 = $hash; RuntimeFiles = $entries.Count } | Format-List
