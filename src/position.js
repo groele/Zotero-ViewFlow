@@ -110,7 +110,7 @@ export async function applyPosition(plugin, owner) {
  * Adjusts section maxWidth to avoid XUL intrinsic width expansion overflowing sidebars.
  */
 export function fitWidth(state) {
-	if (!state.sizingOwner || state.destroyed) return;
+	if (!state.sizingOwner || state.destroyed || state.body?.isConnected === false) return;
 	const bounds = state.sizingOwner.getBoundingClientRect();
 	if (!bounds.width) return;
 	const width = Math.max(0, Math.min(bounds.width, bounds.right - state.body.getBoundingClientRect().left - 8));

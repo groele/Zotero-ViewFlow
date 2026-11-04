@@ -106,7 +106,8 @@
   }
   function resolveItems(state, normalize = normalizeItem) {
     if (state.tabType === "library") {
-      const selection = state.doc.defaultView?.ZoteroPane?.getSelectedItems() || [];
+      const pane = state.doc.defaultView?.ZoteroPane || Zotero.getActiveZoteroPane?.();
+      const selection = pane?.getSelectedItems?.() || [];
       const items = [
         ...new Map(
           selection.map((item2) => normalize(item2)).filter(Boolean).map((item2) => [item2.id, item2])
@@ -122,7 +123,21 @@
     const override = getPref("citationstyle");
     let format;
     try {
-      format = { ...qc.unserializeSetting(qc.getFormatFromURL(item?.getField("url") || "")) };
+      let url = "";
+      if (item?.isField?.("url")) {
+        try {
+          url = item.getField("url", true, true) || "";
+        } catch {
+          url = "";
+        }
+      }
+      let rawSetting;
+      try {
+        rawSetting = qc.getFormatFromURL(url);
+      } catch {
+        rawSetting = Zotero.Prefs.get("export.quickCopy.setting") || "";
+      }
+      format = { ...qc.unserializeSetting(rawSetting) };
     } catch (error) {
       if (!override) throw createError("no-style", error.message);
       format = {};
@@ -332,7 +347,7 @@
     }
   }
   function fitWidth(state) {
-    if (!state.sizingOwner || state.destroyed) return;
+    if (!state.sizingOwner || state.destroyed || state.body?.isConnected === false) return;
     const bounds = state.sizingOwner.getBoundingClientRect();
     if (!bounds.width) return;
     const width = Math.max(0, Math.min(bounds.width, bounds.right - state.body.getBoundingClientRect().left - 8));
@@ -352,10 +367,15 @@
     return `<section class="zotero-preview-block"><div class="zotero-preview-block-row"><div class="zotero-preview-block-body">${content.html}</div><div class="zotero-preview-block-toolbar"><span class="zotero-preview-copy" role="button" tabindex="0" title="${label}" aria-label="${label}" data-l10n-id="zotero-preview-copy-${kind}" data-copy-citation="${kind === "citation"}">${clipboardSvg}</span></div></div></section>`;
   }
   function setHTML(state, html) {
+    if (state.destroyed || state.body?.isConnected === false) return;
     for (const timer of state.feedbackTimers) clearTimeout(timer);
     state.feedbackTimers.clear();
     state.copyFeedback.clear();
-    const parsed = new state.doc.defaultView.DOMParser().parseFromString(html, "text/html");
+    const win = state.doc?.defaultView || globalThis;
+    const Parser = win?.DOMParser || globalThis.DOMParser;
+    if (!Parser) return;
+    const parsed = new Parser().parseFromString(html, "text/html");
+    if (!parsed?.body) return;
     state.body.replaceChildren(
       ...Array.from(parsed.body.childNodes, (node) => state.doc.importNode(node, true))
     );
@@ -435,9 +455,10 @@
     const owner = body.closest("item-details");
     plugin._observePosition(owner, state);
     plugin._queuePosition(owner);
-    if (owner && doc.defaultView.ResizeObserver) {
+    const RO = doc.defaultView?.ResizeObserver || globalThis.ResizeObserver;
+    if (owner && RO) {
       state.sizingOwner = owner;
-      state.widthObserver = new doc.defaultView.ResizeObserver(() => plugin._fitWidth(state));
+      state.widthObserver = new RO(() => plugin._fitWidth(state));
       state.widthObserver.observe(owner);
     }
   }

@@ -28,10 +28,15 @@ export function buildBlock(kind, content, clipboardSvg = CLIPBOARD_ICON_SVG) {
  * Parses and safely sets HTML into the section body using DOMParser and importNode.
  */
 export function setHTML(state, html) {
+	if (state.destroyed || state.body?.isConnected === false) return;
 	for (const timer of state.feedbackTimers) clearTimeout(timer);
 	state.feedbackTimers.clear();
 	state.copyFeedback.clear();
-	const parsed = new state.doc.defaultView.DOMParser().parseFromString(html, 'text/html');
+	const win = state.doc?.defaultView || globalThis;
+	const Parser = win?.DOMParser || globalThis.DOMParser;
+	if (!Parser) return;
+	const parsed = new Parser().parseFromString(html, 'text/html');
+	if (!parsed?.body) return;
 	state.body.replaceChildren(
 		...Array.from(parsed.body.childNodes, node => state.doc.importNode(node, true))
 	);

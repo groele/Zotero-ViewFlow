@@ -21,7 +21,8 @@ export function normalizeItem(item) {
  */
 export function resolveItems(state, normalize = normalizeItem) {
 	if (state.tabType === 'library') {
-		const selection = state.doc.defaultView?.ZoteroPane?.getSelectedItems() || [];
+		const pane = state.doc.defaultView?.ZoteroPane || Zotero.getActiveZoteroPane?.();
+		const selection = pane?.getSelectedItems?.() || [];
 		const items = [
 			...new Map(
 				selection
@@ -44,7 +45,17 @@ export function resolveConfig(item, { getPref, layoutConfig, parseNum = parseNum
 	const override = getPref('citationstyle');
 	let format;
 	try {
-		format = { ...qc.unserializeSetting(qc.getFormatFromURL(item?.getField('url') || '')) };
+		let url = '';
+		if (item?.isField?.('url')) {
+			try { url = item.getField('url', true, true) || ''; } catch { url = ''; }
+		}
+		let rawSetting;
+		try {
+			rawSetting = qc.getFormatFromURL(url);
+		} catch {
+			rawSetting = Zotero.Prefs.get('export.quickCopy.setting') || '';
+		}
+		format = { ...qc.unserializeSetting(rawSetting) };
 	} catch (error) {
 		if (!override) throw createError('no-style', error.message);
 		format = {};

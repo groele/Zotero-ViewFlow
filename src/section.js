@@ -60,9 +60,10 @@ export function initSection(plugin, { doc, body, refresh }) {
 	const owner = body.closest('item-details');
 	plugin._observePosition(owner, state);
 	plugin._queuePosition(owner);
-	if (owner && doc.defaultView.ResizeObserver) {
+	const RO = doc.defaultView?.ResizeObserver || globalThis.ResizeObserver;
+	if (owner && RO) {
 		state.sizingOwner = owner;
-		state.widthObserver = new doc.defaultView.ResizeObserver(() => plugin._fitWidth(state));
+		state.widthObserver = new RO(() => plugin._fitWidth(state));
 		state.widthObserver.observe(owner);
 	}
 }

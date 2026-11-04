@@ -1,5 +1,12 @@
 # Changelog
 
+## 13.1.1 — 2026-11-04
+
+- Safe QuickCopy Resolution: reinforced CSL format resolution against item types lacking URL fields, avoiding false-positive style errors.
+- Multi-Window DOM Resilience: safeguarded `DOMParser` instantiation and `ResizeObserver` lifecycle against unattached/closing documents in multi-window environments.
+- Active Library Pane Fallback: enhanced multi-selection resolution with `Zotero.getActiveZoteroPane()` fallback for detached tabs.
+- Layout Geometrics Stability: added element attachment checks to sidebar sizing recalculation, preventing synchronous layout thrashing.
+
 ## 13.1.0 — 2026-11-03
 
 - Modular Settings Architecture: refactored settings panel into cohesive, top-down business flow cards: Citation & Content, Layout & Appearance, Interaction & Diagnostics, and Release Information.
