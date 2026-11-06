@@ -1,6 +1,6 @@
 {
   "name": "zotero-viewflow",
-  "version": "13.1.4",
+  "version": "13.1.5",
   "description": "Preview and copy formatted references in Zotero's item pane.",
   "private": true,
   "license": "Apache-2.0",
@@ -10,10 +10,12 @@
   "scripts": {
     "build:bundle": "npm run typecheck && node scripts/build-source.mjs",
     "build:xpi": "pwsh -NoProfile -File scripts/build.ps1",
-    "build": "npm run typecheck && npm run build:xpi",
+    "build": "npm run typecheck && npm run guard && npm run build:xpi",
+    "guard": "node scripts/architecture-guard.mjs",
+    "check:architecture": "node scripts/architecture-guard.mjs",
     "test:syntax": "node --check bootstrap.js zoteropreview.js zoteropreview_prefs.js",
     "test:unit": "node --test-concurrency=1 --experimental-strip-types --test tests/*.test.cjs",
-    "test": "npm run build:bundle && npm run test:syntax && npm run test:unit",
+    "test": "npm run build:bundle && npm run guard && npm run test:syntax && npm run test:unit",
     "typecheck": "tsc --noEmit",
     "test:architecture": "node --experimental-strip-types --test tests/architecture.test.cjs"
   },

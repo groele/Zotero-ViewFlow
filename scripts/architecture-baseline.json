@@ -1,0 +1,21 @@
+{
+  "policy": "freeze-and-shrink",
+  "maxSourceLines": 360,
+  "capturedAt": "2026-11-06",
+  "debtCleared": true,
+  "note": "Known §5.9 debt. Listed files may stay at or below the recorded line count, but must never grow; any other source file above 360 lines fails the guard. Remove an entry only after splitting that module below 360 lines. Every entry must still exist and must still exceed the ceiling - stale entries are rejected by the baseline integrity test.",
+  "lastReleasedVersion": "13.1.5",
+  "splitHistory": [
+    {
+      "version": "13.1.5",
+      "date": "2026-11-06",
+      "resolved": [
+        "Extracted 360-line ceiling assertion from tests/architecture.test.cjs into dedicated scripts/architecture-guard.mjs",
+        "Official workspace architecture-baseline.json established with policy: freeze-and-shrink and debtCleared: true",
+        "All 11 TypeScript source files in src/ verified <= 360 lines (0 oversized modules, max 354 lines in src/index.ts)",
+        "Pre-bundle architecture guard integrated into package.json build and test workflows"
+      ]
+    }
+  ],
+  "oversized": {}
+}

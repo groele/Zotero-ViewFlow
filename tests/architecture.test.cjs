@@ -57,6 +57,17 @@ test('all TypeScript modules stay within the architecture size limit', () => {
   scan(path.join(root, 'src'));
 });
 
+test('architecture baseline and standalone guard are established and debt is cleared', () => {
+  const baseline = JSON.parse(read('scripts/architecture-baseline.json'));
+  assert.equal(baseline.policy, 'freeze-and-shrink');
+  assert.equal(baseline.maxSourceLines, 360);
+  assert.equal(baseline.debtCleared, true);
+  assert.deepEqual(baseline.oversized, {});
+  assert.ok(fs.existsSync(path.join(root, 'scripts/architecture-guard.mjs')));
+  const pkg = JSON.parse(read('package.json'));
+  assert.equal(pkg.scripts.guard, 'node scripts/architecture-guard.mjs');
+});
+
 
 test('root runtime bundle guard: zoteropreview.js is a strictly generated bundle and hand-written scripts are restricted', () => {
   const bundleHeader = '/* Zotero ViewFlow - Native item-pane lifecycle; modular decoupled runtime. */';
