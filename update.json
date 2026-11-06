@@ -1,0 +1,19 @@
+{
+  "addons": {
+    "zotero-viewflow@groele": {
+      "updates": [
+        {
+          "version": "13.1.3",
+          "update_link": "https://github.com/groele/Zotero-ViewFlow/releases/download/v13.1.3/Zotero-ViewFlow-13.1.3.xpi",
+          "applications": {
+            "zotero": {
+              "strict_min_version": "10.0",
+              "strict_max_version": "12.*"
+            }
+          },
+          "update_hash": "sha512:c370fd612556316d05f1b02570966ebb198e3ccdb43cd3f368581e5d37803090c510534c1aa6199db9497334c8b9a4354e2e23b701e3e6f2004109dc62538cd4"
+        }
+      ]
+    }
+  }
+}

@@ -50,7 +50,7 @@ Zotero ViewFlow 是 Zotero Flow Series 中独立维护的插件，在 Zotero 原
 2. 打开 Zotero 的 **工具 → 插件**（不同版本的菜单名称可能不同）。
 3. 选择 **从文件安装插件**，选中 XPI，按提示重启。
 
-自动更新清单：[zotero-viewflow-updates.json](https://github.com/groele/Zotero-ViewFlow/blob/main/zotero-viewflow-updates.json)。
+自动更新清单：[update.json](https://github.com/groele/Zotero-ViewFlow/blob/main/update.json)。
 
 ## 快速开始
 

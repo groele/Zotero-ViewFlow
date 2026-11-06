@@ -8,7 +8,7 @@ const read = name => fs.readFileSync(path.join(__dirname, '..', name), 'utf8');
 test('preferences wait for style loading, initialize once, and clean up captured listeners', async () => {
  const nodes = new Map(), handlers = new Map(), values = new Map([['citationstyle','missing-style']]);
  const target = id => ({ id, value: '', isConnected: true, attributes:{},children:[],
-  addEventListener(type, fn, capture) { handlers.set(`${id}:${type}`, {fn, capture}); },
+  addEventListener(type, fn, options) { handlers.set(`${id}:${type}`, {fn, capture: options.capture}); options.signal.addEventListener('abort', () => handlers.delete(`${id}:${type}`), {once:true}); },
   removeEventListener(type) { handlers.delete(`${id}:${type}`); },
   setAttribute(key,value) {this.attributes[key]=value;}, appendChild(node) {this.children.push(node);}, replaceChildren() {this.children=[];} });
  const doc = Object.assign(target('document'), {
@@ -22,7 +22,7 @@ test('preferences wait for style loading, initialize once, and clean up captured
   _queueAllPreviews: () => { values.set('refreshed', true); } };
  let resolveStyles, stylesLoaded = false;
  const stylesReady = new Promise(resolve => { resolveStyles = resolve; });
- const context = vm.createContext({ document: doc, window: win,
+ const context = vm.createContext({ document: doc, window: win, AbortController,
   Zotero: { zoteropreview: preview, Styles: { init: () => stylesReady, getVisible: () => {
    assert.equal(stylesLoaded, true, 'must not read an unloaded style cache');
    return [{styleID:'style',title:'Style'}];
@@ -62,12 +62,12 @@ test('preferences wait for style loading, initialize once, and clean up captured
 test('closing preferences while styles load prevents late DOM access and listeners', async () => {
  const handlers = new Map(); let resolveStyles, domReads = 0;
  const root = { id: 'zotero-prefpane-zotero-preview', isConnected: true };
- const target = id => ({ addEventListener(type, fn) { handlers.set(id + ':' + type, fn); },
+ const target = id => ({ addEventListener(type, fn, options) { handlers.set(id + ':' + type, fn); options.signal.addEventListener('abort', () => handlers.delete(id + ':' + type), {once:true}); },
   removeEventListener(type) { handlers.delete(id + ':' + type); } });
  const doc = Object.assign(target('document'), { getElementById: () => root,
   querySelector() { domReads++; throw new Error('closed preference document accessed'); } });
  const preview = { initialized: true, _prefPaneCleanups: new Set() };
- const context = vm.createContext({ document: doc, window: target('window'),
+ const context = vm.createContext({ document: doc, window: target('window'), AbortController,
   Zotero: { zoteropreview: preview, Styles: { init: () => new Promise(resolve => { resolveStyles = resolve; }) },
    logError(error) { throw error; } } });
  vm.runInContext(read('zoteropreview_prefs.js'), context);
@@ -113,4 +113,21 @@ test('Gecko 153 audit excludes inline handlers and obsolete platform patterns', 
   assert.doesNotMatch(read(file), /\.ownerGlobal\b|CheckboxStateChange|\.oncommand\s*=|\[(?:hidden|collapsed|disabled|checked|selected)="true"\]/);
  }
  assert.match(read('bootstrap.js'), /defaultXUL:\s*true/);
+});
+
+
+test('shutdown invalidates script and string caches on disable', async () => {
+ const calls = [];
+ const context = vm.createContext({APP_SHUTDOWN: 1, ADDON_DISABLE: 2,
+  Cu: {unload: uri => calls.push(['unload', uri])},
+  Ci: {nsIStringBundleService: {}},
+  Cc: {'@mozilla.org/intl/stringbundle;1': {getService: () => ({flushBundles: () => calls.push(['flush'])})}},
+  Zotero: {initializationPromise: Promise.resolve(), PreferencePanes: {register() {}}},
+  Services: {scriptloader: {loadSubScript() {context.Zotero.zoteropreview = {init(){}, start(){}, shutdown(){}};}},
+    obs: {notifyObservers: (_subject, topic) => calls.push(['notify', topic])}}
+ });
+ vm.runInContext(read('bootstrap.js'), context);
+ await context.startup({id:'test', version:'1', rootURI:'test/'});
+ context.shutdown({}, 2);
+ assert.deepEqual(calls, [['unload','test/zoteropreview.js'],['flush'],['notify','startupcache-invalidate']]);
 });

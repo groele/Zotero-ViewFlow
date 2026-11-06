@@ -2,7 +2,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
 test('CacheManager: handles basic operations, LRU eviction and byte bounding', async () => {
-	const { CacheManager } = await import('../src/cache.js');
+	const { CacheManager } = await import('../src/cache.ts');
 	const cache = new CacheManager({ limit: 3, byteLimit: 1000, ttl: 50 });
 
 	cache.put('a', { title: 'Paper A' }, [1]);
@@ -36,7 +36,7 @@ test('CacheManager: handles basic operations, LRU eviction and byte bounding', a
 });
 
 test('Position: resolvePosition falls back safely to header', async () => {
-	const { resolvePosition } = await import('../src/position.js');
+	const { resolvePosition } = await import('../src/position.ts');
 	assert.equal(resolvePosition('zotero-item-pane-header'), 'zotero-item-pane-header');
 	assert.equal(resolvePosition('zotero-editpane-item-box'), 'zotero-editpane-item-box');
 	assert.equal(resolvePosition('zotero-editpane-related'), 'zotero-editpane-related');
@@ -45,7 +45,7 @@ test('Position: resolvePosition falls back safely to header', async () => {
 });
 
 test('Constants: parseNumber and createPreviewError work as expected', async () => {
-	const { parseNumber, createPreviewError } = await import('../src/constants.js');
+	const { parseNumber, createPreviewError } = await import('../src/constants.ts');
 	assert.equal(parseNumber('1.5', 1, 0, 3), 1.5);
 	assert.equal(parseNumber('5', 1, 0, 3), 3);
 	assert.equal(parseNumber('-2', 1, 0, 3), 0);
@@ -58,7 +58,7 @@ test('Constants: parseNumber and createPreviewError work as expected', async () 
 });
 
 test('View: buildBlock constructs semantic markup with copy buttons', async () => {
-	const { buildBlock } = await import('../src/view.js');
+	const { buildBlock } = await import('../src/view.ts');
 	const bibHtml = buildBlock('bibliography', { html: '<i>Smith 2020</i>' }, '<svg>icon</svg>');
 	assert.match(bibHtml, /class="zotero-preview-block"/);
 	assert.match(bibHtml, /data-copy-citation="false"/);
@@ -70,7 +70,6 @@ test('View: buildBlock constructs semantic markup with copy buttons', async () =
 });
 
 test('CSL: normalizeItem resolves parents and prevents infinite loops', async () => {
-	const { normalizeItem } = await import('../src/csl.js');
 	globalThis.Zotero = {
 		Items: {
 			get: id => {
@@ -82,6 +81,8 @@ test('CSL: normalizeItem resolves parents and prevents infinite loops', async ()
 			}
 		}
 	};
+
+	const { normalizeItem } = await import('../src/csl.ts');
 
 	// Regular item
 	const regular = { id: 1, isRegularItem: () => true };

@@ -31,7 +31,7 @@ function setup(clock = {setTimeout, clearTimeout}) {
  const Components = { classes: new Proxy({}, {get: (t,k) => ({createInstance: () => k.includes('transferable') ? transferable : {data:''}})}),
   interfaces: {nsIClipboard:{kGlobalClipboard:1}} };
  const Services={clipboard:{setData(){}}};
- const context=vm.createContext({Zotero,Components,Services,setTimeout:clock.setTimeout,clearTimeout:clock.clearTimeout});
+ const context=vm.createContext({Zotero,Cc:Components.classes,Ci:Components.interfaces,Services,AbortController,setTimeout:clock.setTimeout,clearTimeout:clock.clearTimeout});
  vm.runInContext('Object.freeze(Array.prototype); Object.freeze(JSON); Object.freeze(Promise);',context);
  vm.runInContext(source,context);
  const plugin=Zotero.zoteropreview;
@@ -43,7 +43,7 @@ function setup(clock = {setTimeout, clearTimeout}) {
   const sheet = {remove() {},};
   const doc = {defaultView:{ZoteroPane:{getSelectedItems:()=>selection}},createElementNS:()=>({...sheet}),documentElement:{appendChild(){}}};
   const listeners = new Map();
-  const body = {innerHTML:'',classList:{add(){}},style:{setProperty(){}},addEventListener:(k,v)=>listeners.set(k,v),
+  const body = {innerHTML:'',classList:{add(){}},style:{setProperty(){}},addEventListener:(k,v,options)=>{listeners.set(k,v); options.signal.addEventListener('abort',()=>listeners.delete(k),{once:true});},
    removeEventListener:k=>listeners.delete(k),getClientRects:()=>[{}],closest:()=>({open:true}),contains:()=>true};
   let refreshes=0;
   plugin._initSection({doc,body,refresh:()=>{refreshes++;}});
@@ -538,4 +538,14 @@ test('native refresh requests serialize, retain one trailing request and stop af
  fire();await flush();assert.equal(refreshed,2);
  h.plugin._scheduleRefresh(state);h.plugin._destroySection(s.body);release();await flush();
  assert.equal(timers.size,0);assert.equal(state.refreshTask,null);h.plugin.shutdown();
+});
+
+
+test('destroying a section aborts all of its DOM listeners', () => {
+ const h = setup();
+ const s = h.section(h.item(1));
+ assert.deepEqual([...s.listeners.keys()].sort(), ['click', 'keydown']);
+ h.plugin._destroySection(s.body);
+ assert.equal(s.listeners.size, 0);
+ h.plugin.shutdown();
 });

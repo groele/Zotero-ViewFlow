@@ -1,10 +1,17 @@
-import { CACHE_LIMIT, CACHE_BYTE_LIMIT, CACHE_TTL } from './constants.js';
+import { CACHE_LIMIT, CACHE_BYTE_LIMIT, CACHE_TTL } from './constants.ts';
+
+type CacheEntry = { payload: unknown; ids: number[]; bytes: number; created: number };
 
 /**
  * LRU cache manager with entry count limit, byte budget, and TTL expiration.
  */
 export class CacheManager {
-	constructor({ limit = CACHE_LIMIT, byteLimit = CACHE_BYTE_LIMIT, ttl = CACHE_TTL } = {}) {
+	limit: number;
+	byteLimit: number;
+	ttl: number;
+	map: Map<string, CacheEntry>;
+	bytes: number;
+	constructor({ limit = CACHE_LIMIT, byteLimit = CACHE_BYTE_LIMIT, ttl = CACHE_TTL }: { limit?: number; byteLimit?: number; ttl?: number } = {}) {
 		this.limit = limit;
 		this.byteLimit = byteLimit;
 		this.ttl = ttl;
@@ -16,7 +23,7 @@ export class CacheManager {
 	 * Retrieve payload by key if not expired.
 	 * Touches the entry for LRU reordering.
 	 */
-	get(key) {
+	get(key: string) {
 		const entry = this.map.get(key);
 		if (!entry) return null;
 		if (Date.now() - entry.created > this.ttl) {
@@ -32,7 +39,7 @@ export class CacheManager {
 	 * Insert a payload into cache with item IDs.
 	 * Evicts oldest entries if limit or byteLimit exceeded.
 	 */
-	put(key, payload, ids) {
+	put(key: string, payload: unknown, ids: number[]) {
 		const bytes = JSON.stringify(payload).length * 2;
 		if (bytes > this.byteLimit) return false;
 		this.delete(key);
@@ -40,7 +47,9 @@ export class CacheManager {
 			this.map.size &&
 			(this.map.size >= this.limit || this.bytes + bytes > this.byteLimit)
 		) {
-			this.delete(this.map.keys().next().value);
+			const oldest = this.map.keys().next().value;
+			if (oldest === undefined) break;
+			this.delete(oldest);
 		}
 		this.map.set(key, { payload, ids, bytes, created: Date.now() });
 		this.bytes += bytes;
@@ -50,7 +59,7 @@ export class CacheManager {
 	/**
 	 * Delete entry by key and update byte accounting.
 	 */
-	delete(key) {
+	delete(key: string) {
 		const entry = this.map.get(key);
 		if (!entry) return;
 		this.bytes -= entry.bytes || 0;
@@ -68,7 +77,7 @@ export class CacheManager {
 	/**
 	 * Invalidate entries referencing specific item IDs, or all if changedIds is null.
 	 */
-	invalidate(changedIds) {
+	invalidate(changedIds: Set<number> | null) {
 		for (const [key, entry] of this.map) {
 			if (!changedIds || entry.ids.some(id => changedIds.has(id))) {
 				this.delete(key);

@@ -1,0 +1,25 @@
+import type {CacheManager} from './cache.ts';
+import type {normalizeItem, resolveConfig} from './csl.ts';
+import type {initSection} from './section.ts';
+import type {createPreviewError} from './constants.ts';
+import type {State, Props, Payload, Config, Plugin} from './section.ts';
+import type {PositionOwner} from './position.ts';
+type Item = NonNullable<Parameters<typeof normalizeItem>[0]>;
+type Content = {html:string; text:string};
+type Initial = {id:string;version:string;rootURI:string};
+type Lifecycle = symbol | null;
+export type PreviewFacade = Plugin & {
+ id:string;version:string;rootURI:string;_prefPrefix:string;_cacheLimit:number;_cacheByteLimit:number;_cacheTTL:number;_styleInitTimeout:number;
+ _cacheManager:CacheManager;_cache:CacheManager['map'];_prefObservers:symbol[];_prefPaneCleanups:Set<()=>void>;
+ _positionTimers:Map<PositionOwner,number>;_positionObservers:Map<PositionOwner,{observer:MutationObserver;count:number}>;_positionRuns:Map<PositionOwner,{dirty:boolean}>;
+ _lifecycle:Lifecycle;_sectionID:string|false|null;_notifierID:string|null;
+ init(p:Initial):void; start():void; shutdown():void; log(message:unknown):void; pref(name:string):string|number|boolean|undefined;
+ getPosition():string; _observePosition(owner:PositionOwner,state:State):void; _queuePosition(owner:PositionOwner):void; _applyPosition(owner:PositionOwner):Promise<void>; _fitWidth(state:State):void;
+ _initSection(props:Parameters<typeof initSection>[1]):void; _normalizeItem(item:Item|null):Item|null;_changeItem(props:Props):void;_items(state:State):Item[];
+ _config(item:Item):Config & ReturnType<typeof resolveConfig>; _previewError(code:string,message:string):ReturnType<typeof createPreviewError>; _layoutConfig():{font:number;spacing:number}; _updateLayout():void; _number(value:string|number|boolean|undefined,fallback:number,min:number,max:number):number;
+ _ensureSectionHeader(body:HTMLElement):void;_prepareRender(props:Props):void;_cancelRender(state:State):void;_renderSection(props:{body:HTMLElement}):Promise<void>;_waitForStyles(state:State):Promise<boolean>;_runRender(state:State):Promise<void>;
+ _previewKey(items:Item[],config:Config & ReturnType<typeof resolveConfig>):string;_generate(items:Item[],config:Config & ReturnType<typeof resolveConfig>):Payload;
+ _cacheGet(key:string):Payload|null;_cachePut(key:string,payload:Payload,ids:number[]):void;_cacheDelete(key:string):void;_cacheClear():void;
+ _clipboardIconSVG():string;_successIconSVG():string;_showCopyFeedback(state:State,button:HTMLElement):void;_block(kind:string,content:Content):string;_renderPayload(state:State,payload:Payload,omitted:number):void;_setHTML(state:State,html:string):void;_message(state:State,id:string,fallback:string,error?:boolean):void;
+ copyCitation(asCitations:boolean,body:HTMLElement,button:HTMLElement):boolean;notify(event:string,type:string,ids:(number|string)[]):void;_scheduleRefresh(state:State):void;_queueAllPreviews():void;setPref(pref:string,value:string|number|boolean):void;_destroySection(body:HTMLElement):void;_cleanup(action:()=>void):void;
+};

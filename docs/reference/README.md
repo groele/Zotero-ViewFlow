@@ -50,7 +50,7 @@ The declared compatibility range is not a guarantee that every Zotero version ha
 2. Open Zotero → **Tools → Plugins** (or the add-on manager in your version).
 3. Choose **Install Add-on From File**, select the XPI, and restart Zotero if requested.
 
-Update feed: [zotero-viewflow-updates.json](https://github.com/groele/Zotero-ViewFlow/blob/main/zotero-viewflow-updates.json).
+Update feed: [update.json](https://github.com/groele/Zotero-ViewFlow/blob/main/update.json).
 
 ## Quick Start
 

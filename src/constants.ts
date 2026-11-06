@@ -21,11 +21,11 @@ export const DEFAULT_ERROR_MESSAGE = [
 	'Preview unavailable. Check the selected citation style and retry.'
 ];
 
-export function parseNumber(value, fallback, min, max) {
-	const parsed = Number.parseFloat(value);
+export function parseNumber(value: string | number | boolean | undefined, fallback: number, min: number, max: number) {
+	const parsed = Number.parseFloat(value as string);
 	return Number.isFinite(parsed) ? Math.max(min, Math.min(max, parsed)) : fallback;
 }
 
-export function createPreviewError(code, message) {
+export function createPreviewError(code: string, message: string) {
 	return Object.assign(new Error(message), { previewCode: code });
 }

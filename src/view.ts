@@ -1,9 +1,14 @@
-import { CLIPBOARD_ICON_SVG } from './constants.js';
+import { CLIPBOARD_ICON_SVG } from './constants.ts';
+
+import type {State, Plugin, Payload} from './section.ts';
+type ViewState = State;
+type PreviewContent = { html: string; text: string };
+type ViewPlugin = Pick<Plugin, '_fitWidth'> & { _block(kind:string, content:PreviewContent): string; _setHTML(state:State, html:string):void };
 
 /**
  * Ensures the native collapsible section has a non-empty header label.
  */
-export function ensureSectionHeader(body) {
+export function ensureSectionHeader(body: Element) {
 	const section = body.closest('collapsible-section');
 	if (section?.getAttribute && !section.getAttribute('label')?.trim()) {
 		section.setAttribute('label', 'Zotero ViewFlow');
@@ -13,7 +18,7 @@ export function ensureSectionHeader(body) {
 /**
  * Generates HTML string for a citation or bibliography preview block.
  */
-export function buildBlock(kind, content, clipboardSvg = CLIPBOARD_ICON_SVG) {
+export function buildBlock(kind: string, content: PreviewContent, clipboardSvg = CLIPBOARD_ICON_SVG) {
 	const label = kind === 'citation' ? 'Copy in-text citation' : 'Copy bibliography';
 	return (
 		`<section class="zotero-preview-block"><div class="zotero-preview-block-row">` +
@@ -27,7 +32,7 @@ export function buildBlock(kind, content, clipboardSvg = CLIPBOARD_ICON_SVG) {
 /**
  * Parses and safely sets HTML into the section body using DOMParser and importNode.
  */
-export function setHTML(state, html) {
+export function setHTML(state: ViewState, html: string) {
 	if (state.destroyed || state.body?.isConnected === false) return;
 	for (const timer of state.feedbackTimers) clearTimeout(timer);
 	state.feedbackTimers.clear();
@@ -38,23 +43,24 @@ export function setHTML(state, html) {
 	const parsed = new Parser().parseFromString(html, 'text/html');
 	if (!parsed?.body) return;
 	state.body.replaceChildren(
-		...Array.from(parsed.body.childNodes, node => state.doc.importNode(node, true))
+		...Array.from(parsed.body.childNodes as NodeListOf<ChildNode>, node => state.doc.importNode(node as Node, true))
 	);
 }
 
 /**
  * Formats full preview payload into HTML and applies CSS custom properties.
  */
-export function renderPayload(plugin, state, payload, omitted) {
+export function renderPayload(plugin: ViewPlugin, state: ViewState, payload: Record<string, PreviewContent>, omitted: number) {
 	let html = Object.entries(payload)
 		.map(([kind, content]) => plugin._block(kind, content))
 		.join('<hr class="zotero-preview-separator"/>');
 	if (omitted) {
 		html += `<div class="zotero-preview-message" data-l10n-id="zotero-preview-truncated" data-l10n-args='${JSON.stringify({ count: omitted })}'>${omitted} additional items omitted.</div>`;
 	}
-	const { body, config } = state;
+	const { body } = state;
+	const config = state.config!;
 	body.style.setProperty('--zotero-preview-font-size', config.font + 'em');
-	body.style.setProperty('--zotero-preview-line-height', config.spacing);
+	body.style.setProperty('--zotero-preview-line-height', String(config.spacing));
 	const wrapped = `<div class="zotero-preview-content">${html}</div>`;
 	if (state.lastHTML !== wrapped) {
 		plugin._setHTML(state, wrapped);
@@ -66,7 +72,7 @@ export function renderPayload(plugin, state, payload, omitted) {
 /**
  * Displays a status or error message inside the section body.
  */
-export function renderMessage(plugin, state, id, fallback, error = false) {
+export function renderMessage(plugin: ViewPlugin, state: ViewState, id: string, fallback: string, error = false) {
 	const html =
 		`<div class="zotero-preview-message${error ? ' zotero-preview-message-error' : ''}" role="status" data-l10n-id="${id}">${fallback}</div>` +
 		(error

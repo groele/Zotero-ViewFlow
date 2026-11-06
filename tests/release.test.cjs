@@ -9,7 +9,7 @@ const root=path.resolve(__dirname,'..');
 const read=p=>fs.readFileSync(path.join(root,p),'utf8').replace(/^\uFEFF/,'');
 const manifest=JSON.parse(read('manifest.json'));
 const product=JSON.parse(read('docs/brand/product.json'));
-const feed=JSON.parse(read('zotero-viewflow-updates.json'));
+const feed=JSON.parse(read('update.json'));
 const update=feed.addons[manifest.applications.zotero.id].updates[0];
 const isLocalCandidate=product.releaseStatus==='candidate'&&product.version===manifest.version;
 test('manifest keeps an unpublished local candidate separate from the maintained update feed',()=>{
@@ -23,7 +23,7 @@ test('manifest keeps an unpublished local candidate separate from the maintained
  assert.ok(!feed.addons['zoteropreview@carter-tod.com']);
  if(isLocalCandidate)assert.notEqual(update.version,manifest.version);
  else assert.equal(update.version,manifest.version);
- assert.equal(manifest.applications.zotero.update_url,'https://raw.githubusercontent.com/groele/Zotero-ViewFlow/main/zotero-viewflow-updates.json');
+ assert.equal(manifest.applications.zotero.update_url,'https://raw.githubusercontent.com/groele/Zotero-ViewFlow/main/update.json');
  const publishedVersion=isLocalCandidate?update.version:manifest.version;
  assert.equal(update.update_link,`https://github.com/groele/Zotero-ViewFlow/releases/download/v${publishedVersion}/Zotero-ViewFlow-${publishedVersion}.xpi`);
  assert.deepEqual(update.applications.zotero,{strict_min_version:manifest.applications.zotero.strict_min_version,strict_max_version:manifest.applications.zotero.strict_max_version});
@@ -31,7 +31,7 @@ test('manifest keeps an unpublished local candidate separate from the maintained
 });
 
 test('candidate installer builds without changing published metadata',()=>{
- const feedBefore=fs.readFileSync(path.join(root,'zotero-viewflow-updates.json'));
+ const feedBefore=fs.readFileSync(path.join(root,'update.json'));
  const supplied=process.env.VIEWFLOW_XPI_PATH;
  const temporary=supplied ? null : fs.mkdtempSync(path.join(os.tmpdir(),'viewflow-release-test-'));
  const packagePath=supplied ? path.resolve(supplied) : path.join(temporary,`Zotero-ViewFlow-${manifest.version}.xpi`);
@@ -47,7 +47,7 @@ test('candidate installer builds without changing published metadata',()=>{
   assert.ok(fs.statSync(packagePath).size>0);
   const bytes=fs.readFileSync(packagePath);
   if(!isLocalCandidate)assert.equal(update.update_hash,'sha512:'+crypto.createHash('sha512').update(bytes).digest('hex'),'Installer checksum differs from the maintained feed; prepare a release explicitly with build.ps1 -UpdateFeed');
-  assert.deepEqual(fs.readFileSync(path.join(root,'zotero-viewflow-updates.json')),feedBefore,'Test builds must not rewrite the published update feed');
+  assert.deepEqual(fs.readFileSync(path.join(root,'update.json')),feedBefore,'Test builds must not rewrite the published update feed');
  } finally {
   if(temporary){
    const resolved=path.resolve(temporary);

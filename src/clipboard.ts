@@ -1,11 +1,19 @@
-import { CLIPBOARD_ICON_SVG, SUCCESS_ICON_SVG } from './constants.js';
+import { CLIPBOARD_ICON_SVG, SUCCESS_ICON_SVG } from './constants.ts';
+
+type FeedbackState = {
+ destroyed: boolean;
+ copyFeedback: Map<HTMLElement, ReturnType<typeof setTimeout>[]>;
+ feedbackTimers: Set<ReturnType<typeof setTimeout>>;
+};
+type CopyErrorState = { doc: Document };
+type ClipboardContent = { html: string; text: string };
 
 /**
  * Triggers copy success feedback animation and icon restoration.
  */
 export function showCopyFeedback(
-	state,
-	button,
+	state: FeedbackState,
+	button: HTMLElement,
 	successSvg = SUCCESS_ICON_SVG,
 	clipboardSvg = CLIPBOARD_ICON_SVG
 ) {
@@ -33,29 +41,29 @@ export function showCopyFeedback(
 /**
  * Writes HTML and text content to the system clipboard using XPCOM nsITransferable.
  */
-export function writeToXPCOMClipboard(content, asHTML) {
-	const { classes: Cc, interfaces: Ci } = Components;
-	const transferable = Cc['@mozilla.org/widget/transferable;1'].createInstance(Ci.nsITransferable);
-	transferable.init(null);
+export function writeToXPCOMClipboard(content: ClipboardContent, asHTML: boolean) {
+	const transferable = Cc['@mozilla.org/widget/transferable;1'].createInstance(Ci.nsITransferable) as nsITransferable;
+	transferable.init(null as unknown as nsILoadContext);
 	for (const [flavor, value] of [
 		['text/html', content.html],
 		['text/plain', asHTML ? content.html : content.text]
 	]) {
-		const str = Cc['@mozilla.org/supports-string;1'].createInstance(Ci.nsISupportsString);
+		const str = Cc['@mozilla.org/supports-string;1'].createInstance(Ci.nsISupportsString) as nsISupportsString;
 		str.data = value;
 		transferable.addDataFlavor(flavor);
 		transferable.setTransferData(flavor, str);
 	}
-	Services.clipboard.setData(transferable, null, Ci.nsIClipboard.kGlobalClipboard);
+	// Gecko permits a null owner, although the bundled host typings do not.
+	Services.clipboard.setData(transferable, null as unknown as nsIClipboardOwner, Ci.nsIClipboard.kGlobalClipboard);
 }
 
 /**
  * Appends or updates a copy failure notice element in the section body.
  */
-export function renderCopyError(state, body, log) {
-	let status = body.querySelector('.zotero-preview-copy-status');
+export function renderCopyError(state: CopyErrorState, body: HTMLElement, _log: (error: unknown) => void) {
+	let status = body.querySelector<HTMLElement>('.zotero-preview-copy-status');
 	if (!status) {
-		status = state.doc.createElementNS('http://www.w3.org/1999/xhtml', 'div');
+		status = state.doc.createElementNS('http://www.w3.org/1999/xhtml', 'div') as HTMLDivElement;
 		status.className = 'zotero-preview-copy-status';
 		status.setAttribute('role', 'status');
 		body.appendChild(status);

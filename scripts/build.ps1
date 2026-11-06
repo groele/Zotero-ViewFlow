@@ -1,6 +1,13 @@
 param([string]$OutputPath, [switch]$UpdateFeed, [switch]$VerifyOnly)
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
+if (-not $VerifyOnly) {
+    Push-Location $projectRoot
+    try {
+        & npm run build:bundle
+        if ($LASTEXITCODE -ne 0) { throw 'Type check or bundle failed' }
+    } finally { Pop-Location }
+}
 $manifest = Get-Content -Raw -LiteralPath (Join-Path $projectRoot 'manifest.json') | ConvertFrom-Json
 if (-not $OutputPath) { $OutputPath = Join-Path $projectRoot ('dist\Zotero-ViewFlow-' + $manifest.version + '.xpi') }
 $runtimeFiles = @('manifest.json','bootstrap.js','prefs.js','prefs.xhtml','settings.css','style.css','view.svg','zoteropreview.js','zoteropreview_prefs.js','LICENSE')
@@ -44,7 +51,7 @@ try {
 $hash = (Get-FileHash -LiteralPath $resolvedOutput -Algorithm SHA256).Hash
 $hash512 = (Get-FileHash -LiteralPath $resolvedOutput -Algorithm SHA512).Hash
 if ($UpdateFeed) {
-    $feedPath = Join-Path $projectRoot 'zotero-viewflow-updates.json'
+    $feedPath = Join-Path $projectRoot 'update.json'
     $feed = Get-Content -LiteralPath $feedPath -Raw | ConvertFrom-Json
     $update = $feed.addons.($manifest.applications.zotero.id).updates[0]
     if ($update.version -ne $manifest.version) { throw 'Update feed version does not match manifest' }

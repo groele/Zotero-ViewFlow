@@ -1,0 +1,66 @@
+const {test} = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const root = path.resolve(__dirname, '..');
+const read = file => fs.readFileSync(path.join(root, file), 'utf8');
+
+test('strict type checking and the bundle remain mandatory in the build', () => {
+  const config = JSON.parse(read('tsconfig.json'));
+  const pkg = JSON.parse(read('package.json'));
+  assert.equal(config.extends, 'zotero-types/entries/sandbox/tsconfig.json');
+  for (const key of ['strict', 'isolatedModules', 'verbatimModuleSyntax', 'noEmit']) assert.equal(config.compilerOptions[key], true, key);
+  assert.match(pkg.scripts['build:bundle'], /npm run typecheck\s*&&/);
+  assert.match(read('scripts/build.ps1'), /npm run build:bundle/);
+  const script = read('scripts/build-source.mjs');
+  assert.match(script, /bundle:\s*true/);
+  assert.match(script, /target:\s*'firefox140'/);
+  assert.match(script, /minify:\s*false/);
+  assert.match(script, /src\/preferences\.ts/);
+  assert.match(script, /zoteropreview_prefs\.js/);
+});
+
+test('runtime sources use TypeScript in every source directory', () => {
+  const scan = dir => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const file = path.join(dir, entry.name);
+      if (entry.isDirectory()) scan(file);
+      else assert.doesNotMatch(entry.name, /\.(?:[cm]?js|jsx)$/i, `Untyped runtime module: ${file}`);
+    }
+  };
+  scan(path.join(root, 'src'));
+  for (const name of ['cache.ts', 'constants.ts', 'clipboard.ts', 'view.ts', 'position.ts', 'csl.ts', 'section.ts', 'index.ts', 'preferences.ts']) assert.ok(fs.existsSync(path.join(root, 'src', name)), name);
+});
+
+test('candidate feed is canonical and does not advertise an unpublished version', () => {
+  const manifest = JSON.parse(read('manifest.json'));
+  const feed = JSON.parse(read('update.json'));
+  assert.match(manifest.applications.zotero.update_url, /\/update\.json$/);
+  assert.ok(!fs.existsSync(path.join(root, 'zotero-viewflow-updates.json')));
+  const product = JSON.parse(read('docs/brand/product.json'));
+  if (product.releaseStatus === 'candidate') assert.notEqual(feed.addons[manifest.applications.zotero.id].updates[0].version, manifest.version);
+});
+
+
+test('all TypeScript modules stay within the architecture size limit', () => {
+  const scan = dir => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const file = path.join(dir, entry.name);
+      if (entry.isDirectory()) { scan(file); continue; }
+      if (!/\.tsx?$/.test(entry.name)) continue;
+      const lines = fs.readFileSync(file, 'utf8').split(/\r?\n/);
+      if (lines.at(-1) === '') lines.pop();
+      assert.ok(lines.length <= 360, `${path.relative(root, file)} has ${lines.length} lines`);
+    }
+  };
+  scan(path.join(root, 'src'));
+});
+
+test('facade installs every action descriptor', async () => {
+  globalThis.Zotero = {};
+  const { previewActions } = await import('../src/preview-actions.ts');
+  const { preview } = await import('../src/index.ts');
+  for (const key of Reflect.ownKeys(previewActions)) {
+    assert.strictEqual(Object.getOwnPropertyDescriptor(preview, key)?.value, Object.getOwnPropertyDescriptor(previewActions, key)?.value);
+  }
+});

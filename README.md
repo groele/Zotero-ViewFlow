@@ -33,7 +33,7 @@
 
 后续可在插件管理器中检查更新。自动检查／安装取决于 Zotero 与该插件的更新设置和兼容范围。升级或迁移前备份重要数据。
 
-更新清单: [zotero-viewflow-updates.json](https://github.com/groele/Zotero-ViewFlow/blob/main/zotero-viewflow-updates.json) · 插件 ID: `zotero-viewflow@groele`.
+更新清单: [update.json](https://github.com/groele/Zotero-ViewFlow/blob/main/update.json) · 插件 ID: `zotero-viewflow@groele`.
 
 <a id="quick-start"></a>
 

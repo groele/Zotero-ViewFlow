@@ -1,7 +1,24 @@
+type Pane = HTMLElement;
+export type PositionOwner = Element & {
+ getPanes(): Pane[];
+ skipRender?: boolean;
+ sidenav?: { container: PositionOwner; querySelectorAll(selector: string): NodeListOf<HTMLElement>; changePaneOrder(id: string, index: number, options: {persist: boolean; render: boolean}): Promise<void> };
+ changePaneOrder?(id: string, index: number, options: {render: boolean}): Promise<void>;
+};
+export type PositionState = { positionOwner?: PositionOwner | null; body: HTMLElement; doc: Document; payload?: unknown; sizingOwner?: Element | null; destroyed: boolean };
+export type PositionPlugin = {
+ initialized: boolean; _lifecycle: symbol | null; _sectionID: string | false | null;
+ _positionObservers: Map<PositionOwner, {observer: MutationObserver; count: number}>;
+ _positionTimers: Map<PositionOwner, number>; _positionRuns: Map<PositionOwner, {dirty: boolean}>;
+ _states: Map<unknown, PositionState>;
+ _queuePosition(owner: PositionOwner | null): void; _applyPosition(owner: PositionOwner): Promise<void>;
+ _scheduleRefresh(state: PositionState): void; getPosition(): string; log(error: unknown): void;
+};
+
 /**
  * Validates and returns the user-selected section position in item-details.
  */
-export function resolvePosition(prefValue) {
+export function resolvePosition(prefValue: string) {
 	return ['zotero-item-pane-header', 'zotero-editpane-item-box', 'zotero-editpane-related'].includes(prefValue)
 		? prefValue
 		: 'zotero-item-pane-header';
@@ -10,7 +27,7 @@ export function resolvePosition(prefValue) {
 /**
  * Observes the parent container of panes in item-details to re-apply section order on mutation.
  */
-export function observePosition(plugin, owner, state) {
+export function observePosition(plugin: PositionPlugin, owner: PositionOwner | null, state: PositionState) {
 	if (state.positionOwner === owner) return;
 	if (!owner?.getPanes) return;
 	const parent = owner.getPanes().find(pane => pane.contains?.(state.body))?.parentNode;
@@ -30,7 +47,7 @@ export function observePosition(plugin, owner, state) {
 /**
  * Debounces and queues a position check/reorder task for the given item-details owner.
  */
-export function queuePosition(plugin, owner) {
+export function queuePosition(plugin: PositionPlugin, owner: PositionOwner | null) {
 	if (!plugin.initialized || !owner?.getPanes || plugin._positionTimers.has(owner)) return;
 	const run = plugin._positionRuns.get(owner);
 	if (run) {
@@ -60,10 +77,11 @@ export function queuePosition(plugin, owner) {
 /**
  * Orders the Zotero ViewFlow section pane relative to other panes (header, after info, or bottom).
  */
-export async function applyPosition(plugin, owner) {
+export async function applyPosition(plugin: PositionPlugin, owner: PositionOwner) {
 	if (!plugin.initialized) return;
 	const lifecycle = plugin._lifecycle;
 	const sectionID = plugin._sectionID;
+	if (!sectionID) return;
 	const panes = owner.getPanes();
 	const current = panes.findIndex(pane => pane.dataset.pane === plugin._sectionID);
 	if (current < 0 || owner.skipRender) return;
@@ -77,13 +95,13 @@ export async function applyPosition(plugin, owner) {
 
 	const sidenav = owner.sidenav;
 	if (sidenav?.container === owner && sidenav.changePaneOrder) {
-		const wrappers = Array.from(sidenav.querySelectorAll?.('.inherit-flex > .pin-wrapper') || []);
+		const wrappers = Array.from(sidenav.querySelectorAll?.('.inherit-flex > .pin-wrapper') || []) as HTMLElement[];
 		const targetID = panes[index]?.dataset.pane;
 		const targetIndex = targetID
-			? wrappers.findIndex(wrapper => wrapper.querySelector('.btn[data-pane]')?.dataset.pane === targetID)
+			? wrappers.findIndex(wrapper => wrapper.querySelector<HTMLElement>('.btn[data-pane]')?.dataset.pane === targetID)
 			: wrappers.length;
 		await sidenav.changePaneOrder(
-			plugin._sectionID,
+			sectionID,
 			wrappers.length && targetIndex >= 0 ? targetIndex : index,
 			{ persist: false, render: false }
 		);
@@ -109,7 +127,7 @@ export async function applyPosition(plugin, owner) {
 /**
  * Adjusts section maxWidth to avoid XUL intrinsic width expansion overflowing sidebars.
  */
-export function fitWidth(state) {
+export function fitWidth(state: PositionState) {
 	if (!state.sizingOwner || state.destroyed || state.body?.isConnected === false) return;
 	const bounds = state.sizingOwner.getBoundingClientRect();
 	if (!bounds.width) return;

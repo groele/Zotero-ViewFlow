@@ -33,7 +33,7 @@ Install this add-on independently and combine it with other Flow products as nee
 
 Use the add-on manager to check for later updates. Automatic checking/installation depends on Zotero, per-add-on update settings, and compatibility. Back up important data before upgrades or migration.
 
-Update feed: [zotero-viewflow-updates.json](https://github.com/groele/Zotero-ViewFlow/blob/main/zotero-viewflow-updates.json) · Add-on ID: `zotero-viewflow@groele`.
+Update feed: [update.json](https://github.com/groele/Zotero-ViewFlow/blob/main/update.json) · Add-on ID: `zotero-viewflow@groele`.
 
 <a id="quick-start"></a>
 

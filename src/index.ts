@@ -4,39 +4,26 @@ import {
 	CACHE_BYTE_LIMIT,
 	CACHE_TTL,
 	STYLE_INIT_TIMEOUT,
-	CLIPBOARD_ICON_SVG,
-	SUCCESS_ICON_SVG,
 	parseNumber,
 	createPreviewError
-} from './constants.js';
-import { CacheManager } from './cache.js';
+} from './constants.ts';
+import { CacheManager } from './cache.ts';
 import {
 	normalizeItem,
 	resolveItems,
 	resolveConfig,
-	getPreviewKey,
-	generateCSL,
 	waitForStyles
-} from './csl.js';
-import {
-	showCopyFeedback,
-	writeToXPCOMClipboard,
-	renderCopyError
-} from './clipboard.js';
+} from './csl.ts';
 import {
 	resolvePosition,
 	observePosition,
 	queuePosition,
 	applyPosition,
 	fitWidth
-} from './position.js';
+} from './position.ts';
 import {
 	ensureSectionHeader,
-	buildBlock,
-	setHTML,
-	renderPayload,
-	renderMessage
-} from './view.js';
+} from './view.ts';
 import {
 	initSection,
 	changeItem,
@@ -48,13 +35,19 @@ import {
 	destroySection,
 	queueAllPreviews,
 	updateLayout
-} from './section.js';
+} from './section.ts';
+
+import type {Props} from './section.ts';
+import type {PositionOwner} from './position.ts';
+import type {PreviewFacade} from './contracts.ts';
+import {previewActions} from './preview-actions.ts';
 
 /**
  * Zotero ViewFlow - Core Preview Plugin Object.
  * Preserves native item-pane lifecycle, shared LRU cache, and XPCOM clipboard integrations.
  */
-export const preview = {
+const core: Omit<PreviewFacade, keyof typeof previewActions> & ThisType<PreviewFacade> = {
+ id: "", version: "", rootURI: "", _states: new Map(), _cacheManager: new CacheManager(), _cache: new Map(), _prefObservers: [], _prefPaneCleanups: new Set(), _stylesheets: new Map(), _positionTimers: new Map(), _positionObservers: new Map(), _positionRuns: new Map(), _lifecycle: null, _stats: {generations:0,cacheHits:0}, _sectionID: null, _notifierID: null,
 	initialized: false,
 	_prefPrefix: PREF_PREFIX,
 	_cacheLimit: CACHE_LIMIT,
@@ -107,7 +100,7 @@ export const preview = {
 			this.setPref(this._prefPrefix + 'positionPolicyVersion', 1);
 		}
 		const title = { l10nID: 'zotero-preview-pane-title', icon: this.rootURI + 'view.svg' };
-		this._sectionID = Zotero.ItemPaneManager.registerSection({
+		this._sectionID = (Zotero.ItemPaneManager.registerSection as unknown as (options: {paneID:string;pluginID:string;header:object;sidenav:object;onInit:(p:Parameters<typeof initSection>[1])=>void;onDestroy:(p:{body:HTMLElement})=>void;onItemChange:(p:Props)=>void;onRender:(p:Props)=>void;onAsyncRender:(p:{body:HTMLElement})=>Promise<void>;onToggle:(p:{body:HTMLElement})=>void})=>string | false)({
 			paneID: 'zotero-preview',
 			pluginID: this.id,
 			header: title,
@@ -129,7 +122,7 @@ export const preview = {
 				this._prefPrefix + 'position',
 				() => {
 					for (const state of this._states.values()) {
-						this._queuePosition(state.body.closest('item-details'));
+						this._queuePosition(state.body.closest('item-details') as PositionOwner | null);
 					}
 				},
 				true
@@ -169,7 +162,7 @@ export const preview = {
 	},
 
 	getPosition() {
-		return resolvePosition(this.pref('position'));
+		return resolvePosition(this.pref('position') as string);
 	},
 
 	_observePosition(owner, state) {
@@ -202,7 +195,7 @@ export const preview = {
 
 	_config(item) {
 		return resolveConfig(item, {
-			getPref: n => this.pref(n),
+			getPref: n => this.pref(n) as string,
 			layoutConfig: () => this._layoutConfig(),
 			parseNum: (v, fb, min, max) => this._number(v, fb, min, max),
 			createError: (c, m) => this._previewError(c, m)
@@ -252,106 +245,10 @@ export const preview = {
 		return runRender(this, state);
 	},
 
-	_previewKey(items, config) {
-		return getPreviewKey(items, config);
-	},
-
-	_generate(items, config) {
-		return generateCSL(items, config, (c, m) => this._previewError(c, m));
-	},
-
-	_cacheGet(key) {
-		return this._cacheManager.get(key);
-	},
-
-	_cachePut(key, payload, ids) {
-		this._cacheManager.put(key, payload, ids);
-	},
-
-	_cacheDelete(key) {
-		this._cacheManager.delete(key);
-	},
-
-	_cacheClear() {
-		this._cacheManager.clear();
-	},
-
-	_clipboardIconSVG() {
-		return CLIPBOARD_ICON_SVG;
-	},
-
-	_successIconSVG() {
-		return SUCCESS_ICON_SVG;
-	},
-
-	_showCopyFeedback(state, button) {
-		showCopyFeedback(state, button, this._successIconSVG(), this._clipboardIconSVG());
-	},
-
-	_block(kind, content) {
-		return buildBlock(kind, content, this._clipboardIconSVG());
-	},
-
-	_renderPayload(state, payload, omitted) {
-		renderPayload(this, state, payload, omitted);
-	},
-
-	_setHTML(state, html) {
-		setHTML(state, html);
-	},
-
-	_message(state, id, fallback, error = false) {
-		renderMessage(this, state, id, fallback, error);
-	},
-
-	copyCitation(asCitations, body, button) {
-		const state = this._states.get(body);
-		const content = state?.payload?.[asCitations ? 'citation' : 'bibliography'];
-		if (!content) return false;
-		const ids = this._items(state).map(item => item.id);
-		if (
-			state.destroyed ||
-			!this.initialized ||
-			!ids.length ||
-			ids.length !== state.ids.length ||
-			ids.some((id, index) => id !== state.ids[index])
-		) {
-			state.payload = null;
-			this._cancelRender(state);
-			this._scheduleRefresh(state);
-			return false;
-		}
-		try {
-			const config = this._config(state.item);
-			const items = this._items(state).slice(0, Math.floor(config.limit));
-			if (
-				this._previewKey(items, config) !== state.key ||
-				config.asHTML !== state.config.asHTML
-			) {
-				throw new Error('Preview inputs changed');
-			}
-		} catch (error) {
-			state.payload = null;
-			this._cancelRender(state);
-			this._scheduleRefresh(state);
-			return false;
-		}
-		try {
-			writeToXPCOMClipboard(content, state.config.asHTML);
-			body.querySelector?.('.zotero-preview-copy-status')?.remove();
-			if (button) this._showCopyFeedback(state, button);
-			return true;
-		} catch (error) {
-			this.log(`Clipboard: ${error}`);
-			renderCopyError(state, body, msg => this.log(msg));
-			return false;
-		}
-	},
-
 	notify(event, type, ids) {
 		if (this.initialized && type === 'tab' && event === 'select') {
 			for (const state of this._states.values()) {
-				this._queuePosition(state.body.closest('item-details'));
+				this._queuePosition(state.body.closest('item-details') as PositionOwner | null);
 				if (!state.payload) this._scheduleRefresh(state);
 			}
 			return;
@@ -387,7 +284,7 @@ export const preview = {
 
 	setPref(pref, value) {
 		const name = pref.replace(this._prefPrefix, '');
-		const bounds = {
+		const bounds: Record<string,[number,number,number]> = {
 			fontsize: [1, 0.2, 3],
 			spacing: [1.5, 1, 3],
 			maxPreviewItems: [100, 1, 500]
@@ -407,7 +304,7 @@ export const preview = {
 		try {
 			action();
 		} catch (error) {
-			Zotero.logError?.(error);
+			Zotero.logError?.(error as Error);
 		}
 	},
 
@@ -423,17 +320,17 @@ export const preview = {
 		this._positionObservers.clear();
 		this._positionRuns.clear();
 
-		const cleanup = action => this._cleanup(action);
+		const cleanup = (action: () => void) => this._cleanup(action);
 		for (const dispose of [...this._prefPaneCleanups]) cleanup(dispose);
 		this._prefPaneCleanups.clear();
 		if (this._notifierID != null) {
-			cleanup(() => Zotero.Notifier.unregisterObserver(this._notifierID));
+			cleanup(() => Zotero.Notifier.unregisterObserver(this._notifierID!));
 		}
 		for (const observer of this._prefObservers) {
 			cleanup(() => Zotero.Prefs.unregisterObserver(observer));
 		}
 		if (this._sectionID) {
-			cleanup(() => Zotero.ItemPaneManager.unregisterSection(this._sectionID));
+			cleanup(() => Zotero.ItemPaneManager.unregisterSection(this._sectionID as string));
 		}
 		for (const body of [...this._states.keys()]) cleanup(() => this._destroySection(body));
 		for (const { link } of this._stylesheets.values()) cleanup(() => link.remove());
@@ -445,7 +342,13 @@ export const preview = {
 	}
 };
 
+const actionDescriptors = Object.getOwnPropertyDescriptors(previewActions);
+for (const name of Reflect.ownKeys(actionDescriptors)) {
+	if (Object.hasOwn(core, name)) throw new Error(`Duplicate preview facade method: ${String(name)}`);
+}
+export const preview = Object.defineProperties(core, actionDescriptors) as PreviewFacade;
+
 // Bind to global Zotero object
 if (typeof Zotero !== 'undefined') {
-	Zotero.zoteropreview = preview;
+	(Zotero as unknown as {zoteropreview: PreviewFacade}).zoteropreview = preview;
 }
