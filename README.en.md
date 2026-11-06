@@ -1,4 +1,4 @@
-> Current version: **13.1.5**. Promote architecture guard to scripts/architecture-guard.mjs, establish debtCleared: true zero-debt baseline, elevate to top tier governance, and ensure Zotero 10 ~ 12 modern compatibility.
+> Current version: **16.0.0**. Promote architecture guard to scripts/architecture-guard.mjs, establish debtCleared: true zero-debt baseline, elevate to top tier governance, and ensure Zotero 10 ~ 12 modern compatibility.
 
 # Zotero ViewFlow
 
@@ -11,7 +11,7 @@ Preview and copy formatted references in Zotero’s item pane.
 
 [简体中文](README.md) · [English](README.en.md)
 
-[![Release](https://img.shields.io/badge/version-13.1.5-245ac7?style=flat-square)](https://github.com/groele/Zotero-ViewFlow/releases/tag/v13.1.5) · [Download XPI](https://github.com/groele/Zotero-ViewFlow/releases/download/v13.1.5/Zotero-ViewFlow-13.1.5.xpi) · [Report an issue](https://github.com/groele/Zotero-ViewFlow/issues)
+[![Release](https://img.shields.io/badge/version-16.0.0-245ac7?style=flat-square)](https://github.com/groele/Zotero-ViewFlow/releases/tag/v16.0.0) · [Download XPI](https://github.com/groele/Zotero-ViewFlow/releases/download/v16.0.0/Zotero-ViewFlow-16.0.0.xpi) · [Report an issue](https://github.com/groele/Zotero-ViewFlow/issues)
 
 [Overview](#overview) · [Installation and updates](#installation) · [Quick start](#quick-start) · [Key features](#features) · [Settings](#settings) · [Data, sync, and services](#data) · [Compatibility and validation](#compatibility) · [Troubleshooting](#troubleshooting) · [Development and documentation](#development) · [The Flow series](#series) · [Origin and license](#license)
 
@@ -27,7 +27,7 @@ Install this add-on independently and combine it with other Flow products as nee
 
 ## Installation and updates
 
-1. Download [Zotero-ViewFlow-13.1.5.xpi](https://github.com/groele/Zotero-ViewFlow/releases/download/v13.1.5/Zotero-ViewFlow-13.1.5.xpi) (add-on version **13.1.5**), not the Source code ZIP.
+1. Download [Zotero-ViewFlow-16.0.0.xpi](https://github.com/groele/Zotero-ViewFlow/releases/download/v16.0.0/Zotero-ViewFlow-16.0.0.xpi) (add-on version **16.0.0**), not the Source code ZIP.
 2. In Zotero, open **Tools → Plugins/Add-ons**, then choose **Install Add-on From File** from the gear menu.
 3. Select the XPI, complete installation, and restart if requested.
 
@@ -76,7 +76,7 @@ Settings cover citation format, placement, layout styling, and maintenance optio
 
 | Item | Scope |
 |---|---|
-| Current add-on version | 13.1.5 |
+| Current add-on version | 16.0.0 |
 | Declared Zotero range | `10.0` through `12.*` |
 | Evidence boundary | All 71 automated unit tests and 14 architecture guard rules passed 100%. Deeply decoupled into src/ modular architecture (all source modules <= 360 lines, 0 debt declared), fully compatible with modern Zotero 10, 11 and 12 Gecko platforms. |
 

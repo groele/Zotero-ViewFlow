@@ -1,6 +1,6 @@
 {
   "name": "zotero-viewflow",
-  "version": "13.1.5",
+  "version": "16.0.0",
   "description": "Preview and copy formatted references in Zotero's item pane.",
   "private": true,
   "license": "Apache-2.0",
