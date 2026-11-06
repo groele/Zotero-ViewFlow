@@ -1,5 +1,17 @@
 # Changelog
 
+## 13.1.4 — 2026-11-06
+
+- Build Pipeline Hardening: upgraded `package.json` `build` script to enforce mandatory static type checking (`npm run typecheck && npm run build:xpi`) across all build entrypoints.
+- Root Runtime Architecture Guard: added strict defensive guards in `tests/architecture.test.cjs` ensuring `zoteropreview.js` is generated exclusively via esbuild with valid banner signatures, establishing root script whitelisting and enforcing <= 100 line bounds on bootstrap wrappers.
+- Test Suite Concurrency Isolation: added `--test-concurrency=1` to unit test execution to prevent filesystem contention between PowerShell package validation and test runners.
+
+## 13.1.3 — 2026-11-06
+
+- Modern TypeScript Architecture: migrated runtime codebase to TypeScript ES modules under `src/` with `zotero-types` strict compiler baseline (`tsc --noEmit`).
+- Gecko 153 Platform Audit: validated clean compatibility with Zotero 10 ~ 12 modern Gecko 153+ frozen intrinsic environments.
+- Canonical Release Feed: consolidated update feeds into `update.json` with SHA-512 package checksums.
+
 ## 13.1.2 — 2026-11-04
 
 - Unified CacheManager Reuse: streamlined `src/section.js` render cycle to uniformly reuse `CacheManager.get()`, `put()`, and `clear()`, eliminating redundant manual Map queries and LRU reordering.
