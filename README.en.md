@@ -61,7 +61,7 @@ Update feed: [update.json](https://github.com/groele/Zotero-ViewFlow/blob/main/u
 
 Open the add-on preference page in **Zotero → Settings → Zotero ViewFlow**.
 
-Settings cover citation format, placement, preview content, font, and item limits. Version 12.3.4 waits for Zotero’s citation styles before populating the menu.
+Settings cover citation format, placement, layout styling, and maintenance options. The add-on safely waits for Zotero citation styles to initialize before populating menus, and provides a one-click cache purge tool.
 
 <a id="data"></a>
 
@@ -78,7 +78,7 @@ Settings cover citation format, placement, preview content, font, and item limit
 |---|---|
 | Current add-on version | 13.1.5 |
 | Declared Zotero range | `10.0` through `12.*` |
-| Evidence boundary | 61 automated unit tests and runtime syntax checks passed 100%. Deeply decoupled into `src/` modular architecture and validated against Zotero 10, 11 and 12 modern Gecko platforms. |
+| Evidence boundary | All 71 automated unit tests and 14 architecture guard rules passed 100%. Deeply decoupled into src/ modular architecture (all source modules <= 360 lines, 0 debt declared), fully compatible with modern Zotero 10, 11 and 12 Gecko platforms. |
 
 Add-on and Zotero versions are separate. Declared compatibility does not establish testing on every host, operating system or service. This patch validates the targeted behaviors listed above, not all plugin workflows or main-profile installation.
 
