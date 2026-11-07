@@ -72,5 +72,5 @@ zotero-preview-release-notes-label = Changes
 zotero-preview-release-notes = Hardened build pipeline with mandatory static type checking (npm run typecheck) and added architectural guards for generated bundles.
 zotero-preview-release-date = Build date
 zotero-preview-release-download = Installer
-zotero-preview-release-download-link = Download the 13.1.4 installer
+zotero-preview-release-download-link = Download ViewFlow 16.0.0 installer
 zotero-preview-release-repository = Repository

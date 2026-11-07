@@ -72,5 +72,5 @@ zotero-preview-release-notes-label = Cambios
 zotero-preview-release-notes = Línea de compilación reforzada con verificación de tipo estático (npm run typecheck) y guardas arquitectónicas agregadas.
 zotero-preview-release-date = Fecha de compilación
 zotero-preview-release-download = Instalador
-zotero-preview-release-download-link = Descargar el instalador 13.1.4
+zotero-preview-release-download-link = Descargar el instalador ViewFlow 16.0.0
 zotero-preview-release-repository = Repositorio

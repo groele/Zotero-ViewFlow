@@ -72,5 +72,5 @@ zotero-preview-release-notes-label = 版本说明
 zotero-preview-release-notes = 加固构建流水线静态类型守卫（npm run typecheck），新增根目录运行时生成物防篡改与手写隔离架构守卫。
 zotero-preview-release-date = 构建日期
 zotero-preview-release-download = 安装包
-zotero-preview-release-download-link = 下载 13.1.4 安装包
+zotero-preview-release-download-link = 下载 ViewFlow 16.0.0 安装包
 zotero-preview-release-repository = 项目仓库
