@@ -72,7 +72,7 @@ zotero-preview-release-notes-label = Changes
 zotero-preview-release-notes = Added compact citation reverse lookup, dedicated sidebar panel, preference toggle, and local history cache eviction.
 zotero-preview-release-date = Build date
 zotero-preview-release-download = Installer
-zotero-preview-release-download-link = Download ViewFlow 16.1.9 installer
+zotero-preview-release-download-link = Download ViewFlow 16.1.10 installer
 zotero-preview-release-repository = Repository
 
 zotero-preview-lookup-pane-title =
@@ -87,7 +87,7 @@ zotero-preview-settings-lookup-history-label =
     .label = Track local copy history for instant provenance
 zotero-preview-settings-lookup-history-desc = Automatically saves citation mappings on copy to enable immediate reverse lookup.
 zotero-preview-settings-cache-dir-label = Local cache file path
-zotero-preview-settings-cache-dir-desc = Edit the full path or choose a folder. The filename is Zotero-citation-history.json.
+zotero-preview-settings-cache-dir-desc = Edit the full path or choose a folder. The filename is viewflow-history.json.
 zotero-preview-settings-cache-quota-label = Maximum Cache Entries (LRU)
 zotero-preview-settings-cache-ttl-label = Cache Retention TTL (Days)
 zotero-preview-settings-cache-clear-label = Clear local citation history cache
@@ -111,7 +111,7 @@ zotero-preview-cache-default =
 
 zotero-preview-cache-file-label = Current cache file (select to copy the full path)
 
-zotero-preview-cache-location-help = Enter the full file path or an absolute folder; leave blank for the default. Legacy citation-history.json is read automatically. Changing folders merges history and retains previous files.
+zotero-preview-cache-location-help = Enter the full file path or an absolute folder; leave blank for the default. Legacy history files are read automatically. Changing folders merges history and retains previous files.
 
 zotero-preview-cache-path-saved = Folder applied. History will be saved to the new location in the background.
 

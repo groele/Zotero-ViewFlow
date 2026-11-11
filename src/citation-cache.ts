@@ -113,7 +113,7 @@ export class CitationCacheManager {
 	}
 
 	getFilePath(): string {
-		return PathUtils.join(this.getDirectoryPath(), 'Zotero-citation-history.json');
+		return PathUtils.join(this.getDirectoryPath(), 'viewflow-history.json');
 	}
 
 	/**
@@ -131,13 +131,23 @@ export class CitationCacheManager {
     private async load(filePath: string, generation: number): Promise<void> {
         try {
             if (typeof IOUtils === 'undefined') return;
-            const legacyPath = filePath.replace(/Zotero-citation-history\.json$/, 'citation-history.json');
-            const migrated = !await IOUtils.exists(filePath);
-            if (migrated) {
-                if (!await IOUtils.exists(legacyPath)) return;
-                filePath = legacyPath;
+            const legacyCandidates = [
+                filePath.replace(/viewflow-history\.json$/, 'Zotero-citation-history.json'),
+                filePath.replace(/viewflow-history\.json$/, 'citation-history.json')
+            ];
+            let activePath = filePath;
+            let migrated = false;
+            if (!await IOUtils.exists(filePath)) {
+                for (const candidate of legacyCandidates) {
+                    if (await IOUtils.exists(candidate)) {
+                        activePath = candidate;
+                        migrated = true;
+                        break;
+                    }
+                }
+                if (!migrated) return;
             }
-            const data: unknown = JSON.parse(await IOUtils.readUTF8(filePath));
+            const data: unknown = JSON.parse(await IOUtils.readUTF8(activePath));
             if (generation !== this._generation || !Array.isArray(data)) return;
             const ttlMs = this._config.ttlDays * 86400000;
             for (const r of data as CitationRecord[]) {
@@ -276,7 +286,7 @@ export class CitationCacheManager {
 			if (!(await IOUtils.exists(dirPath))) {
 				await IOUtils.makeDirectory(dirPath, { ignoreExisting: true });
 			}
-			const filePath = PathUtils.join(dirPath, 'Zotero-citation-history.json');
+			const filePath = PathUtils.join(dirPath, 'viewflow-history.json');
 			const tmpPath = filePath + '.tmp';
 			const data = Array.from(this._records.values());
 			const json = JSON.stringify(data, null, 2);
@@ -310,7 +320,12 @@ export class CitationCacheManager {
 		if (typeof IOUtils !== 'undefined') {
 			try {
 				const filePath = this.getFilePath();
-				for (const path of [filePath, filePath.replace(/Zotero-citation-history\.json$/, 'citation-history.json')]) {
+				const paths = [
+					filePath,
+					filePath.replace(/viewflow-history\.json$/, 'Zotero-citation-history.json'),
+					filePath.replace(/viewflow-history\.json$/, 'citation-history.json')
+				];
+				for (const path of paths) {
 					if (await IOUtils.exists(path)) await IOUtils.remove(path);
 				}
 			} catch (_) {}

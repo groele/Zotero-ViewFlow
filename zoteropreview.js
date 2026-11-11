@@ -183,7 +183,7 @@
       return "viewflow-cache";
     }
     getFilePath() {
-      return PathUtils.join(this.getDirectoryPath(), "Zotero-citation-history.json");
+      return PathUtils.join(this.getDirectoryPath(), "viewflow-history.json");
     }
     /**
      * Loads persistent cache from disk with corruption self-healing.
@@ -199,13 +199,23 @@
     async load(filePath, generation) {
       try {
         if (typeof IOUtils === "undefined") return;
-        const legacyPath = filePath.replace(/Zotero-citation-history\.json$/, "citation-history.json");
-        const migrated = !await IOUtils.exists(filePath);
-        if (migrated) {
-          if (!await IOUtils.exists(legacyPath)) return;
-          filePath = legacyPath;
+        const legacyCandidates = [
+          filePath.replace(/viewflow-history\.json$/, "Zotero-citation-history.json"),
+          filePath.replace(/viewflow-history\.json$/, "citation-history.json")
+        ];
+        let activePath = filePath;
+        let migrated = false;
+        if (!await IOUtils.exists(filePath)) {
+          for (const candidate of legacyCandidates) {
+            if (await IOUtils.exists(candidate)) {
+              activePath = candidate;
+              migrated = true;
+              break;
+            }
+          }
+          if (!migrated) return;
         }
-        const data = JSON.parse(await IOUtils.readUTF8(filePath));
+        const data = JSON.parse(await IOUtils.readUTF8(activePath));
         if (generation !== this._generation || !Array.isArray(data)) return;
         const ttlMs = this._config.ttlDays * 864e5;
         for (const r of data) {
@@ -318,7 +328,7 @@
         if (!await IOUtils.exists(dirPath)) {
           await IOUtils.makeDirectory(dirPath, { ignoreExisting: true });
         }
-        const filePath = PathUtils.join(dirPath, "Zotero-citation-history.json");
+        const filePath = PathUtils.join(dirPath, "viewflow-history.json");
         const tmpPath = filePath + ".tmp";
         const data = Array.from(this._records.values());
         const json = JSON.stringify(data, null, 2);
@@ -350,7 +360,12 @@
       if (typeof IOUtils !== "undefined") {
         try {
           const filePath = this.getFilePath();
-          for (const path of [filePath, filePath.replace(/Zotero-citation-history\.json$/, "citation-history.json")]) {
+          const paths = [
+            filePath,
+            filePath.replace(/viewflow-history\.json$/, "Zotero-citation-history.json"),
+            filePath.replace(/viewflow-history\.json$/, "citation-history.json")
+          ];
+          for (const path of paths) {
             if (await IOUtils.exists(path)) await IOUtils.remove(path);
           }
         } catch (_) {

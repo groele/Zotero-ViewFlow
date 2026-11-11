@@ -52,7 +52,7 @@ export function setupCachePreferences(
         try {
             let path = value.trim();
             if (/\.json$/i.test(path)) {
-                if (!/(?:^|[\\/])(?:Zotero-)?citation-history\.json$/i.test(path)) throw new Error('Unsupported cache filename');
+                if (!/(?:^|[\\/])(?:viewflow-history|(?:Zotero-)?citation-history)\.json$/i.test(path)) throw new Error('Unsupported cache filename');
                 const parent = PathUtils.parent(path);
                 if (!parent) throw new Error('Parent directory required');
                 path = parent;

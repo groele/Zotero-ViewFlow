@@ -72,7 +72,7 @@ zotero-preview-release-notes-label = Modifications
 zotero-preview-release-notes = Ajout de la recherche inversée de citations compactes, d'un panneau latéral dédié, d'un commutateur de préférences et de l'éviction du cache local.
 zotero-preview-release-date = Date de compilation
 zotero-preview-release-download = Installation
-zotero-preview-release-download-link = Télécharger l'installation ViewFlow 16.1.9
+zotero-preview-release-download-link = Télécharger l'installation ViewFlow 16.1.10
 zotero-preview-release-repository = Dépôt
 
 zotero-preview-lookup-pane-title =
@@ -87,7 +87,7 @@ zotero-preview-settings-lookup-history-label =
     .label = Enregistrer l'historique des copies locales pour une provenance instantanée
 zotero-preview-settings-lookup-history-desc = Enregistre automatiquement les correspondances lors de la copie pour une recherche inverse immédiate.
 zotero-preview-settings-cache-dir-label = Chemin du fichier de cache local
-zotero-preview-settings-cache-dir-desc = Modifiez le chemin complet ou choisissez un dossier. Le nom du fichier est Zotero-citation-history.json.
+zotero-preview-settings-cache-dir-desc = Modifiez le chemin complet ou choisissez un dossier. Le nom du fichier est viewflow-history.json.
 zotero-preview-settings-cache-quota-label = Limite Maximale d'Entrées du Cache (LRU)
 zotero-preview-settings-cache-ttl-label = Rétention du Cache TTL (Jours)
 zotero-preview-settings-cache-clear-label = Vider le cache d'historique des citations locales
@@ -111,7 +111,7 @@ zotero-preview-cache-default =
 
 zotero-preview-cache-file-label = Fichier de cache actuel (sélectionnez pour copier le chemin complet)
 
-zotero-preview-cache-location-help = Entrez le chemin complet ou un dossier absolu ; laissez vide pour l'emplacement par défaut. L'ancien fichier citation-history.json est lu automatiquement.
+zotero-preview-cache-location-help = Entrez le chemin complet ou un dossier absolu ; laissez vide pour l'emplacement par défaut. Les anciens fichiers d'historique sont lus automatiquement.
 
 zotero-preview-cache-path-saved = Dossier appliqué. L'historique sera enregistré au nouvel emplacement en arrière-plan.
 

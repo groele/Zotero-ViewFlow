@@ -72,7 +72,7 @@ zotero-preview-release-notes-label = Cambios
 zotero-preview-release-notes = Se agregó búsqueda inversa de citas compactas, panel de barra lateral dedicado, interruptor de preferencias y expulsión de caché local.
 zotero-preview-release-date = Fecha de compilación
 zotero-preview-release-download = Instalador
-zotero-preview-release-download-link = Descargar el instalador ViewFlow 16.1.9
+zotero-preview-release-download-link = Descargar el instalador ViewFlow 16.1.10
 zotero-preview-release-repository = Repositorio
 
 zotero-preview-lookup-pane-title =
@@ -87,7 +87,7 @@ zotero-preview-settings-lookup-history-label =
     .label = Registrar historial de copia local para procedencia instantánea
 zotero-preview-settings-lookup-history-desc = Guarda automáticamente las asignaciones al copiar para permitir la búsqueda inversa inmediata.
 zotero-preview-settings-cache-dir-label = Ruta del archivo de caché local
-zotero-preview-settings-cache-dir-desc = Edite la ruta completa o elija una carpeta. El nombre del archivo es Zotero-citation-history.json.
+zotero-preview-settings-cache-dir-desc = Edite la ruta completa o elija una carpeta. El nombre del archivo es viewflow-history.json.
 zotero-preview-settings-cache-quota-label = Límite Máximo de Entradas de Caché (LRU)
 zotero-preview-settings-cache-ttl-label = Retención de Caché TTL (Días)
 zotero-preview-settings-cache-clear-label = Borrar caché de historial de citas local
@@ -111,7 +111,7 @@ zotero-preview-cache-default =
 
 zotero-preview-cache-file-label = Archivo de caché actual (seleccione para copiar la ruta completa)
 
-zotero-preview-cache-location-help = Introduzca la ruta completa o una carpeta absoluta; déjelo en blanco para el valor predeterminado. El archivo heredado citation-history.json se lee automáticamente.
+zotero-preview-cache-location-help = Introduzca la ruta completa o una carpeta absoluta; déjelo en blanco para el valor predeterminado. Los archivos de historial heredados se leen automáticamente.
 
 zotero-preview-cache-path-saved = Carpeta aplicada. El historial se guardará en la nueva ubicación en segundo plano.
 

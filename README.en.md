@@ -1,4 +1,4 @@
-> Current version: **16.1.9**. Added compact citation reverse lookup, dedicated sidebar panel, preference toggle, and local history cache eviction, ensuring Zotero 10 ~ 12 modern compatibility.
+> Current version: **16.1.10**. Added compact citation reverse lookup, dedicated sidebar panel, preference toggle, and local history cache eviction, ensuring Zotero 10 ~ 12 modern compatibility.
 
 # Zotero ViewFlow
 
@@ -11,7 +11,7 @@ Preview and copy formatted references in Zotero’s item pane.
 
 [简体中文](README.md) · [English](README.en.md)
 
-[![Release](https://img.shields.io/badge/version-16.1.9-245ac7?style=flat-square)](https://github.com/groele/Zotero-ViewFlow/releases/tag/v16.1.9) · [Download XPI](https://github.com/groele/Zotero-ViewFlow/releases/download/v16.1.9/Zotero-ViewFlow-16.1.9.xpi) · [Report an issue](https://github.com/groele/Zotero-ViewFlow/issues)
+[![Release](https://img.shields.io/badge/version-16.1.10-245ac7?style=flat-square)](https://github.com/groele/Zotero-ViewFlow/releases/tag/v16.1.10) · [Download XPI](https://github.com/groele/Zotero-ViewFlow/releases/download/v16.1.10/Zotero-ViewFlow-16.1.10.xpi) · [Report an issue](https://github.com/groele/Zotero-ViewFlow/issues)
 
 [Overview](#overview) · [Installation and updates](#installation) · [Quick start](#quick-start) · [Key features](#features) · [Settings](#settings) · [Data, sync, and services](#data) · [Compatibility and validation](#compatibility) · [Troubleshooting](#troubleshooting) · [Development and documentation](#development) · [The Flow series](#series) · [Origin and license](#license)
 
@@ -27,7 +27,7 @@ Install this add-on independently and combine it with other Flow products as nee
 
 ## Installation and updates
 
-1. Download [Zotero-ViewFlow-16.1.9.xpi](https://github.com/groele/Zotero-ViewFlow/releases/download/v16.1.9/Zotero-ViewFlow-16.1.9.xpi) (add-on version **16.1.9**), not the Source code ZIP.
+1. Download [Zotero-ViewFlow-16.1.10.xpi](https://github.com/groele/Zotero-ViewFlow/releases/download/v16.1.10/Zotero-ViewFlow-16.1.10.xpi) (add-on version **16.1.10**), not the Source code ZIP.
 2. In Zotero, open **Tools → Plugins/Add-ons**, then choose **Install Add-on From File** from the gear menu.
 3. Select the XPI, complete installation, and restart if requested.
 
@@ -82,7 +82,7 @@ The settings pane adheres strictly to the 40px golden alignment grid:
 
 | Item | Scope |
 |---|---|
-| Current add-on version | 16.1.9 |
+| Current add-on version | 16.1.10 |
 | Declared Zotero range | `10.0` through `12.*` |
 | Evidence boundary | All 77 automated unit tests and 14 architecture guard rules passed 100%. Deeply decoupled into src/ modular architecture (all 14 source modules <= 360 lines, 0 debt declared), fully compatible with modern Zotero 10, 11 and 12 Gecko platforms. |
 

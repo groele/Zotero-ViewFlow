@@ -50,7 +50,7 @@ test('Citation Cache: handles in-memory and disk persistence with LRU+Hit evicti
 
 		// Persist to disk
 		await manager.flush();
-		const cacheFile = path.join(tempDir, 'Zotero-citation-history.json');
+		const cacheFile = path.join(tempDir, 'viewflow-history.json');
 		assert.ok(fs.existsSync(cacheFile));
 
 		const diskData = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
@@ -135,13 +135,12 @@ test('cache directory switch merges destination records and persists reduced quo
   await first.flush();
   fs.mkdirSync(destination,{recursive:true});
   const record={key:'old-format',text:'two',libraryID:1,itemKey:'TWO',itemID:2,title:'Two',style:'test',copiedAt:Date.now(),lastAccessedAt:Date.now(),hitCount:0};
-  fs.writeFileSync(path.join(destination,'citation-history.json'),JSON.stringify([record]));
+  fs.writeFileSync(path.join(destination,'Zotero-citation-history.json'),JSON.stringify([record]));
   first.configure({customDir:destination});
   await first.flush();
   assert.equal(first.count,2);
-  assert.equal(fs.existsSync(path.join(destination,'citation-history.json')),true);
-  assert.equal(fs.existsSync(path.join(destination,'Zotero-citation-history.json')),true);
-  assert.equal(fs.existsSync(path.join(source,'Zotero-citation-history.json')),true);
+  assert.equal(fs.existsSync(path.join(destination,'viewflow-history.json')),true);
+  assert.equal(fs.existsSync(path.join(source,'viewflow-history.json')),true);
   assert.equal(JSON.parse(fs.readFileSync(first.getFilePath(),'utf8')).length,2);
   first.configure({maxEntries:1});
   await first.flush();
