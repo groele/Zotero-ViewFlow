@@ -1,40 +1,15 @@
 import {
-	PREF_PREFIX,
-	CACHE_LIMIT,
-	CACHE_BYTE_LIMIT,
-	CACHE_TTL,
-	STYLE_INIT_TIMEOUT,
-	parseNumber,
-	createPreviewError
+	PREF_PREFIX, CACHE_LIMIT, CACHE_BYTE_LIMIT, CACHE_TTL, STYLE_INIT_TIMEOUT, parseNumber, createPreviewError
 } from './constants.ts';
 import { CacheManager } from './cache.ts';
+import { CitationCacheManager } from './citation-cache.ts';
+import { registerLookupSection, unregisterLookupSection } from './lookup-section.ts';
+import { normalizeItem, resolveItems, resolveConfig, waitForStyles } from './csl.ts';
+import { resolvePosition, observePosition, queuePosition, applyPosition, fitWidth } from './position.ts';
+import { ensureSectionHeader } from './view.ts';
 import {
-	normalizeItem,
-	resolveItems,
-	resolveConfig,
-	waitForStyles
-} from './csl.ts';
-import {
-	resolvePosition,
-	observePosition,
-	queuePosition,
-	applyPosition,
-	fitWidth
-} from './position.ts';
-import {
-	ensureSectionHeader,
-} from './view.ts';
-import {
-	initSection,
-	changeItem,
-	prepareRender,
-	cancelRender,
-	renderSection,
-	runRender,
-	scheduleRefresh,
-	destroySection,
-	queueAllPreviews,
-	updateLayout
+	initSection, changeItem, prepareRender, cancelRender, renderSection, runRender,
+	scheduleRefresh, destroySection, queueAllPreviews, updateLayout
 } from './section.ts';
 
 import type {Props} from './section.ts';
@@ -47,7 +22,7 @@ import {previewActions} from './preview-actions.ts';
  * Preserves native item-pane lifecycle, shared LRU cache, and XPCOM clipboard integrations.
  */
 const core: Omit<PreviewFacade, keyof typeof previewActions> & ThisType<PreviewFacade> = {
- id: "", version: "", rootURI: "", _states: new Map(), _cacheManager: new CacheManager(), _cache: new Map(), _prefObservers: [], _prefPaneCleanups: new Set(), _stylesheets: new Map(), _positionTimers: new Map(), _positionObservers: new Map(), _positionRuns: new Map(), _lifecycle: null, _stats: {generations:0,cacheHits:0}, _sectionID: null, _notifierID: null,
+ id: "", version: "", rootURI: "", _states: new Map(), _cacheManager: new CacheManager(), _cache: new Map(), _prefObservers: [], _prefPaneCleanups: new Set(), _stylesheets: new Map(), _positionTimers: new Map(), _positionObservers: new Map(), _positionRuns: new Map(), _lifecycle: null, _stats: {generations:0,cacheHits:0}, _sectionID: null, _lookupSectionID: null, _notifierID: null, _citationCache: new CitationCacheManager(),
 	initialized: false,
 	_prefPrefix: PREF_PREFIX,
 	_cacheLimit: CACHE_LIMIT,
@@ -59,12 +34,11 @@ const core: Omit<PreviewFacade, keyof typeof previewActions> & ThisType<PreviewF
 		if (this.initialized) return;
 		Object.assign(this, { id, version, rootURI });
 		this._states = new Map();
-		this._cacheManager = new CacheManager({
-			limit: this._cacheLimit,
-			byteLimit: this._cacheByteLimit,
-			ttl: this._cacheTTL
-		});
+		this._cacheManager = new CacheManager({ limit: this._cacheLimit, byteLimit: this._cacheByteLimit, ttl: this._cacheTTL });
 		this._cache = this._cacheManager.map;
+		this._citationCache = new CitationCacheManager();
+		this._syncCacheConfig();
+		this._citationCache.init().catch(err => this.log(err));
 		this._prefObservers = [];
 		this._prefPaneCleanups = new Set();
 		this._stylesheets = new Map();
@@ -76,25 +50,14 @@ const core: Omit<PreviewFacade, keyof typeof previewActions> & ThisType<PreviewF
 		this.initialized = true;
 	},
 
-	get _cacheBytes() {
-		return this._cacheManager?.bytes || 0;
-	},
-	set _cacheBytes(val) {
-		if (this._cacheManager) this._cacheManager.bytes = val;
-	},
+	get _cacheBytes() { return this._cacheManager?.bytes || 0; },
+	set _cacheBytes(val) { if (this._cacheManager) this._cacheManager.bytes = val; },
 
-	log(message) {
-		if (this.pref('debug')) Zotero.debug(`ZoteroPreview: ${message}`);
-	},
-
-	pref(name) {
-		return Zotero.Prefs.get(this._prefPrefix + name, true);
-	},
+	log(message) { if (this.pref('debug')) Zotero.debug(`ZoteroPreview: ${message}`); },
+	pref(name) { return Zotero.Prefs.get(this._prefPrefix + name, true); },
 
 	start() {
-		if (!Zotero.ItemPaneManager?.registerSection) {
-			throw new Error('Native ItemPaneManager API required');
-		}
+		if (!Zotero.ItemPaneManager?.registerSection) throw new Error('Native ItemPaneManager API required');
 		if (this.pref('positionPolicyVersion') !== 1) {
 			this.setPref(this._prefPrefix + 'position', 'zotero-item-pane-header');
 			this.setPref(this._prefPrefix + 'positionPolicyVersion', 1);
@@ -116,82 +79,58 @@ const core: Omit<PreviewFacade, keyof typeof previewActions> & ThisType<PreviewF
 			}
 		});
 		if (!this._sectionID) throw new Error('Could not register ZoteroPreview section');
+		this._syncLookupSection();
 		this._notifierID = Zotero.Notifier.registerObserver(this, ['item', 'tab'], 'zoteropreview');
 		this._prefObservers.push(
-			Zotero.Prefs.registerObserver(
-				this._prefPrefix + 'position',
-				() => {
-					for (const state of this._states.values()) {
-						this._queuePosition(state.body.closest('item-details') as PositionOwner | null);
-					}
-				},
-				true
-			)
+			Zotero.Prefs.registerObserver(this._prefPrefix + 'position', () => {
+				for (const state of this._states.values()) {
+					this._queuePosition(state.body.closest('item-details') as PositionOwner | null);
+				}
+			}, true)
 		);
 		for (const name of ['fontsize', 'spacing']) {
-			this._prefObservers.push(
-				Zotero.Prefs.registerObserver(
-					this._prefPrefix + name,
-					() => this._updateLayout(),
-					true
-				)
-			);
+			this._prefObservers.push(Zotero.Prefs.registerObserver(this._prefPrefix + name, () => this._updateLayout(), true));
 		}
 		for (const name of ['citationstyle', 'whatToShow', 'maxPreviewItems']) {
-			this._prefObservers.push(
-				Zotero.Prefs.registerObserver(
-					this._prefPrefix + name,
-					() => this._queueAllPreviews(),
-					true
-				)
-			);
+			this._prefObservers.push(Zotero.Prefs.registerObserver(this._prefPrefix + name, () => this._queueAllPreviews(), true));
 		}
-		for (const name of [
-			'export.quickCopy.setting',
-			'export.quickCopy.locale',
-			'export.quickCopy.dragLimit'
-		]) {
-			this._prefObservers.push(
-				Zotero.Prefs.registerObserver(name, () => this._queueAllPreviews())
-			);
+		this._prefObservers.push(Zotero.Prefs.registerObserver(this._prefPrefix + 'lookupEnabled', () => this._syncLookupSection(), true));
+		for (const name of ['cacheDirectory', 'cacheMaxEntries', 'cacheTtlDays']) {
+			this._prefObservers.push(Zotero.Prefs.registerObserver(this._prefPrefix + name, () => this._syncCacheConfig(), true));
+		}
+		for (const name of ['export.quickCopy.setting', 'export.quickCopy.locale', 'export.quickCopy.dragLimit']) {
+			this._prefObservers.push(Zotero.Prefs.registerObserver(name, () => this._queueAllPreviews()));
 		}
 	},
 
-	_initSection(props) {
-		initSection(this, props);
+	_syncCacheConfig() {
+		if (!this._citationCache) return;
+		const customDir = String(this.pref('cacheDirectory') || '').trim();
+		const maxEntries = Math.round(this._number(this.pref('cacheMaxEntries'), 2000, 100, 100000));
+		const ttlDays = Math.round(this._number(this.pref('cacheTtlDays'), 90, 7, 3650));
+		this._citationCache.configure({ customDir, maxEntries, ttlDays });
 	},
 
-	getPosition() {
-		return resolvePosition(this.pref('position') as string);
+	_syncLookupSection() {
+		const enabled = this.pref('lookupEnabled') !== false;
+		if (enabled && !this._lookupSectionID) {
+			this._lookupSectionID = registerLookupSection(this);
+			if (!this._lookupSectionID) Zotero.logError(new Error('ViewFlow citation lookup section registration failed'));
+		} else if (!enabled && this._lookupSectionID) {
+			unregisterLookupSection(this._lookupSectionID);
+			this._lookupSectionID = null;
+		}
 	},
 
-	_observePosition(owner, state) {
-		observePosition(this, owner, state);
-	},
-
-	_queuePosition(owner) {
-		queuePosition(this, owner);
-	},
-
-	_applyPosition(owner) {
-		return applyPosition(this, owner);
-	},
-
-	_fitWidth(state) {
-		fitWidth(state);
-	},
-
-	_normalizeItem(item) {
-		return normalizeItem(item);
-	},
-
-	_changeItem(props) {
-		changeItem(this, props);
-	},
-
-	_items(state) {
-		return resolveItems(state, item => this._normalizeItem(item));
-	},
+	_initSection(props) { initSection(this, props); },
+	getPosition() { return resolvePosition(this.pref('position') as string); },
+	_observePosition(owner, state) { observePosition(this, owner, state); },
+	_queuePosition(owner) { queuePosition(this, owner); },
+	_applyPosition(owner) { return applyPosition(this, owner); },
+	_fitWidth(state) { fitWidth(state); },
+	_normalizeItem(item) { return normalizeItem(item); },
+	_changeItem(props) { changeItem(this, props); },
+	_items(state) { return resolveItems(state, item => this._normalizeItem(item)); },
 
 	_config(item) {
 		return resolveConfig(item, {
@@ -202,48 +141,18 @@ const core: Omit<PreviewFacade, keyof typeof previewActions> & ThisType<PreviewF
 		});
 	},
 
-	_previewError(code, message) {
-		return createPreviewError(code, message);
-	},
-
+	_previewError(code, message) { return createPreviewError(code, message); },
 	_layoutConfig() {
-		return {
-			font: this._number(this.pref('fontsize'), 1, 0.2, 3),
-			spacing: this._number(this.pref('spacing'), 1.5, 1, 3)
-		};
+		return { font: this._number(this.pref('fontsize'), 1, 0.2, 3), spacing: this._number(this.pref('spacing'), 1.5, 1, 3) };
 	},
-
-	_updateLayout() {
-		updateLayout(this);
-	},
-
-	_number(value, fallback, min, max) {
-		return parseNumber(value, fallback, min, max);
-	},
-
-	_ensureSectionHeader(body) {
-		ensureSectionHeader(body);
-	},
-
-	_prepareRender(props) {
-		prepareRender(this, props);
-	},
-
-	_cancelRender(state) {
-		cancelRender(state);
-	},
-
-	_renderSection(props) {
-		return renderSection(this, props);
-	},
-
-	_waitForStyles(state) {
-		return waitForStyles(state, this._styleInitTimeout);
-	},
-
-	_runRender(state) {
-		return runRender(this, state);
-	},
+	_updateLayout() { updateLayout(this); },
+	_number(value, fallback, min, max) { return parseNumber(value, fallback, min, max); },
+	_ensureSectionHeader(body) { ensureSectionHeader(body); },
+	_prepareRender(props) { prepareRender(this, props); },
+	_cancelRender(state) { cancelRender(state); },
+	_renderSection(props) { return renderSection(this, props); },
+	_waitForStyles(state) { return waitForStyles(state, this._styleInitTimeout); },
+	_runRender(state) { return runRender(this, state); },
 
 	notify(event, type, ids) {
 		if (this.initialized && type === 'tab' && event === 'select') {
@@ -274,38 +183,27 @@ const core: Omit<PreviewFacade, keyof typeof previewActions> & ThisType<PreviewF
 		}
 	},
 
-	_scheduleRefresh(state) {
-		scheduleRefresh(this, state);
-	},
-
-	_queueAllPreviews() {
-		queueAllPreviews(this);
-	},
-
+	_scheduleRefresh(state) { scheduleRefresh(this, state); },
+	_queueAllPreviews() { queueAllPreviews(this); },
 	setPref(pref, value) {
-		const name = pref.replace(this._prefPrefix, '');
-		const bounds: Record<string,[number,number,number]> = {
-			fontsize: [1, 0.2, 3],
-			spacing: [1.5, 1, 3],
-			maxPreviewItems: [100, 1, 500]
+		const bounds: Record<string, [number, number, number, boolean?]> = {
+			[this._prefPrefix + 'fontsize']: [1, 0.2, 3],
+			[this._prefPrefix + 'spacing']: [1.5, 1, 3],
+			[this._prefPrefix + 'maxPreviewItems']: [100, 1, 500, true],
+			[this._prefPrefix + 'cacheMaxEntries']: [2000, 100, 100000, true],
+			[this._prefPrefix + 'cacheTtlDays']: [90, 7, 3650, true],
 		};
-		if (bounds[name]) {
-			value = this._number(value, ...bounds[name]);
-			if (name === 'maxPreviewItems') value = Math.floor(value);
+		if (pref in bounds) {
+			const [fallback, min, max, integer] = bounds[pref];
+			const num = this._number(value, fallback, min, max);
+			value = integer ? Math.round(num) : num;
 		}
 		Zotero.Prefs.set(pref, value, true);
 	},
-
-	_destroySection(body) {
-		destroySection(this, body);
-	},
+	_destroySection(body) { destroySection(this, body); },
 
 	_cleanup(action) {
-		try {
-			action();
-		} catch (error) {
-			Zotero.logError?.(error as Error);
-		}
+		try { action(); } catch (error) { Zotero.logError?.(error as Error); }
 	},
 
 	shutdown() {
@@ -332,11 +230,18 @@ const core: Omit<PreviewFacade, keyof typeof previewActions> & ThisType<PreviewF
 		if (this._sectionID) {
 			cleanup(() => Zotero.ItemPaneManager.unregisterSection(this._sectionID as string));
 		}
+		if (this._lookupSectionID) {
+			cleanup(() => unregisterLookupSection(this._lookupSectionID));
+		}
+		if (this._citationCache) {
+			this._citationCache.flush().catch(() => {});
+		}
 		for (const body of [...this._states.keys()]) cleanup(() => this._destroySection(body));
 		for (const { link } of this._stylesheets.values()) cleanup(() => link.remove());
 		this._stylesheets.clear();
 		this._cacheManager.clear();
 		this._sectionID = null;
+		this._lookupSectionID = null;
 		this._notifierID = null;
 		this._prefObservers = [];
 	}

@@ -1,4 +1,4 @@
-> 当前版本：**16.0.0**。提炼全系标配 scripts/architecture-guard.mjs，确立 debtCleared: true 架构零债务基线，跻身标准第一梯队，持续加固 Zotero 10 ~ 12 现代架构稳定性。
+> 当前版本：**16.1.9**。新增紧凑参考文献反向逆查功能、独立侧栏入口、偏好设置开关及本地历史缓存淘汰机制，持续加固 Zotero 10 ~ 12 现代架构稳定性。
 
 # Zotero ViewFlow
 
@@ -11,7 +11,7 @@
 
 [简体中文](README.md) · [English](README.en.md)
 
-[![当前版本](https://img.shields.io/badge/version-16.0.0-245ac7?style=flat-square)](https://github.com/groele/Zotero-ViewFlow/releases/tag/v16.0.0) · [下载 XPI](https://github.com/groele/Zotero-ViewFlow/releases/download/v16.0.0/Zotero-ViewFlow-16.0.0.xpi) · [问题反馈](https://github.com/groele/Zotero-ViewFlow/issues)
+[![当前版本](https://img.shields.io/badge/version-16.1.9-245ac7?style=flat-square)](https://github.com/groele/Zotero-ViewFlow/releases/tag/v16.1.9) · [下载 XPI](https://github.com/groele/Zotero-ViewFlow/releases/download/v16.1.9/Zotero-ViewFlow-16.1.9.xpi) · [问题反馈](https://github.com/groele/Zotero-ViewFlow/issues)
 
 [产品定位](#overview) · [安装与更新](#installation) · [快速开始](#quick-start) · [核心功能](#features) · [设置与使用](#settings) · [数据、同步与外部服务](#data) · [兼容性与验证范围](#compatibility) · [常见问题](#troubleshooting) · [开发与详细文档](#development) · [系列产品](#series) · [项目来源与许可](#license)
 
@@ -27,7 +27,7 @@
 
 ## 安装与更新
 
-1. 下载 [Zotero-ViewFlow-16.0.0.xpi](https://github.com/groele/Zotero-ViewFlow/releases/download/v16.0.0/Zotero-ViewFlow-16.0.0.xpi)（插件版本 **16.0.0**），不要安装 Source code ZIP。
+1. 下载 [Zotero-ViewFlow-16.1.9.xpi](https://github.com/groele/Zotero-ViewFlow/releases/download/v16.1.9/Zotero-ViewFlow-16.1.9.xpi)（插件版本 **16.1.9**），不要安装 Source code ZIP。
 2. 在 Zotero 打开 **工具 → 插件／附加组件**，从齿轮菜单选择 **从文件安装插件**。
 3. 选择 XPI，完成安装；按提示重启 Zotero。
 
@@ -39,9 +39,9 @@
 
 ## 快速开始
 
-1. 选择文献，或在 Zotero 主窗口打开阅读标签页。
-2. 打开条目侧栏中的预览栏目。
-3. 在设置中选择样式与内容，检查预览后复制。
+1. **引文即时预览与复制**：选择文献，或在 Zotero 主窗口打开阅读标签页，在侧栏中单击「📋 复制参考文献」或「📋 复制正文引用」。
+2. **紧凑引文反向逆查**：从 Word/PPT/邮件中复制简写引文（如 `Curr. Appl Phys., 2027, 94, 40–47.`），在侧栏引文反查入口中点击「📋 剪贴板」或粘贴后按回车，秒级定位原文献并可一键打开 PDF 原文。
+3. **设置与缓存管理**：在插件设置面板中按需开启/关闭反查功能、配置本地存储路径与容量淘汰预算。
 
 <a id="features"></a>
 
@@ -50,10 +50,11 @@
 | 特色能力 | 能解决什么问题 | 实际边界 |
 |---|---|---|
 | 原生条目侧栏即时预览 | 在主库窗口的条目侧栏直接预览所选文献的参考文献与文内引文，无需切换到外部格式化工具。 | 独立阅读器窗口可能没有所需的原生 ItemPane；此时应在主窗口的阅读标签页使用。 |
+| 一键极速复制格式化引文 | 专属快捷复制按钮：复制文末参考文献或正文引用，无缝粘贴至 PPT 汇报演示或审稿回复信。 | 复制能力受目标应用与 Zotero 提供的格式限制；不代替 Zotero 的正式引文插入流程。 |
+| 紧凑引文反向逆查与秒级定标 | 从 Word/PPT 复制紧凑引文或 DOI，在独立侧栏快速反查定位本地原始文献条目，并支持一键打开 PDF。 | 依托本地数据库物理坐标先验剪枝与加权匹配；未入库文献提示未找到。 |
+| 本地历史缓存与智能淘汰 | 自动记录本机复制引文映射关系，支持 LRU+Hit 综合热度淘汰与 90 天 TTL 过期自愈。 | 默认存储于数据目录下的 `viewflow-cache`，支持在设置面板中自定义路径与容量配额。 |
 | 与 Zotero 样式/Quick Copy 对齐 | 选用 Zotero 已安装的 CSL 样式，或跟随 Quick Copy 设置，以便在写作前检查格式化结果。 | 显示结果依赖已安装样式与 Zotero 格式化引擎；不负责安装、修复或验证 CSL 样式本身。 |
-| 阅读器与文献库上下文 | 依据当前主库选择或主窗口阅读标签页展示相应预览，将阅读和引文核对放在同一界面。 | 只注入插件自己的容器，不改变 Zotero 其他面板或其他插件的 UI。 |
 | 可调布局与信息密度 | 调整预览位置、显示内容、字体与条目数量，适配不同工作区和窄窗口。 | 宿主缩放、窗口尺寸与 Zotero 主题仍会影响最终布局；不会用缩小关键文字掩盖溢出。 |
-| 文本与支持的富文本复制 | 复制当前显示的格式化文本及可用富文本，以便粘贴到目标文档。 | 复制能力受目标应用与 Zotero 提供的格式限制；不代替 Zotero 的正式引文插入流程。 |
 
 <a id="settings"></a>
 
@@ -61,7 +62,11 @@
 
 在 **Zotero → 设置 → Zotero ViewFlow** 中查看插件偏好页。
 
-设置涵盖引用格式、预览位置、版式排版与高级维护选项。插件原生支持异步等待 Zotero 引用样式初始化完成后安全填充菜单，并提供一键清理格式化缓存能力。
+设置采用标准 40px 黄金基准对齐卡片化布局，涵盖：
+1. **引用格式与预览内容**：CSL 样式下拉菜单（支持异步填充与 Quick Copy 跟随）、预览内容范围；
+2. **布局、样式与排版**：侧栏位置（顶部/中间/底部）、字号缩放比例、行间距倍数、最大预览条目数；
+3. **高级与调试选项**：一键清理格式化内存缓存、调试日志开关；
+4. **紧凑引文反向逆查与本地缓存**：反查功能总开关（关闭时彻底注销侧栏 Section）、复制历史记录开关、本地缓存目录路径自定义、容量配额（100~100000 条）、TTL 周期（7~3650 天）以及一键清空本地引文缓存。
 
 <a id="data"></a>
 
@@ -69,6 +74,7 @@
 
 - 预览读取 Zotero 条目和已安装引用样式；预览操作不承担文献库同步。
 - 复制结果不等于在 Word 中插入可编辑的 Zotero 引用域。
+- 本地引文历史缓存存储于本机磁盘，不上传任何外部服务器，100% 保护科研隐私。
 
 <a id="compatibility"></a>
 
@@ -76,9 +82,9 @@
 
 | 项目 | 范围 |
 |---|---|
-| 当前插件版本 | 16.0.0 |
+| 当前插件版本 | 16.1.9 |
 | 清单声明的 Zotero 范围 | `10.0` 至 `12.*` |
-| 当前说明 | 71 项全套单元测试与 14 项架构合规守卫 100% 通过；深度解耦为 src/ 模块化架构（全量模块 <= 360 行，0 债务），全面兼容 Zotero 10、11 及 12 现代 Gecko 架构。 |
+| 当前说明 | 77 项全套单元测试与 14 项架构合规守卫 100% 通过；深度解耦为 src/ 模块化架构（全量 14 个模块 <= 360 行，0 债务），全面兼容 Zotero 10、11 及 12 现代 Gecko 架构。 |
 
 插件版本与 Zotero 版本分别管理。兼容声明不等于已验证所有宿主、系统和外部服务；本轮仅验证上述定向行为，未覆盖所有业务流程或主环境安装。
 

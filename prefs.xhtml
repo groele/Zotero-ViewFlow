@@ -7,7 +7,7 @@
     <html:header class="viewflow-settings-header">
         <html:div class="viewflow-settings-title-row">
             <html:h1 data-l10n-id="zotero-preview-settings-heading"></html:h1>
-            <html:span class="viewflow-version-badge">v16.0.0</html:span>
+            <html:span class="viewflow-version-badge">v16.1.9</html:span>
         </html:div>
         <html:p data-l10n-id="zotero-preview-settings-intro"></html:p>
     </html:header>
@@ -103,6 +103,67 @@
         </html:div>
     </html:details>
 
+    <!-- 卡片 4：紧凑引文反向逆查与本地缓存 (默认折叠) -->
+    <html:details class="viewflow-settings-card">
+        <html:summary>
+            <html:span data-l10n-id="zotero-preview-card-lookup-heading"></html:span>
+        </html:summary>
+        <html:div class="viewflow-settings-card-content">
+            <html:div class="viewflow-subgroup">
+                <checkbox id="extensions-zoteropreview-lookupEnabled"
+                    preference="extensions.zoteropreview.lookupEnabled"
+                    native="true"
+                    data-l10n-id="zotero-preview-settings-lookup-enable-label"/>
+                <description class="viewflow-settings-description viewflow-indented-desc" data-l10n-id="zotero-preview-settings-lookup-enable-desc"></description>
+                <description class="viewflow-settings-description viewflow-indented-desc" data-l10n-id="zotero-preview-lookup-scope"></description>
+            </html:div>
+
+            <html:div class="viewflow-subgroup viewflow-level3-indent">
+                <checkbox id="extensions-zoteropreview-lookupHistoryEnabled"
+                    preference="extensions.zoteropreview.lookupHistoryEnabled"
+                    native="true"
+                    data-l10n-id="zotero-preview-settings-lookup-history-label"/>
+                <description class="viewflow-settings-description viewflow-indented-desc" data-l10n-id="zotero-preview-settings-lookup-history-desc"></description>
+            </html:div>
+
+            <html:div class="viewflow-subgroup viewflow-level3-indent">
+                <label class="viewflow-subgroup-title" data-l10n-id="zotero-preview-settings-cache-dir-label"></label>
+                <description class="viewflow-settings-description" data-l10n-id="zotero-preview-settings-cache-dir-desc"></description>
+                <html:input class="html-input" id="zotero-preview-cache-dir" type="text" data-preference="extensions.zoteropreview.cacheDirectory" size="30"/>
+                <html:div class="viewflow-cache-tools">
+                    <button id="zotero-preview-cache-browse" native="true" data-l10n-id="zotero-preview-cache-choose"/>
+                    <button id="zotero-preview-cache-default" native="true" data-l10n-id="zotero-preview-cache-default"/>
+                    <button id="zotero-preview-cache-retry" native="true" data-l10n-id="zotero-preview-cache-retry"/>
+                </html:div>
+                <html:div id="zotero-preview-cache-status" role="status" aria-live="polite"/>
+                <description class="viewflow-settings-description" data-l10n-id="zotero-preview-cache-location-help"/>
+
+            </html:div>
+
+            <html:div class="viewflow-settings-fields viewflow-level3-indent">
+                <html:div class="viewflow-settings-field">
+                    <label data-l10n-id="zotero-preview-settings-cache-quota-label" control="zotero-preview-cache-quota"></label>
+                    <html:input class="html-input" id="zotero-preview-cache-quota" type="number" min="100" max="100000" step="1" size="6" data-preference="extensions.zoteropreview.cacheMaxEntries"/>
+                </html:div>
+                <html:div class="viewflow-settings-field">
+                    <label data-l10n-id="zotero-preview-settings-cache-ttl-label" control="zotero-preview-cache-ttl"></label>
+                    <html:input class="html-input" id="zotero-preview-cache-ttl" type="number" min="7" max="3650" step="1" size="5" data-preference="extensions.zoteropreview.cacheTtlDays"/>
+                </html:div>
+            </html:div>
+
+            <description class="viewflow-settings-description viewflow-level3-indent" data-l10n-id="zotero-preview-cache-recommendation"/>
+            <html:div class="viewflow-level3-indent">
+                <button id="zotero-preview-cache-recommend" native="true" data-l10n-id="zotero-preview-cache-recommend"/>
+            </html:div>
+            <html:div class="viewflow-settings-actions viewflow-level3-indent">
+                <button id="zotero-preview-clear-history-btn"
+                    native="true"
+                    data-l10n-id="zotero-preview-settings-cache-clear-label"/>
+                <description id="zotero-preview-cache-stats" class="viewflow-settings-description" data-l10n-id="zotero-preview-settings-cache-stats-desc"></description>
+            </html:div>
+        </html:div>
+    </html:details>
+
     <!-- 底部发行信息卡片 -->
     <html:section class="viewflow-release-info" aria-labelledby="viewflow-release-heading">
         <html:div id="viewflow-release-heading" class="viewflow-release-title" data-l10n-id="zotero-preview-release-heading"></html:div>
@@ -112,11 +173,11 @@
         </html:div>
         <html:div class="viewflow-release-row">
             <html:span class="viewflow-release-label" data-l10n-id="zotero-preview-release-date"></html:span>
-            <html:time datetime="2026-11-06">2026-11-06</html:time>
+            <html:time datetime="2026-11-11">2026-11-11</html:time>
         </html:div>
         <html:div class="viewflow-release-row">
             <html:span class="viewflow-release-label" data-l10n-id="zotero-preview-release-download"></html:span>
-            <html:a href="https://github.com/groele/Zotero-ViewFlow/releases/download/v16.0.0/Zotero-ViewFlow-16.0.0.xpi" data-l10n-id="zotero-preview-release-download-link"></html:a>
+            <html:a href="https://github.com/groele/Zotero-ViewFlow/releases/download/v16.1.9/Zotero-ViewFlow-16.1.9.xpi" data-l10n-id="zotero-preview-release-download-link"></html:a>
         </html:div>
         <html:div class="viewflow-release-row">
             <html:span class="viewflow-release-label" data-l10n-id="zotero-preview-release-repository"></html:span>

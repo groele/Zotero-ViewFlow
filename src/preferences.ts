@@ -1,3 +1,4 @@
+import { setupCachePreferences } from './cache-preferences.ts';
 declare const document: Document;
 declare const window: Window;
 // Preference handlers are scoped to this preference-pane document.
@@ -8,6 +9,7 @@ type PreferencePreview = {
     initialized: boolean;
     _prefPrefix: string;
     _prefPaneCleanups: Set<() => void>;
+    _citationCache?: { clear(): Promise<void>; count: number; getFilePath(): string; getDirectoryPath(): string };
     pref(name: string): PreferenceValue;
     setPref(name: string, value: PreferenceValue): void;
     getPosition(): string;
@@ -80,11 +82,13 @@ const prefs = {
         for (const [id, name, fallback] of [
             ['zotero-preview-fontsize', 'fontsize', 1],
             ['zotero-preview-spacing', 'spacing', 1.5],
-            ['zotero-preview-max-items', 'maxPreviewItems', 100]
+            ['zotero-preview-max-items', 'maxPreviewItems', 100],
+            ['zotero-preview-cache-quota', 'cacheMaxEntries', 2000],
+            ['zotero-preview-cache-ttl', 'cacheTtlDays', 90]
         ] as const) {
             const input = document.getElementById(id) as PreferenceControl | null;
             if (input) {
-                input.value = (preview.pref(name) || fallback) as string | number;
+                input.value = (preview.pref(name) ?? fallback) as string | number;
                 listen(input, 'change', () => {
                     preview.setPref(preview._prefPrefix + name, input.value);
                     input.value = String(preview.pref(name) ?? '');
@@ -100,6 +104,49 @@ const prefs = {
         if (clearBtn) {
             listen(clearBtn, 'command', () => preview._queueAllPreviews());
         }
+
+        const updateDependencies = () => {
+            const lookupEnabled = preview.pref('lookupEnabled') !== false;
+            const historyEnabled = lookupEnabled && preview.pref('lookupHistoryEnabled') !== false;
+            const histEl = document.getElementById('extensions-zoteropreview-lookupHistoryEnabled') as (HTMLInputElement & { disabled: boolean }) | null;
+            if (histEl) histEl.disabled = !lookupEnabled;
+            for (const did of [
+                'zotero-preview-cache-dir',
+                'zotero-preview-cache-browse',
+                'zotero-preview-cache-default',
+                'zotero-preview-cache-recommend',
+                'zotero-preview-cache-quota',
+                'zotero-preview-cache-ttl',
+                'zotero-preview-clear-history-btn'
+            ]) {
+                const el = document.getElementById(did) as (HTMLInputElement & { disabled: boolean }) | null;
+                if (el) el.disabled = !historyEnabled;
+            }
+        };
+        for (const checkId of ['extensions-zoteropreview-lookupEnabled', 'extensions-zoteropreview-lookupHistoryEnabled']) {
+            const checkEl = document.getElementById(checkId);
+            if (checkEl) {
+                listen(checkEl, 'command', () => {
+                    setTimeout(updateDependencies, 0);
+                });
+            }
+        }
+        updateDependencies();
+
+        const clearHistoryBtn = document.getElementById('zotero-preview-clear-history-btn');
+        if (clearHistoryBtn) {
+            listen(clearHistoryBtn, 'command', async () => {
+                if (preview._citationCache) {
+                    await preview._citationCache.clear();
+                    const statsDesc = document.getElementById('zotero-preview-cache-stats');
+                    if (statsDesc) {
+                        statsDesc.setAttribute('data-l10n-id', 'zotero-preview-cache-usage');
+                        statsDesc.setAttribute('data-l10n-args', JSON.stringify({count: 0, limit: Number(preview.pref('cacheMaxEntries') || 2000)}));
+                    }
+                }
+            });
+        }
+        setupCachePreferences(preview, document, listen);
         initializedRoots.add(root);
         } catch (error) {
             if (!disposed) host.logError(error);

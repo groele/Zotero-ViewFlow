@@ -1,4 +1,4 @@
-> Current version: **16.0.0**. Promote architecture guard to scripts/architecture-guard.mjs, establish debtCleared: true zero-debt baseline, elevate to top tier governance, and ensure Zotero 10 ~ 12 modern compatibility.
+> Current version: **16.1.9**. Added compact citation reverse lookup, dedicated sidebar panel, preference toggle, and local history cache eviction, ensuring Zotero 10 ~ 12 modern compatibility.
 
 # Zotero ViewFlow
 
@@ -11,7 +11,7 @@ Preview and copy formatted references in Zotero’s item pane.
 
 [简体中文](README.md) · [English](README.en.md)
 
-[![Release](https://img.shields.io/badge/version-16.0.0-245ac7?style=flat-square)](https://github.com/groele/Zotero-ViewFlow/releases/tag/v16.0.0) · [Download XPI](https://github.com/groele/Zotero-ViewFlow/releases/download/v16.0.0/Zotero-ViewFlow-16.0.0.xpi) · [Report an issue](https://github.com/groele/Zotero-ViewFlow/issues)
+[![Release](https://img.shields.io/badge/version-16.1.9-245ac7?style=flat-square)](https://github.com/groele/Zotero-ViewFlow/releases/tag/v16.1.9) · [Download XPI](https://github.com/groele/Zotero-ViewFlow/releases/download/v16.1.9/Zotero-ViewFlow-16.1.9.xpi) · [Report an issue](https://github.com/groele/Zotero-ViewFlow/issues)
 
 [Overview](#overview) · [Installation and updates](#installation) · [Quick start](#quick-start) · [Key features](#features) · [Settings](#settings) · [Data, sync, and services](#data) · [Compatibility and validation](#compatibility) · [Troubleshooting](#troubleshooting) · [Development and documentation](#development) · [The Flow series](#series) · [Origin and license](#license)
 
@@ -27,7 +27,7 @@ Install this add-on independently and combine it with other Flow products as nee
 
 ## Installation and updates
 
-1. Download [Zotero-ViewFlow-16.0.0.xpi](https://github.com/groele/Zotero-ViewFlow/releases/download/v16.0.0/Zotero-ViewFlow-16.0.0.xpi) (add-on version **16.0.0**), not the Source code ZIP.
+1. Download [Zotero-ViewFlow-16.1.9.xpi](https://github.com/groele/Zotero-ViewFlow/releases/download/v16.1.9/Zotero-ViewFlow-16.1.9.xpi) (add-on version **16.1.9**), not the Source code ZIP.
 2. In Zotero, open **Tools → Plugins/Add-ons**, then choose **Install Add-on From File** from the gear menu.
 3. Select the XPI, complete installation, and restart if requested.
 
@@ -39,9 +39,9 @@ Update feed: [update.json](https://github.com/groele/Zotero-ViewFlow/blob/main/u
 
 ## Quick start
 
-1. Select an item or open a reader tab in Zotero’s main window.
-2. Open the preview section in the item pane.
-3. Choose style and content in settings, then review and copy the output.
+1. **Instant preview and copy**: Select an item or open a reader tab, and click "📋 Copy Bibliography" or "📋 Copy Citation".
+2. **Compact reverse lookup**: Copy a compact reference string (e.g. `Curr. Appl Phys., 2027, 94, 40–47.` or a DOI) from Word/PPT, click "📋 Clipboard" or paste and press Enter in the sidebar lookup panel to locate the source item and open its PDF in one click.
+3. **Settings & cache management**: Configure the lookup feature toggle, local cache directory path, and retention quota in preferences.
 
 <a id="features"></a>
 
@@ -50,10 +50,11 @@ Update feed: [update.json](https://github.com/groele/Zotero-ViewFlow/blob/main/u
 | Differentiator | What it does | Boundary |
 |---|---|---|
 | Immediate native item-pane preview | Displays the selected item’s bibliography and in-text citation in the main-library item pane, without switching to an external formatting tool. | A standalone reader window may lack the required native ItemPane; use a reader tab in the main window in that case. |
+| One-click formatted citation copy | Dedicated buttons to copy formatted references or in-text citations, ready for pasting into slides, rebuttals, or emails. | Copy fidelity is constrained by Zotero and the destination application; it does not replace Zotero’s formal citation-insertion workflow. |
+| Compact citation reverse lookup | Resolves compact citations and DOIs back to local Zotero library items in milliseconds, with one-click PDF opening. | Based on physical coordinate pruning and weighted verification; unindexed items will prompt not found. |
+| Local history cache & eviction | Automatically caches copy history mappings with LRU+Hit priority eviction and 90-day TTL retention. | Stored locally in `viewflow-cache` within Zotero's data directory; supports custom paths and capacity quotas. |
 | Alignment with Zotero styles and Quick Copy | Uses an installed Zotero CSL style or follows Quick Copy settings to inspect formatted output before writing. | Output depends on installed styles and Zotero’s formatting engine; it neither installs, repairs, nor validates a CSL style. |
-| Reader and library context | Shows the relevant preview for the current main-library selection or reader tab, bringing reading and citation checking into one interface. | Injects only its own container and does not alter Zotero’s other panes or another add-on’s UI. |
 | Adjustable layout and information density | Adjusts pane placement, visible content, font, and item limit for different workspaces and narrow windows. | Host zoom, window size, and Zotero theme still affect layout; it does not hide overflow by shrinking critical text. |
-| Text and supported rich-text copy | Copies the currently displayed formatted text and available rich-text representation for pasting into a destination. | Copy fidelity is constrained by Zotero and the destination application; it does not replace Zotero’s formal citation-insertion workflow. |
 
 <a id="settings"></a>
 
@@ -61,7 +62,11 @@ Update feed: [update.json](https://github.com/groele/Zotero-ViewFlow/blob/main/u
 
 Open the add-on preference page in **Zotero → Settings → Zotero ViewFlow**.
 
-Settings cover citation format, placement, layout styling, and maintenance options. The add-on safely waits for Zotero citation styles to initialize before populating menus, and provides a one-click cache purge tool.
+The settings pane adheres strictly to the 40px golden alignment grid:
+1. **Citation format and preview content**: CSL style selector (supports asynchronous style hydration and Quick Copy tracking) and visible content options;
+2. **Placement, layout, and typography**: Pane placement (Top/Middle/Bottom), font scaling, line spacing, and max preview items;
+3. **Advanced and debugging**: One-click preview cache clear, debug logging toggle;
+4. **Reverse lookup & local cache**: Master feature toggle (unregisters sidebar section when disabled), copy history tracking toggle, custom directory path, entry quota (100–100,000), TTL days (7–3,650), and one-click history cache purge.
 
 <a id="data"></a>
 
@@ -69,6 +74,7 @@ Settings cover citation format, placement, layout styling, and maintenance optio
 
 - Preview uses Zotero items and installed citation styles; it does not synchronize a library.
 - Copying output is different from inserting an editable Zotero citation field in Word.
+- Citation history cache is kept entirely on local disk; no external network requests or third-party telemetry.
 
 <a id="compatibility"></a>
 
@@ -76,9 +82,9 @@ Settings cover citation format, placement, layout styling, and maintenance optio
 
 | Item | Scope |
 |---|---|
-| Current add-on version | 16.0.0 |
+| Current add-on version | 16.1.9 |
 | Declared Zotero range | `10.0` through `12.*` |
-| Evidence boundary | All 71 automated unit tests and 14 architecture guard rules passed 100%. Deeply decoupled into src/ modular architecture (all source modules <= 360 lines, 0 debt declared), fully compatible with modern Zotero 10, 11 and 12 Gecko platforms. |
+| Evidence boundary | All 77 automated unit tests and 14 architecture guard rules passed 100%. Deeply decoupled into src/ modular architecture (all 14 source modules <= 360 lines, 0 debt declared), fully compatible with modern Zotero 10, 11 and 12 Gecko platforms. |
 
 Add-on and Zotero versions are separate. Declared compatibility does not establish testing on every host, operating system or service. This patch validates the targeted behaviors listed above, not all plugin workflows or main-profile installation.
 

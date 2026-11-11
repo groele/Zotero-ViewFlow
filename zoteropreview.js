@@ -100,6 +100,829 @@
     }
   };
 
+  // src/citation-cache.ts
+  var CitationCacheManager = class {
+    _records = /* @__PURE__ */ new Map();
+    _initialized = false;
+    _loading = Promise.resolve();
+    _generation = 0;
+    _writing = Promise.resolve();
+    _writeTimer = null;
+    _config = { maxEntries: 2e3, ttlDays: 90 };
+    _dirty = false;
+    _lastError = null;
+    _statusListeners = /* @__PURE__ */ new Set();
+    constructor(config) {
+      if (config) this.configure(config);
+    }
+    get count() {
+      return this._records.size;
+    }
+    get config() {
+      return this._config;
+    }
+    get dirty() {
+      return this._dirty;
+    }
+    get lastError() {
+      return this._lastError;
+    }
+    get saveFailed() {
+      return this._lastError !== null;
+    }
+    onStatusChange(listener) {
+      this._statusListeners.add(listener);
+      return () => this._statusListeners.delete(listener);
+    }
+    _emitStatus() {
+      for (const fn of this._statusListeners) {
+        try {
+          fn();
+        } catch (_) {
+        }
+      }
+    }
+    /**
+     * Updates cache configuration dynamically and enforces new capacity/TTL limits.
+     */
+    configure(config) {
+      const prevDir = this._config.customDir || "";
+      if (typeof config.maxEntries === "number" && Number.isFinite(config.maxEntries) && config.maxEntries > 0) {
+        this._config.maxEntries = Math.max(1, Math.floor(config.maxEntries));
+      }
+      if (typeof config.ttlDays === "number" && Number.isFinite(config.ttlDays) && config.ttlDays > 0) {
+        this._config.ttlDays = config.ttlDays;
+      }
+      if (config.customDir !== void 0) {
+        this._config.customDir = config.customDir.trim() || void 0;
+      }
+      const now = Date.now();
+      const ttlMs = this._config.ttlDays * 864e5;
+      for (const [k, r] of this._records.entries()) {
+        if (now - (r.lastAccessedAt || r.copiedAt) >= ttlMs) {
+          this._records.delete(k);
+        }
+      }
+      this._enforceEviction();
+      if (this._initialized && (this._config.customDir || "") !== prevDir) {
+        this._initialized = false;
+        this.init().then(() => this.scheduleSave()).catch(() => {
+        });
+      } else if (this._initialized) {
+        this.scheduleSave();
+      }
+    }
+    /**
+     * Resolves the cache directory path. Defaults to [Zotero.DataDirectory]/viewflow-cache
+     */
+    getDirectoryPath() {
+      if (this._config.customDir) return this._config.customDir;
+      if (typeof Zotero !== "undefined" && Zotero.DataDirectory?.dir) {
+        return PathUtils.join(Zotero.DataDirectory.dir, "viewflow-cache");
+      }
+      return "viewflow-cache";
+    }
+    getFilePath() {
+      return PathUtils.join(this.getDirectoryPath(), "Zotero-citation-history.json");
+    }
+    /**
+     * Loads persistent cache from disk with corruption self-healing.
+     */
+    init() {
+      if (this._initialized || typeof IOUtils === "undefined") return this._loading;
+      this._initialized = true;
+      const generation = ++this._generation;
+      const filePath = this.getFilePath();
+      this._loading = this.load(filePath, generation);
+      return this._loading;
+    }
+    async load(filePath, generation) {
+      try {
+        if (typeof IOUtils === "undefined") return;
+        const legacyPath = filePath.replace(/Zotero-citation-history\.json$/, "citation-history.json");
+        const migrated = !await IOUtils.exists(filePath);
+        if (migrated) {
+          if (!await IOUtils.exists(legacyPath)) return;
+          filePath = legacyPath;
+        }
+        const data = JSON.parse(await IOUtils.readUTF8(filePath));
+        if (generation !== this._generation || !Array.isArray(data)) return;
+        const ttlMs = this._config.ttlDays * 864e5;
+        for (const r of data) {
+          if (!r || typeof r.text !== "string" || typeof r.itemKey !== "string" || !Number.isFinite(r.libraryID) || !Number.isFinite(r.lastAccessedAt) || !Number.isFinite(r.hitCount) || Date.now() - r.lastAccessedAt >= ttlMs) continue;
+          const key = this.recordKey(r);
+          const current = this._records.get(key);
+          if (!current || current.lastAccessedAt < r.lastAccessedAt) this._records.set(key, r);
+        }
+        this._enforceEviction();
+        if (migrated) this.scheduleSave();
+      } catch (error) {
+        if (typeof Zotero !== "undefined") Zotero.debug("[ViewFlow] Cache load failed: " + error);
+      }
+    }
+    /**
+     * Records a copied citation entry, queuing debounced atomic write.
+     */
+    record(entry) {
+      const normKey = this.recordKey(entry);
+      if (!normKey) return;
+      const existing = this._records.get(normKey);
+      const record = {
+        ...entry,
+        key: normKey,
+        copiedAt: existing?.copiedAt || Date.now(),
+        lastAccessedAt: Date.now(),
+        hitCount: existing?.hitCount || 0
+      };
+      this._records.delete(normKey);
+      this._records.set(normKey, record);
+      this._dirty = true;
+      this._enforceEviction();
+      this.scheduleSave();
+    }
+    /**
+     * Looks up a record by text, updating hit count and recency.
+     */
+    recordKey(entry) {
+      return JSON.stringify([this.normalizeKey(entry.text), entry.libraryID, entry.itemKey]);
+    }
+    lookup(rawText) {
+      const records = this.lookupAll(rawText);
+      return records.length === 1 ? records[0] : null;
+    }
+    lookupAll(rawText) {
+      const key = this.normalizeKey(rawText);
+      const records = [...this._records.values()].filter((record) => key && this.normalizeKey(record.text) === key && record.itemKey && Date.now() - record.lastAccessedAt < this._config.ttlDays * 864e5);
+      for (const record of records) {
+        record.lastAccessedAt = Date.now();
+        record.hitCount++;
+      }
+      if (records.length) this.scheduleSave();
+      return records;
+    }
+    normalizeKey(text) {
+      return text.trim().replace(/^(?:\[\d+\]\s*|\(\d+\)\s*|\d{1,3}[.)]\s+|•\s*)/, "").replace(/\.+$/, "").replace(/[\u2010-\u2015\u2212]/g, "-").replace(/\s+/g, " ").trim().toLowerCase();
+    }
+    /**
+     * Enforces capacity budget using LRU + HitCount priority.
+     */
+    _enforceEviction() {
+      if (this._records.size <= this._config.maxEntries) return;
+      const entries = Array.from(this._records.values());
+      entries.sort((a, b) => {
+        const scoreA = a.lastAccessedAt + a.hitCount * 864e5;
+        const scoreB = b.lastAccessedAt + b.hitCount * 864e5;
+        return scoreA - scoreB;
+      });
+      const toRemove = entries.slice(0, entries.length - this._config.maxEntries);
+      for (const r of toRemove) {
+        this._records.delete(this.recordKey(r));
+      }
+    }
+    scheduleSave() {
+      if (this._writeTimer) clearTimeout(this._writeTimer);
+      this._writeTimer = setTimeout(() => {
+        this.flush().catch((err) => {
+          if (typeof Zotero !== "undefined") Zotero.debug(`[ViewFlow] Flush error: ${err}`);
+        });
+      }, 1e3);
+    }
+    /**
+     * Atomically flushes cache to disk. Rejects on disk write errors while keeping records in memory for retry.
+     */
+    flush() {
+      const loading = this._loading;
+      const run = this._writing.catch(() => {
+      }).then(async () => {
+        await loading;
+        await this.writeSnapshot();
+      });
+      this._writing = run.catch(() => {
+      });
+      return run;
+    }
+    retrySave() {
+      return this.flush();
+    }
+    async writeSnapshot() {
+      if (this._writeTimer) clearTimeout(this._writeTimer);
+      this._writeTimer = null;
+      if (typeof IOUtils === "undefined") {
+        this._dirty = false;
+        this._lastError = null;
+        this._emitStatus();
+        return;
+      }
+      try {
+        const dirPath = this.getDirectoryPath();
+        if (!await IOUtils.exists(dirPath)) {
+          await IOUtils.makeDirectory(dirPath, { ignoreExisting: true });
+        }
+        const filePath = PathUtils.join(dirPath, "Zotero-citation-history.json");
+        const tmpPath = filePath + ".tmp";
+        const data = Array.from(this._records.values());
+        const json = JSON.stringify(data, null, 2);
+        await IOUtils.writeUTF8(tmpPath, json, { tmpPath: tmpPath + ".bak" });
+        await IOUtils.move(tmpPath, filePath, { noOverwrite: false });
+        this._dirty = false;
+        this._lastError = null;
+        this._emitStatus();
+      } catch (error) {
+        this._dirty = true;
+        this._lastError = error instanceof Error ? error : new Error(String(error));
+        this._emitStatus();
+        if (typeof Zotero !== "undefined") {
+          Zotero.debug(`[ViewFlow] Atomic cache write failed: ${error}`);
+        }
+        throw this._lastError;
+      }
+    }
+    async clear() {
+      if (this._writeTimer) clearTimeout(this._writeTimer);
+      this._writeTimer = null;
+      this._generation++;
+      await this._loading;
+      this._records.clear();
+      this._dirty = false;
+      this._lastError = null;
+      this._emitStatus();
+      await this._writing;
+      if (typeof IOUtils !== "undefined") {
+        try {
+          const filePath = this.getFilePath();
+          for (const path of [filePath, filePath.replace(/Zotero-citation-history\.json$/, "citation-history.json")]) {
+            if (await IOUtils.exists(path)) await IOUtils.remove(path);
+          }
+        } catch (_) {
+        }
+      }
+    }
+  };
+
+  // src/lookup-title.ts
+  function renderLookupTitle(target, title) {
+    const doc = target.ownerDocument;
+    const Parser = doc?.defaultView?.DOMParser;
+    target.textContent = "";
+    if (!doc || !Parser) {
+      target.textContent = title.replace(/<[^>]*>/g, "");
+      return;
+    }
+    const parsed = new Parser().parseFromString(title, "text/html");
+    const allowed = /* @__PURE__ */ new Set(["sub", "sup", "i", "b", "em", "strong", "span"]);
+    const append = (source, parent) => {
+      if (source.nodeType === 3) {
+        parent.appendChild(doc.createTextNode(source.textContent || ""));
+        return;
+      }
+      if (source.nodeType !== 1) return;
+      const tag = source.localName;
+      if (["script", "style", "iframe", "object"].includes(tag)) return;
+      const next = allowed.has(tag) ? doc.createElementNS("http://www.w3.org/1999/xhtml", tag) : parent;
+      if (next !== parent) parent.appendChild(next);
+      for (const child of Array.from(source.childNodes)) if (child) append(child, next);
+    };
+    for (const child of Array.from(parsed.body.childNodes)) append(child, target);
+  }
+
+  // src/citation-lookup.ts
+  function extractIdentifier(input) {
+    const doiMatch = input.match(/\b(10\.\d{4,9}\/[-._;()/:A-Za-z0-9]+)\b/i);
+    const arxivMatch = input.match(/\b(?:arXiv:\s*|arxiv\.org\/(?:abs|pdf)\/)(\d{4}\.\d{4,5}(?:v\d+)?)\b/i) || input.trim().match(/^(\d{4}\.\d{4,5}(?:v\d+)?)$/i);
+    return {
+      doi: doiMatch ? doiMatch[1].replace(/[.,;)]+$/, "") : void 0,
+      arxiv: arxivMatch ? arxivMatch[1] : void 0
+    };
+  }
+  function stripAuthorPrefix(text) {
+    const quoteMatch = text.match(/^(.+?)[,.\s]+["\u201c].+?["\u201d][,.\s]+(.+)$/);
+    if (quoteMatch) {
+      return { authors: quoteMatch[1].trim(), rest: quoteMatch[2].replace(/^in\s+/i, "").trim() };
+    }
+    const gbtMatch = text.match(/^([^.]+?)\.\s*.+?\[J\][.,\s]+(.+)$/i);
+    if (gbtMatch) {
+      return { authors: gbtMatch[1].trim(), rest: gbtMatch[2].trim() };
+    }
+    const etAlMatch = text.match(/^(.+?\bet\s+al\.?),?\s+(.+)$/i);
+    if (etAlMatch) {
+      return { authors: etAlMatch[1].trim(), rest: etAlMatch[2].trim() };
+    }
+    const semiMatch = text.match(/^([^;]+(?:;\s*[^;]+)+)[,;]\s+([A-Z].+)$/);
+    if (semiMatch) {
+      return { authors: semiMatch[1].trim(), rest: semiMatch[2].trim() };
+    }
+    return { rest: text };
+  }
+  function normalizeJournal(name) {
+    return name.toLowerCase().replace(/&/g, "and").replace(/[.,]/g, "").replace(/\s+/g, " ").trim();
+  }
+  function parseCompactCitation(input) {
+    if (!input || typeof input !== "string") return null;
+    const clean = input.replace(/\s+/g, " ").trim().replace(/^(?:\[\d+\]\s*|\(\d+\)\s*|\d{1,3}[.)]\s+|•\s*)/, "").replace(/\.+$/, "").replace(/[\u2010-\u2015\u2212]/g, "-");
+    const ids = extractIdentifier(clean);
+    let stripped = clean;
+    if (ids.doi) {
+      stripped = stripped.replace(/(?:doi:?\s*|https?:\/\/(?:dx\.)?doi\.org\/)?10\.\d{4,9}\/[-._;()/:A-Za-z0-9]+/i, "").trim().replace(/[.,;:]+$/, "");
+    }
+    if (ids.arxiv) {
+      stripped = stripped.replace(/(?:https?:\/\/)?(?:arXiv:\s*|arxiv\.org\/(?:abs|pdf)\/)?\b\d{4}\.\d{4,5}(?:v\d+)?\b/i, "").trim().replace(/[.,;:]+$/, "");
+    }
+    const { authors, rest: target } = stripAuthorPrefix(stripped);
+    const m1 = target.match(/^(.+?)[,\s;:]+(\d{4})[,\s;:]+(?:vol\.?\s*)?(\d+)(?:\s*\(([\w-]+)\))?[,\s;:]+(?:pp?\.?\s*)?([A-Za-z]*\d+)(?:-([A-Za-z]*\d+))?$/i);
+    if (m1) {
+      return {
+        raw: input,
+        journalText: m1[1].trim(),
+        year: parseInt(m1[2], 10),
+        volume: m1[3].trim(),
+        issue: m1[4] || void 0,
+        firstPage: m1[5].trim(),
+        lastPage: m1[6] ? m1[6].trim() : void 0,
+        pages: m1[6] ? `${m1[5].trim()}-${m1[6].trim()}` : m1[5].trim(),
+        authorPrefix: authors,
+        ...ids
+      };
+    }
+    const m2 = target.match(/^(.+?)[,\s]+(?:vol\.?\s*)?(\d+)(?:\s*\(([\w-]+)\))?\s*\((\d{4})\)[,\s;:]+(?:pp?\.?\s*)?([A-Za-z]*\d+)(?:-([A-Za-z]*\d+))?$/i);
+    if (m2) {
+      return {
+        raw: input,
+        journalText: m2[1].trim(),
+        volume: m2[2].trim(),
+        issue: m2[3] || void 0,
+        year: parseInt(m2[4], 10),
+        firstPage: m2[5].trim(),
+        lastPage: m2[6] ? m2[6].trim() : void 0,
+        pages: m2[6] ? `${m2[5].trim()}-${m2[6].trim()}` : m2[5].trim(),
+        authorPrefix: authors,
+        ...ids
+      };
+    }
+    const m3 = target.match(/^(.+?)[,\s]+(?:vol\.?\s*)?(\d+)(?:(?:\s*\(([\w-]+)\))|[,\s]+(?:no\.?|issue)\s*([\w-]+))?[,\s;:]+(?:pp?\.?\s*)?([A-Za-z]*\d+)(?:-([A-Za-z]*\d+))?(?:\s*\((\d{4})\)|[,\s]+(?:[A-Za-z]+\.?\s+)?(\d{4}))$/i);
+    if (m3) {
+      return {
+        raw: input,
+        journalText: m3[1].trim(),
+        volume: m3[2].trim(),
+        issue: m3[3] || m3[4] || void 0,
+        year: parseInt(m3[7] || m3[8], 10),
+        firstPage: m3[5].trim(),
+        lastPage: m3[6] ? m3[6].trim() : void 0,
+        pages: m3[6] ? `${m3[5].trim()}-${m3[6].trim()}` : m3[5].trim(),
+        authorPrefix: authors,
+        ...ids
+      };
+    }
+    if (ids.doi || ids.arxiv) {
+      return {
+        raw: input,
+        journalText: "",
+        year: 0,
+        authorPrefix: authors,
+        ...ids
+      };
+    }
+    return null;
+  }
+  function isJournalMatch(queryJournal, pubTitle, abbr) {
+    const qNorm = normalizeJournal(queryJournal);
+    const pubNorm = normalizeJournal(pubTitle);
+    const abbrNorm = normalizeJournal(abbr);
+    if (pubNorm === qNorm || abbrNorm === qNorm) return true;
+    if (!qNorm) return false;
+    const stopwords = /* @__PURE__ */ new Set(["of", "the", "and", "for", "in", "on", "a", "an"]);
+    const pubAcronym = pubNorm.split(" ").filter((w) => !stopwords.has(w)).map((w) => w[0]).join("");
+    if (pubAcronym && pubAcronym === qNorm) return true;
+    const abbrAcronym = abbrNorm.split(" ").filter((w) => !stopwords.has(w)).map((w) => w[0]).join("");
+    if (abbrAcronym && abbrAcronym === qNorm) return true;
+    const qTokens = qNorm.split(" ").filter((t) => t.length > 0 && !stopwords.has(t));
+    if (!qTokens.length) return false;
+    const lastToken = qTokens[qTokens.length - 1];
+    if (lastToken && lastToken.length === 1 && /[a-z]/i.test(lastToken)) {
+      const pubLast = pubNorm.split(" ").pop();
+      const abbrLast = abbrNorm.split(" ").pop();
+      if (pubLast !== lastToken && abbrLast !== lastToken) return false;
+    }
+    const matchTokens = (targetNorm) => {
+      if (!targetNorm) return false;
+      const tokens = targetNorm.split(" ").filter((token) => token.length > 0 && !stopwords.has(token));
+      return tokens.length === qTokens.length && qTokens.every((token, index) => tokens[index].startsWith(token));
+    };
+    return matchTokens(pubNorm) || matchTokens(abbrNorm);
+  }
+  async function queryPhysicalCandidates(parsed, libraryID) {
+    if (typeof Zotero === "undefined") return [];
+    const runSearch = async (libID) => {
+      const s = new Zotero.Search(libID !== void 0 ? { libraryID: libID } : void 0);
+      if (parsed.doi) {
+        s.addCondition("DOI", "is", parsed.doi);
+      } else if (parsed.arxiv && !parsed.journalText) {
+        s.addCondition("quicksearch-everything", "contains", parsed.arxiv.replace(/v\d+$/, ""));
+      } else {
+        s.addCondition("itemType", "is", "journalArticle");
+        if (parsed.year) s.addCondition("date", "contains", String(parsed.year));
+        if (parsed.volume) s.addCondition("volume", "is", parsed.volume);
+      }
+      return await s.search() || [];
+    };
+    let ids = await runSearch(libraryID);
+    if (!ids.length && libraryID !== void 0) ids = await runSearch(void 0);
+    return ids.length ? Zotero.Items.getAsync(ids) : [];
+  }
+  function expandEndPage(first, last) {
+    if (!first || !last) return last;
+    if (/^\d+$/.test(first) && /^\d+$/.test(last) && first.length > last.length) {
+      const expanded = first.slice(0, first.length - last.length) + last;
+      if (parseInt(expanded, 10) > parseInt(first, 10)) return expanded;
+    }
+    return last;
+  }
+  function verifyAndFilterCandidates(candidates, parsed) {
+    const matched = candidates.filter((item) => {
+      if (item.deleted || !item.isRegularItem()) return false;
+      if (parsed.doi) {
+        const itemDoi = (item.getField("DOI") || "").trim().toLowerCase();
+        return itemDoi === parsed.doi.toLowerCase();
+      }
+      if (parsed.arxiv && !parsed.journalText) {
+        const [, qBase = "", qVer] = parsed.arxiv.toLowerCase().match(/^(\d{4}\.\d{4,5})(?:v(\d+))?$/) || [
+          "",
+          parsed.arxiv.toLowerCase().replace(/v\d+$/, ""),
+          void 0
+        ];
+        const fields = ["archiveID", "extra", "DOI", "url", "callNumber"].map((f) => String(item.getField(f) || "").toLowerCase());
+        return fields.some((val) => {
+          for (const m of val.matchAll(/(?:^|[^0-9])(\d{4}\.\d{4,5})(?:v(\d+))?(?=$|[^0-9])/g)) {
+            if (m[1] === qBase && (!qVer || !m[2] || m[2] === qVer)) return true;
+          }
+          return false;
+        });
+      }
+      const rawPages = (item.getField("pages") || "").replace(/[\u2010-\u2015\u2212]/g, "-").trim();
+      const [first, last] = rawPages.split("-");
+      const normItemLast = expandEndPage(first, last);
+      const normParsedLast = expandEndPage(parsed.firstPage, parsed.lastPage);
+      if (parsed.firstPage && first !== parsed.firstPage) return false;
+      if (normParsedLast && normItemLast !== normParsedLast) return false;
+      if (parsed.issue) {
+        const itemIssue = item.getField("issue") || "";
+        if (itemIssue !== parsed.issue) return false;
+      }
+      const pubTitle = item.getField("publicationTitle") || "";
+      const abbr = item.getField("journalAbbreviation") || "";
+      return isJournalMatch(parsed.journalText, pubTitle, abbr);
+    });
+    if (matched.length > 1 && parsed.authorPrefix) {
+      const surname = parsed.authorPrefix.replace(/\bet\s+al\.?/i, "").trim().split(/[,;\s]+/)[0]?.toLowerCase();
+      if (surname && surname.length >= 2) {
+        const byAuthor = matched.filter((it) => {
+          const creators = it.getCreators?.() || [];
+          const firstCreator = String(it.getField("firstCreator") || "").toLowerCase();
+          return firstCreator.includes(surname) || creators.some((c) => (c.lastName || c.name || "").toLowerCase().includes(surname));
+        });
+        if (byAuthor.length > 0) return byAuthor;
+      }
+    }
+    return matched;
+  }
+  async function locateItemInZotero(item) {
+    if (typeof Zotero === "undefined") return false;
+    const win = Zotero.getMainWindow();
+    if (!win || !win.ZoteroPane) return false;
+    try {
+      if (item.deleted) return false;
+      win.Zotero_Tabs?.select?.("zotero-pane");
+      const selected = await win.ZoteroPane.selectItem(item.id);
+      if (selected === false) return false;
+      const itemsView = win.document.getElementById("zotero-items-tree");
+      if (itemsView && itemsView.ensureRowIsVisible && itemsView.selection) {
+        itemsView.ensureRowIsVisible(itemsView.selection.currentIndex);
+      }
+      return true;
+    } catch (e) {
+      Zotero.debug(`[ViewFlow] Locate item failed: ${e}`);
+      return false;
+    }
+  }
+  async function openItemAttachment(item) {
+    if (typeof Zotero === "undefined") return false;
+    try {
+      const attachmentIDs = item.getAttachments();
+      for (const id of attachmentIDs) {
+        const att = await Zotero.Items.getAsync(id);
+        if (att && att.isPDFAttachment && att.isPDFAttachment()) {
+          const reader = Zotero.Reader;
+          if (reader?.open) {
+            await reader.open(att.id);
+            return true;
+          }
+        }
+      }
+    } catch (e) {
+      Zotero.debug(`[ViewFlow] Open attachment failed: ${e}`);
+    }
+    return false;
+  }
+
+  // src/lookup-section.ts
+  var cleanups = /* @__PURE__ */ new WeakMap();
+  function buildLookupSectionDOM(doc, context, body) {
+    cleanups.get(body)?.();
+    doc.defaultView?.MozXULElement?.insertFTLIfNeeded?.("zotero-preview.ftl");
+    body.innerHTML = "";
+    body.className = "zotero-viewflow-lookup-body";
+    const sheet = doc.createElementNS("http://www.w3.org/1999/xhtml", "link");
+    sheet.setAttribute("rel", "stylesheet");
+    sheet.setAttribute("href", context.stylesheetURI);
+    body.appendChild(sheet);
+    const container = doc.createElementNS("http://www.w3.org/1999/xhtml", "div");
+    container.className = "viewflow-lookup-container";
+    const input = doc.createElementNS("http://www.w3.org/1999/xhtml", "input");
+    input.type = "text";
+    input.className = "viewflow-lookup-input";
+    input.setAttribute("data-l10n-id", "zotero-preview-lookup-input");
+    const btnRow = doc.createElementNS("http://www.w3.org/1999/xhtml", "div");
+    btnRow.className = "viewflow-lookup-actions";
+    const searchBtn = doc.createElementNS("http://www.w3.org/1999/xhtml", "button");
+    searchBtn.className = "viewflow-lookup-search";
+    searchBtn.setAttribute("data-l10n-id", "zotero-preview-lookup-search");
+    const clipBtn = doc.createElementNS("http://www.w3.org/1999/xhtml", "button");
+    clipBtn.setAttribute("data-l10n-id", "zotero-preview-lookup-clipboard");
+    btnRow.appendChild(searchBtn);
+    btnRow.appendChild(clipBtn);
+    const statusDiv = doc.createElementNS("http://www.w3.org/1999/xhtml", "div");
+    statusDiv.setAttribute("role", "status");
+    statusDiv.setAttribute("aria-live", "polite");
+    statusDiv.className = "viewflow-lookup-status";
+    const cacheNotice = doc.createElementNS("http://www.w3.org/1999/xhtml", "div");
+    cacheNotice.className = "viewflow-lookup-cache-error";
+    cacheNotice.hidden = true;
+    const cacheMsg = doc.createElementNS("http://www.w3.org/1999/xhtml", "span");
+    const retryBtn = doc.createElementNS("http://www.w3.org/1999/xhtml", "button");
+    retryBtn.type = "button";
+    retryBtn.className = "viewflow-lookup-cache-retry";
+    cacheNotice.appendChild(cacheMsg);
+    cacheNotice.appendChild(retryBtn);
+    container.appendChild(input);
+    container.appendChild(btnRow);
+    container.appendChild(cacheNotice);
+    container.appendChild(statusDiv);
+    body.appendChild(container);
+    let request = 0;
+    const setL10n = (el, id, fallback, args) => {
+      el.setAttribute("data-l10n-id", id);
+      if (args) el.setAttribute("data-l10n-args", JSON.stringify(args));
+      else el.removeAttribute("data-l10n-args");
+      el.textContent = fallback;
+    };
+    setL10n(retryBtn, "zotero-preview-cache-retry", "重试保存缓存");
+    const syncCacheStatus = () => {
+      if (!body.isConnected) return;
+      if (context.cacheManager?.saveFailed || context.cacheManager?.lastError) {
+        cacheNotice.hidden = false;
+        setL10n(cacheMsg, "zotero-preview-cache-save-failed", "历史缓存写入失败，记录暂存于内存，请点击重试保存。");
+      } else {
+        cacheNotice.hidden = true;
+        cacheMsg.textContent = "";
+      }
+    };
+    const offCacheStatus = context.cacheManager?.onStatusChange?.(syncCacheStatus);
+    retryBtn.onclick = async () => {
+      try {
+        await (context.cacheManager?.retrySave ? context.cacheManager.retrySave() : context.cacheManager?.flush?.());
+      } catch (_) {
+      }
+      syncCacheStatus();
+    };
+    syncCacheStatus();
+    input.oninput = () => {
+      request++;
+    };
+    cleanups.set(body, () => {
+      request++;
+      offCacheStatus?.();
+    });
+    const executeLookup = async (textToSearch) => {
+      const current = ++request;
+      const active = () => current === request && body.isConnected;
+      try {
+        if (!textToSearch.trim()) {
+          setL10n(statusDiv, "zotero-preview-lookup-status-empty", "请输入或粘贴引文");
+          return;
+        }
+        setL10n(statusDiv, "zotero-preview-lookup-status-searching", "正在反查本地文献库...");
+        const renderItemResult = (target, labelPrefix, l10nId = "zotero-preview-lookup-state-matched") => {
+          statusDiv.removeAttribute("data-l10n-id");
+          statusDiv.removeAttribute("data-l10n-args");
+          statusDiv.innerHTML = "";
+          const card = doc.createElementNS("http://www.w3.org/1999/xhtml", "div");
+          card.className = "viewflow-lookup-card";
+          const head = doc.createElementNS("http://www.w3.org/1999/xhtml", "div");
+          head.className = "viewflow-lookup-card-head";
+          const status = doc.createElementNS("http://www.w3.org/1999/xhtml", "div");
+          status.className = "viewflow-lookup-result-state";
+          setL10n(status, l10nId, labelPrefix.replace(/🎯|：/g, "").trim());
+          card.appendChild(status);
+          renderLookupTitle(head, String(target.getField("title")));
+          card.appendChild(head);
+          const meta = doc.createElementNS("http://www.w3.org/1999/xhtml", "div");
+          meta.className = "viewflow-lookup-card-meta";
+          const journal = target.getField("publicationTitle") || target.getField("journalAbbreviation") || "";
+          const year = target.getField("year") || target.getField("date") || "";
+          meta.textContent = `${journal} (${year}) · Vol.${target.getField("volume") || "-"} · pp.${target.getField("pages") || "-"}`;
+          card.appendChild(meta);
+          const actRow = doc.createElementNS("http://www.w3.org/1999/xhtml", "div");
+          const locateBtn = doc.createElementNS("http://www.w3.org/1999/xhtml", "button");
+          locateBtn.setAttribute("data-l10n-id", "zotero-preview-lookup-locate");
+          locateBtn.onclick = async () => {
+            const located = await locateItemInZotero(target);
+            if (active()) {
+              setL10n(
+                status,
+                located ? "zotero-preview-lookup-status-located" : "zotero-preview-lookup-status-locate-failed",
+                located ? "已定位" : "定位失败，请重试"
+              );
+            }
+          };
+          actRow.className = "viewflow-lookup-actions";
+          actRow.appendChild(locateBtn);
+          const pdfBtn = doc.createElementNS("http://www.w3.org/1999/xhtml", "button");
+          pdfBtn.setAttribute("data-l10n-id", "zotero-preview-lookup-open-pdf");
+          pdfBtn.onclick = async () => {
+            const opened = await openItemAttachment(target);
+            if (active() && !opened && !meta.textContent?.includes("未找到 PDF 附件")) {
+              meta.textContent += " (未找到 PDF 附件)";
+            }
+          };
+          actRow.appendChild(pdfBtn);
+          card.appendChild(actRow);
+          statusDiv.appendChild(card);
+        };
+        const renderCandidatesList = (items, headingText, l10nId = "zotero-preview-lookup-candidates-heading") => {
+          statusDiv.removeAttribute("data-l10n-id");
+          statusDiv.removeAttribute("data-l10n-args");
+          statusDiv.innerHTML = "";
+          const msg = doc.createElementNS("http://www.w3.org/1999/xhtml", "div");
+          setL10n(msg, l10nId, headingText, { count: items.length });
+          statusDiv.appendChild(msg);
+          const list = doc.createElementNS("http://www.w3.org/1999/xhtml", "ul");
+          for (const m of items) {
+            const li = doc.createElementNS("http://www.w3.org/1999/xhtml", "button");
+            const j = m.getField("journalAbbreviation") || m.getField("publicationTitle") || "";
+            const y = m.getField("year") || m.getField("date") || "";
+            const suffix = j || y ? ` (${[j, y].filter(Boolean).join(", ")})` : "";
+            renderLookupTitle(li, String(m.getField("title")));
+            li.appendChild(doc.createTextNode(suffix));
+            li.onclick = () => {
+              renderItemResult(m, "候选文献，请核对后定位：", "zotero-preview-lookup-state-candidate");
+            };
+            const row = doc.createElementNS("http://www.w3.org/1999/xhtml", "li");
+            row.appendChild(li);
+            list.appendChild(row);
+          }
+          statusDiv.appendChild(list);
+        };
+        if (context.pref("lookupHistoryEnabled") !== false) {
+          const histRecords = context.cacheManager.lookupAll ? context.cacheManager.lookupAll(textToSearch) : context.cacheManager.lookup(textToSearch) ? [context.cacheManager.lookup(textToSearch)] : [];
+          if (histRecords.length > 0) {
+            const liveItems = [];
+            const seenIDs = /* @__PURE__ */ new Set();
+            for (const histRecord of histRecords) {
+              const item = Zotero.Items.getByLibraryAndKeyAsync ? await Zotero.Items.getByLibraryAndKeyAsync(histRecord.libraryID, histRecord.itemKey) : await Zotero.Items.getAsync(histRecord.itemID);
+              if (!active()) return;
+              if (item && !item.deleted && item.isRegularItem() && !seenIDs.has(item.id)) {
+                seenIDs.add(item.id);
+                liveItems.push(item);
+              }
+            }
+            if (liveItems.length === 1) {
+              renderItemResult(liveItems[0], "复制历史匹配，请核对后定位：", "zotero-preview-lookup-state-history");
+              return;
+            } else if (liveItems.length > 1) {
+              renderCandidatesList(liveItems, `复制历史关联到 ${liveItems.length} 篇文献，请点击选择：`, "zotero-preview-lookup-history-candidates");
+              return;
+            }
+          }
+        }
+        const parsed = parseCompactCitation(textToSearch);
+        if (!parsed) {
+          setL10n(statusDiv, "zotero-preview-lookup-status-unrecognized", "无法识别引文结构，请提供包含期刊、年份、卷号与页码（或 DOI/arXiv）的引文。");
+          return;
+        }
+        const pane = doc.defaultView?.ZoteroPane;
+        let libraryID;
+        for (const getLib of [
+          () => pane?.getSelectedLibraryID?.(),
+          () => pane?.getSelectedLibraryIDs?.()?.[0],
+          () => typeof Zotero !== "undefined" ? Zotero.Libraries?.userLibraryID : void 0
+        ]) {
+          try {
+            const val = getLib();
+            if (typeof val === "number" && Number.isFinite(val)) {
+              libraryID = val;
+              break;
+            }
+          } catch (_) {
+          }
+        }
+        const candidates = await queryPhysicalCandidates(parsed, libraryID);
+        if (!active()) return;
+        const matches = verifyAndFilterCandidates(candidates, parsed);
+        if (matches.length === 1) {
+          const target = matches[0];
+          if (!await locateItemInZotero(target)) throw new Error("Item selection failed");
+          if (!active()) return;
+          renderItemResult(target, "🎯 已定位文献：", "zotero-preview-lookup-state-located");
+        } else if (matches.length > 1) {
+          renderCandidatesList(matches, `找到 ${matches.length} 篇可能匹配的文献，请点击选择：`, "zotero-preview-lookup-candidates-heading");
+        } else {
+          const targetLabel = parsed.journalText || parsed.doi || parsed.arxiv || "-";
+          const yearLabel = String(parsed.year || "-");
+          setL10n(
+            statusDiv,
+            "zotero-preview-lookup-status-not-found",
+            `未在当前文库中找到匹配项 (解析: ${targetLabel}, ${yearLabel})`,
+            { journal: targetLabel, year: yearLabel }
+          );
+        }
+      } catch (error) {
+        if (active()) setL10n(statusDiv, "zotero-preview-lookup-status-error", "查询失败，请重试或重新粘贴引文。");
+        context.log(String(error));
+      }
+    };
+    searchBtn.onclick = () => executeLookup(input.value);
+    input.onpaste = () => {
+      setTimeout(() => {
+        if (input.value.trim()) executeLookup(input.value);
+      }, 0);
+    };
+    input.onkeydown = (e) => {
+      const key = e.key;
+      if (key === "Enter") {
+        executeLookup(input.value);
+      } else if (key === "Escape") {
+        request++;
+        input.value = "";
+        statusDiv.removeAttribute("data-l10n-id");
+        statusDiv.removeAttribute("data-l10n-args");
+        statusDiv.textContent = "";
+      }
+    };
+    clipBtn.onclick = () => {
+      try {
+        const clip = Services.clipboard;
+        const trans = Cc["@mozilla.org/widget/transferable;1"].createInstance(Ci.nsITransferable);
+        trans.init(null);
+        trans.addDataFlavor("text/plain");
+        clip.getData(trans, Ci.nsIClipboard.kGlobalClipboard);
+        const str = {};
+        trans.getTransferData("text/plain", str);
+        const text = str.value?.data;
+        if (text) {
+          input.value = text;
+          executeLookup(text);
+          return;
+        }
+      } catch (_) {
+      }
+      setL10n(statusDiv, "zotero-preview-lookup-status-clipboard-fallback", "无法直接读取剪贴板，请手动在输入框中粘贴 (Ctrl+V)。");
+      input.focus();
+    };
+  }
+  function registerLookupSection(facade) {
+    if (typeof Zotero === "undefined" || !Zotero.ItemPaneManager?.registerSection) return false;
+    const title = { l10nID: "zotero-preview-lookup-pane-title", icon: facade.rootURI + "lookup.svg" };
+    return Zotero.ItemPaneManager.registerSection({
+      paneID: "zotero-preview-lookup",
+      pluginID: facade.id,
+      header: title,
+      sidenav: { ...title, orderable: true },
+      onRender: ({ body, setEnabled }) => {
+        setEnabled(true);
+        facade._queuePosition(body.closest("item-details"));
+      },
+      onInit: ({ body }) => {
+        buildLookupSectionDOM(body.ownerDocument, {
+          stylesheetURI: facade.rootURI + "style.css",
+          cacheManager: facade._citationCache,
+          log: (msg) => facade.log(msg),
+          pref: (n) => facade.pref(n)
+        }, body);
+      },
+      onDestroy: ({ body }) => {
+        cleanups.get(body)?.();
+        cleanups.delete(body);
+      }
+    });
+  }
+  function unregisterLookupSection(sectionID) {
+    if (typeof Zotero === "undefined" || !sectionID || !Zotero.ItemPaneManager?.unregisterSection) return;
+    try {
+      Zotero.ItemPaneManager.unregisterSection(sectionID);
+    } catch (_) {
+    }
+  }
+
   // src/csl.ts
   var host = Zotero;
   function normalizeItem(item) {
@@ -265,7 +1088,7 @@
     }, 0);
     plugin._positionTimers.set(owner, timer);
   }
-  async function applyPosition(plugin, owner) {
+  async function applyPreviewPosition(plugin, owner) {
     if (!plugin.initialized) return;
     const lifecycle = plugin._lifecycle;
     const sectionID = plugin._sectionID;
@@ -274,6 +1097,7 @@
     const current = panes.findIndex((pane) => pane.dataset.pane === plugin._sectionID);
     if (current < 0 || owner.skipRender) return;
     const position = plugin.getPosition();
+    if (position === "zotero-editpane-related" && current === panes.length - 2 && panes.at(-1)?.dataset.pane === plugin._lookupSectionID) return;
     let index = position === "zotero-editpane-related" ? panes.length : 0;
     if (position === "zotero-editpane-item-box") {
       const info = panes.findIndex((pane) => pane.dataset.pane === "info");
@@ -305,6 +1129,33 @@
       if (state.body.closest("item-details") === owner && !state.payload) {
         plugin._scheduleRefresh(state);
       }
+    }
+  }
+  async function applyPosition(plugin, owner) {
+    const lifecycle = plugin._lifecycle;
+    await applyPreviewPosition(plugin, owner);
+    if (!plugin.initialized || lifecycle !== plugin._lifecycle || owner.skipRender) return;
+    const lookupID = plugin._lookupSectionID;
+    if (!lookupID) return;
+    const panes = owner.getPanes();
+    const preview2 = panes.findIndex((pane) => pane.dataset.pane === plugin._sectionID);
+    const lookup = panes.findIndex((pane) => pane.dataset.pane === lookupID);
+    if (preview2 < 0 || lookup < 0) return;
+    const sidenav = owner.sidenav;
+    const wrappers = Array.from(sidenav?.querySelectorAll?.(".inherit-flex > .pin-wrapper") || []);
+    const navIDs = wrappers.map((wrapper) => wrapper.querySelector(".btn[data-pane]")?.dataset.pane);
+    const navPreview = navIDs.indexOf(plugin._sectionID || "");
+    const navLookup = navIDs.indexOf(lookupID);
+    if (lookup === preview2 + 1 && (navPreview < 0 || navLookup === navPreview + 1)) return;
+    if (sidenav?.container === owner && navPreview >= 0) {
+      await sidenav.changePaneOrder(lookupID, navPreview + 1, { persist: false, render: false });
+    }
+    if (!plugin.initialized || lifecycle !== plugin._lifecycle) return;
+    const updated = owner.getPanes();
+    const eye = updated.findIndex((pane) => pane.dataset.pane === plugin._sectionID);
+    const magnifier = updated.findIndex((pane) => pane.dataset.pane === lookupID);
+    if (eye >= 0 && magnifier >= 0 && magnifier !== eye + 1) {
+      await owner.changePaneOrder?.(lookupID, eye + 1, { render: false });
     }
   }
   function fitWidth(state) {
@@ -733,6 +1584,23 @@
         writeToXPCOMClipboard(content, state.config.asHTML);
         body.querySelector?.(".zotero-preview-copy-status")?.remove();
         if (button) this._showCopyFeedback(state, button);
+        const rawText = content.text.trim();
+        const canRecord = !asCitations || rawText.length >= 8 && !/^\[?\d+(?:[,\s\u2010-\u2015-]+\d+)*\]?$/.test(rawText);
+        if (this._citationCache && state.item && ids.length === 1 && canRecord && this.pref("lookupHistoryEnabled") !== false) {
+          try {
+            const rawItem = this._items(state)[0];
+            const rawCfg = state.config;
+            this._citationCache.record({
+              text: content.text,
+              libraryID: rawItem.libraryID || 1,
+              itemKey: rawItem.key || "",
+              itemID: rawItem.id,
+              title: String(rawItem.getField?.("title") || ""),
+              style: rawCfg?.style || ""
+            });
+          } catch (_) {
+          }
+        }
         return true;
       } catch (error) {
         this.log(`Clipboard: ${error}`);
@@ -759,7 +1627,9 @@
     _lifecycle: null,
     _stats: { generations: 0, cacheHits: 0 },
     _sectionID: null,
+    _lookupSectionID: null,
     _notifierID: null,
+    _citationCache: new CitationCacheManager(),
     initialized: false,
     _prefPrefix: PREF_PREFIX,
     _cacheLimit: CACHE_LIMIT,
@@ -770,12 +1640,11 @@
       if (this.initialized) return;
       Object.assign(this, { id, version, rootURI });
       this._states = /* @__PURE__ */ new Map();
-      this._cacheManager = new CacheManager({
-        limit: this._cacheLimit,
-        byteLimit: this._cacheByteLimit,
-        ttl: this._cacheTTL
-      });
+      this._cacheManager = new CacheManager({ limit: this._cacheLimit, byteLimit: this._cacheByteLimit, ttl: this._cacheTTL });
       this._cache = this._cacheManager.map;
+      this._citationCache = new CitationCacheManager();
+      this._syncCacheConfig();
+      this._citationCache.init().catch((err) => this.log(err));
       this._prefObservers = [];
       this._prefPaneCleanups = /* @__PURE__ */ new Set();
       this._stylesheets = /* @__PURE__ */ new Map();
@@ -799,9 +1668,7 @@
       return Zotero.Prefs.get(this._prefPrefix + name, true);
     },
     start() {
-      if (!Zotero.ItemPaneManager?.registerSection) {
-        throw new Error("Native ItemPaneManager API required");
-      }
+      if (!Zotero.ItemPaneManager?.registerSection) throw new Error("Native ItemPaneManager API required");
       if (this.pref("positionPolicyVersion") !== 1) {
         this.setPref(this._prefPrefix + "position", "zotero-item-pane-header");
         this.setPref(this._prefPrefix + "positionPolicyVersion", 1);
@@ -823,44 +1690,44 @@
         }
       });
       if (!this._sectionID) throw new Error("Could not register ZoteroPreview section");
+      this._syncLookupSection();
       this._notifierID = Zotero.Notifier.registerObserver(this, ["item", "tab"], "zoteropreview");
       this._prefObservers.push(
-        Zotero.Prefs.registerObserver(
-          this._prefPrefix + "position",
-          () => {
-            for (const state of this._states.values()) {
-              this._queuePosition(state.body.closest("item-details"));
-            }
-          },
-          true
-        )
+        Zotero.Prefs.registerObserver(this._prefPrefix + "position", () => {
+          for (const state of this._states.values()) {
+            this._queuePosition(state.body.closest("item-details"));
+          }
+        }, true)
       );
       for (const name of ["fontsize", "spacing"]) {
-        this._prefObservers.push(
-          Zotero.Prefs.registerObserver(
-            this._prefPrefix + name,
-            () => this._updateLayout(),
-            true
-          )
-        );
+        this._prefObservers.push(Zotero.Prefs.registerObserver(this._prefPrefix + name, () => this._updateLayout(), true));
       }
       for (const name of ["citationstyle", "whatToShow", "maxPreviewItems"]) {
-        this._prefObservers.push(
-          Zotero.Prefs.registerObserver(
-            this._prefPrefix + name,
-            () => this._queueAllPreviews(),
-            true
-          )
-        );
+        this._prefObservers.push(Zotero.Prefs.registerObserver(this._prefPrefix + name, () => this._queueAllPreviews(), true));
       }
-      for (const name of [
-        "export.quickCopy.setting",
-        "export.quickCopy.locale",
-        "export.quickCopy.dragLimit"
-      ]) {
-        this._prefObservers.push(
-          Zotero.Prefs.registerObserver(name, () => this._queueAllPreviews())
-        );
+      this._prefObservers.push(Zotero.Prefs.registerObserver(this._prefPrefix + "lookupEnabled", () => this._syncLookupSection(), true));
+      for (const name of ["cacheDirectory", "cacheMaxEntries", "cacheTtlDays"]) {
+        this._prefObservers.push(Zotero.Prefs.registerObserver(this._prefPrefix + name, () => this._syncCacheConfig(), true));
+      }
+      for (const name of ["export.quickCopy.setting", "export.quickCopy.locale", "export.quickCopy.dragLimit"]) {
+        this._prefObservers.push(Zotero.Prefs.registerObserver(name, () => this._queueAllPreviews()));
+      }
+    },
+    _syncCacheConfig() {
+      if (!this._citationCache) return;
+      const customDir = String(this.pref("cacheDirectory") || "").trim();
+      const maxEntries = Math.round(this._number(this.pref("cacheMaxEntries"), 2e3, 100, 1e5));
+      const ttlDays = Math.round(this._number(this.pref("cacheTtlDays"), 90, 7, 3650));
+      this._citationCache.configure({ customDir, maxEntries, ttlDays });
+    },
+    _syncLookupSection() {
+      const enabled = this.pref("lookupEnabled") !== false;
+      if (enabled && !this._lookupSectionID) {
+        this._lookupSectionID = registerLookupSection(this);
+        if (!this._lookupSectionID) Zotero.logError(new Error("ViewFlow citation lookup section registration failed"));
+      } else if (!enabled && this._lookupSectionID) {
+        unregisterLookupSection(this._lookupSectionID);
+        this._lookupSectionID = null;
       }
     },
     _initSection(props) {
@@ -902,10 +1769,7 @@
       return createPreviewError(code, message);
     },
     _layoutConfig() {
-      return {
-        font: this._number(this.pref("fontsize"), 1, 0.2, 3),
-        spacing: this._number(this.pref("spacing"), 1.5, 1, 3)
-      };
+      return { font: this._number(this.pref("fontsize"), 1, 0.2, 3), spacing: this._number(this.pref("spacing"), 1.5, 1, 3) };
     },
     _updateLayout() {
       updateLayout(this);
@@ -961,15 +1825,17 @@
       queueAllPreviews(this);
     },
     setPref(pref, value) {
-      const name = pref.replace(this._prefPrefix, "");
       const bounds = {
-        fontsize: [1, 0.2, 3],
-        spacing: [1.5, 1, 3],
-        maxPreviewItems: [100, 1, 500]
+        [this._prefPrefix + "fontsize"]: [1, 0.2, 3],
+        [this._prefPrefix + "spacing"]: [1.5, 1, 3],
+        [this._prefPrefix + "maxPreviewItems"]: [100, 1, 500, true],
+        [this._prefPrefix + "cacheMaxEntries"]: [2e3, 100, 1e5, true],
+        [this._prefPrefix + "cacheTtlDays"]: [90, 7, 3650, true]
       };
-      if (bounds[name]) {
-        value = this._number(value, ...bounds[name]);
-        if (name === "maxPreviewItems") value = Math.floor(value);
+      if (pref in bounds) {
+        const [fallback, min, max, integer] = bounds[pref];
+        const num = this._number(value, fallback, min, max);
+        value = integer ? Math.round(num) : num;
       }
       Zotero.Prefs.set(pref, value, true);
     },
@@ -1006,11 +1872,19 @@
       if (this._sectionID) {
         cleanup(() => Zotero.ItemPaneManager.unregisterSection(this._sectionID));
       }
+      if (this._lookupSectionID) {
+        cleanup(() => unregisterLookupSection(this._lookupSectionID));
+      }
+      if (this._citationCache) {
+        this._citationCache.flush().catch(() => {
+        });
+      }
       for (const body of [...this._states.keys()]) cleanup(() => this._destroySection(body));
       for (const { link } of this._stylesheets.values()) cleanup(() => link.remove());
       this._stylesheets.clear();
       this._cacheManager.clear();
       this._sectionID = null;
+      this._lookupSectionID = null;
       this._notifierID = null;
       this._prefObservers = [];
     }

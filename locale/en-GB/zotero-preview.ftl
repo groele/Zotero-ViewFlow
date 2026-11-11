@@ -69,8 +69,76 @@ zotero-preview-settings-missing-style =
     .label = Saved style is not installed — choose another style
 zotero-preview-release-heading = Version information
 zotero-preview-release-notes-label = Changes
-zotero-preview-release-notes = Hardened build pipeline with mandatory static type checking (npm run typecheck) and added architectural guards for generated bundles.
+zotero-preview-release-notes = Added compact citation reverse lookup, dedicated sidebar panel, preference toggle, and local history cache eviction.
 zotero-preview-release-date = Build date
 zotero-preview-release-download = Installer
-zotero-preview-release-download-link = Download ViewFlow 16.0.0 installer
+zotero-preview-release-download-link = Download ViewFlow 16.1.9 installer
 zotero-preview-release-repository = Repository
+
+zotero-preview-lookup-pane-title =
+    .label = Zotero ViewFlow Citation Lookup
+    .tooltiptext = Reverse Citation Lookup
+
+zotero-preview-card-lookup-heading = Reverse Citation Lookup & Local Cache
+zotero-preview-settings-lookup-enable-label =
+    .label = Enable compact citation reverse lookup
+zotero-preview-settings-lookup-enable-desc = Registers a dedicated lookup section in the item pane to locate items from compact citation strings.
+zotero-preview-settings-lookup-history-label =
+    .label = Track local copy history for instant provenance
+zotero-preview-settings-lookup-history-desc = Automatically saves citation mappings on copy to enable immediate reverse lookup.
+zotero-preview-settings-cache-dir-label = Local cache file path
+zotero-preview-settings-cache-dir-desc = Edit the full path or choose a folder. The filename is Zotero-citation-history.json.
+zotero-preview-settings-cache-quota-label = Maximum Cache Entries (LRU)
+zotero-preview-settings-cache-ttl-label = Cache Retention TTL (Days)
+zotero-preview-settings-cache-clear-label = Clear local citation history cache
+zotero-preview-settings-cache-stats-desc = Clears cached citation history records from local disk and memory.
+
+zotero-preview-lookup-input =
+    .title = Supports compact references, DOI, arXiv IDs with prefix or links, and local copy history. Enter to search; Esc to clear.
+    .placeholder = Paste a reference or DOI
+    .aria-label = Reference to look up
+zotero-preview-lookup-search = Find reference
+zotero-preview-lookup-clipboard = Read clipboard
+
+zotero-preview-lookup-locate = Locate item
+zotero-preview-lookup-open-pdf = Open PDF
+
+zotero-preview-cache-choose =
+    .label = Choose folder…
+
+zotero-preview-cache-default =
+    .label = Use default folder
+
+zotero-preview-cache-file-label = Current cache file (select to copy the full path)
+
+zotero-preview-cache-location-help = Enter the full file path or an absolute folder; leave blank for the default. Legacy citation-history.json is read automatically. Changing folders merges history and retains previous files.
+
+zotero-preview-cache-path-saved = Folder applied. History will be saved to the new location in the background.
+
+zotero-preview-cache-path-failed = Folder unavailable. Enter a writable absolute path or choose another folder.
+zotero-preview-cache-save-failed = Failed to write history cache to disk. Records remain in memory; click Retry to save.
+zotero-preview-cache-retry =
+    .label = Retry saving cache
+
+zotero-preview-cache-usage = { $count } history mappings cached / limit { $limit }
+
+zotero-preview-cache-recommendation = Recommended: 2,000 mappings and 90 days. Use 5,000 for frequent cross-document lookup or 10,000 for heavy use. Allowed: 100–100,000. Different formats of one paper may count separately. Low-priority history is evicted at the limit.
+
+zotero-preview-cache-recommend =
+    .label = Use recommended limits (2,000 / 90 days)
+
+zotero-preview-lookup-scope = Supports compact references, DOI, arXiv IDs with prefix or links, and local copy history. Enter to search; Esc to clear.
+zotero-preview-lookup-status-empty = Please enter or paste a citation
+zotero-preview-lookup-status-searching = Searching local library...
+zotero-preview-lookup-status-located = Located
+zotero-preview-lookup-status-locate-failed = Failed to locate item, please try again
+zotero-preview-lookup-status-unrecognized = Unrecognised citation format. Please provide a citation with journal, year, volume, and pages (or DOI/arXiv).
+zotero-preview-lookup-status-not-found = No matching item found in library (Parsed: { $journal }, { $year })
+zotero-preview-lookup-status-error = Lookup failed. Please retry or paste the citation again.
+zotero-preview-lookup-status-clipboard-fallback = Unable to read clipboard directly. Please paste into the input box (Ctrl+V).
+zotero-preview-lookup-state-matched = Matched reference
+zotero-preview-lookup-state-located = Located reference
+zotero-preview-lookup-state-history = Matched from copy history; verify and locate
+zotero-preview-lookup-state-candidate = Candidate reference; verify and locate
+zotero-preview-lookup-candidates-heading = Found { $count } matching references, click to select:
+zotero-preview-lookup-history-candidates = Copy history matched { $count } references, click to select:

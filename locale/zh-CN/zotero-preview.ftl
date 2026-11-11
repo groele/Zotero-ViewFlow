@@ -69,8 +69,76 @@ zotero-preview-settings-missing-style =
     .label = 已保存的样式未安装，请选择其他样式
 zotero-preview-release-heading = 版本信息
 zotero-preview-release-notes-label = 版本说明
-zotero-preview-release-notes = 加固构建流水线静态类型守卫（npm run typecheck），新增根目录运行时生成物防篡改与手写隔离架构守卫。
+zotero-preview-release-notes = 新增紧凑参考文献反向逆查功能、独立侧边栏查询入口、偏好设置开关及本地历史缓存淘汰机制。
 zotero-preview-release-date = 构建日期
 zotero-preview-release-download = 安装包
-zotero-preview-release-download-link = 下载 ViewFlow 16.0.0 安装包
+zotero-preview-release-download-link = 下载 ViewFlow 16.1.9 安装包
 zotero-preview-release-repository = 项目仓库
+
+zotero-preview-lookup-pane-title =
+    .label = Zotero ViewFlow 引文反查
+    .tooltiptext = 紧凑参考文献反向逆查定位
+
+zotero-preview-card-lookup-heading = 紧凑引文反向逆查与本地缓存
+zotero-preview-settings-lookup-enable-label =
+    .label = 启用紧凑引文反向逆查功能
+zotero-preview-settings-lookup-enable-desc = 在条目侧栏中注册独立的引文反查入口，支持通过简写引文反查定位原始文献条目。
+zotero-preview-settings-lookup-history-label =
+    .label = 记录本机复制历史以支持快速溯源
+zotero-preview-settings-lookup-history-desc = 复制引文时自动保存映射关系，可对本机曾复制的引文实现精准快速反查。
+zotero-preview-settings-cache-dir-label = 本地缓存文件路径
+zotero-preview-settings-cache-dir-desc = 显示完整缓存文件路径，可直接编辑或选择目录。文件名固定为 Zotero-citation-history.json。
+zotero-preview-settings-cache-quota-label = 缓存条目容量上限 (LRU)
+zotero-preview-settings-cache-ttl-label = 缓存保留生命周期 (天数)
+zotero-preview-settings-cache-clear-label = 清空本地引文历史缓存
+zotero-preview-settings-cache-stats-desc = 清空本地磁盘与内存中已缓存的引文历史记录。
+
+zotero-preview-lookup-input =
+    .title = 支持紧凑引文、DOI、arXiv:编号或链接，以及本机复制历史。Enter 查找，Esc 清空。
+    .placeholder = 粘贴完整参考文献或 DOI
+    .aria-label = 反查引文
+zotero-preview-lookup-search = 查找原文献
+zotero-preview-lookup-clipboard = 读取剪贴板
+
+zotero-preview-lookup-locate = 定位条目
+zotero-preview-lookup-open-pdf = 打开 PDF
+
+zotero-preview-cache-choose =
+    .label = 选择目录…
+
+zotero-preview-cache-default =
+    .label = 使用默认目录
+
+zotero-preview-cache-file-label = 当前缓存文件（可选择并复制完整路径）
+
+zotero-preview-cache-location-help = 支持输入完整文件路径或绝对目录，留空恢复默认位置。旧版 citation-history.json 会自动兼容读取；切换目录时合并历史，保留原文件。
+
+zotero-preview-cache-path-saved = 目录已应用，历史将在后台保存到新位置。
+
+zotero-preview-cache-path-failed = 无法使用该目录。请输入可写的绝对路径，或重新选择文件夹。
+zotero-preview-cache-save-failed = 历史缓存写入失败，记录暂存于内存，请点击重试保存。
+zotero-preview-cache-retry =
+    .label = 重试保存缓存
+
+zotero-preview-cache-usage = 已缓存 { $count } 条历史映射 / 上限 { $limit } 条
+
+zotero-preview-cache-recommendation = 建议 2,000 条、90 天。经常跨文稿回查可设 5,000 条，重度使用可设 10,000 条。允许 100–100,000 条；同篇文献的不同格式可能占多条。达到上限后自动淘汰低优先级历史。
+
+zotero-preview-cache-recommend =
+    .label = 采用建议值（2,000 条 / 90 天）
+
+zotero-preview-lookup-scope = 支持紧凑引文、DOI、arXiv:编号或链接，以及本机复制历史。Enter 查找，Esc 清空。
+zotero-preview-lookup-status-empty = 请输入或粘贴引文
+zotero-preview-lookup-status-searching = 正在反查本地文献库...
+zotero-preview-lookup-status-located = 已定位
+zotero-preview-lookup-status-locate-failed = 定位失败，请重试
+zotero-preview-lookup-status-unrecognized = 无法识别引文结构，请提供包含期刊、年份、卷号与页码（或 DOI/arXiv）的引文。
+zotero-preview-lookup-status-not-found = 未在当前文库中找到匹配项 (解析: { $journal }, { $year })
+zotero-preview-lookup-status-error = 查询失败，请重试或重新粘贴引文。
+zotero-preview-lookup-status-clipboard-fallback = 无法直接读取剪贴板，请手动在输入框中粘贴 (Ctrl+V)。
+zotero-preview-lookup-state-matched = 已匹配文献
+zotero-preview-lookup-state-located = 已定位文献
+zotero-preview-lookup-state-history = 复制历史匹配，请核对后定位
+zotero-preview-lookup-state-candidate = 候选文献，请核对后定位
+zotero-preview-lookup-candidates-heading = 找到 { $count } 篇可能匹配的文献，请点击选择：
+zotero-preview-lookup-history-candidates = 复制历史关联到 { $count } 篇文献，请点击选择：

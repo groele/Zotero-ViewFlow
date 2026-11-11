@@ -5,3 +5,8 @@ pref("extensions.zoteropreview.fontsize", "1");
 pref("extensions.zoteropreview.spacing", "1.5");
 pref("extensions.zoteropreview.debug", false);
 pref("extensions.zoteropreview.maxPreviewItems", 100);
+pref("extensions.zoteropreview.lookupEnabled", true);
+pref("extensions.zoteropreview.lookupHistoryEnabled", true);
+pref("extensions.zoteropreview.cacheDirectory", "");
+pref("extensions.zoteropreview.cacheMaxEntries", 2000);
+pref("extensions.zoteropreview.cacheTtlDays", 90);

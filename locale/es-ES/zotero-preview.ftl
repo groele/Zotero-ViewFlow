@@ -69,8 +69,76 @@ zotero-preview-settings-missing-style =
     .label = El estilo guardado no está instalado — elija otro
 zotero-preview-release-heading = Información de versión
 zotero-preview-release-notes-label = Cambios
-zotero-preview-release-notes = Línea de compilación reforzada con verificación de tipo estático (npm run typecheck) y guardas arquitectónicas agregadas.
+zotero-preview-release-notes = Se agregó búsqueda inversa de citas compactas, panel de barra lateral dedicado, interruptor de preferencias y expulsión de caché local.
 zotero-preview-release-date = Fecha de compilación
 zotero-preview-release-download = Instalador
-zotero-preview-release-download-link = Descargar el instalador ViewFlow 16.0.0
+zotero-preview-release-download-link = Descargar el instalador ViewFlow 16.1.9
 zotero-preview-release-repository = Repositorio
+
+zotero-preview-lookup-pane-title =
+    .label = Zotero ViewFlow — Búsqueda inversa de citas
+    .tooltiptext = Búsqueda Inversa de Citas
+
+zotero-preview-card-lookup-heading = Búsqueda Inversa de Citas y Caché Local
+zotero-preview-settings-lookup-enable-label =
+    .label = Habilitar búsqueda inversa de citas compactas
+zotero-preview-settings-lookup-enable-desc = Registra una sección dedicada en el panel lateral para localizar elementos desde citas compactas.
+zotero-preview-settings-lookup-history-label =
+    .label = Registrar historial de copia local para procedencia instantánea
+zotero-preview-settings-lookup-history-desc = Guarda automáticamente las asignaciones al copiar para permitir la búsqueda inversa inmediata.
+zotero-preview-settings-cache-dir-label = Ruta del archivo de caché local
+zotero-preview-settings-cache-dir-desc = Edite la ruta completa o elija una carpeta. El nombre del archivo es Zotero-citation-history.json.
+zotero-preview-settings-cache-quota-label = Límite Máximo de Entradas de Caché (LRU)
+zotero-preview-settings-cache-ttl-label = Retención de Caché TTL (Días)
+zotero-preview-settings-cache-clear-label = Borrar caché de historial de citas local
+zotero-preview-settings-cache-stats-desc = Borra los registros del historial de citas en caché del disco local y la memoria.
+
+zotero-preview-lookup-input =
+    .title = Admite citas compactas, DOI, arXiv con prefijo o enlace e historial de copia local. Enter para buscar; Esc para borrar.
+    .placeholder = Pegue una referencia o DOI
+    .aria-label = Referencia a buscar
+zotero-preview-lookup-search = Buscar referencia
+zotero-preview-lookup-clipboard = Leer portapapeles
+
+zotero-preview-lookup-locate = Localizar elemento
+zotero-preview-lookup-open-pdf = Abrir PDF
+
+zotero-preview-cache-choose =
+    .label = Elegir carpeta…
+
+zotero-preview-cache-default =
+    .label = Usar carpeta predeterminada
+
+zotero-preview-cache-file-label = Archivo de caché actual (seleccione para copiar la ruta completa)
+
+zotero-preview-cache-location-help = Introduzca la ruta completa o una carpeta absoluta; déjelo en blanco para el valor predeterminado. El archivo heredado citation-history.json se lee automáticamente.
+
+zotero-preview-cache-path-saved = Carpeta aplicada. El historial se guardará en la nueva ubicación en segundo plano.
+
+zotero-preview-cache-path-failed = Carpeta no disponible. Introduzca una ruta absoluta con permiso de escritura o elija otra carpeta.
+zotero-preview-cache-save-failed = Error al guardar el historial en disco. Los registros permanecen en memoria; pulse Reintentar.
+zotero-preview-cache-retry =
+    .label = Reintentar guardado de caché
+
+zotero-preview-cache-usage = { $count } asignaciones de historial en caché / límite { $limit }
+
+zotero-preview-cache-recommendation = Recomendado: 2.000 asignaciones y 90 días. Use 5.000 para consultas frecuentes o 10.000 para uso intensivo. Permitido: 100–100.000.
+
+zotero-preview-cache-recommend =
+    .label = Usar límites recomendados (2.000 / 90 días)
+
+zotero-preview-lookup-scope = Admite citas compactas, DOI, arXiv con prefijo o enlace e historial de copia local. Enter para buscar; Esc para borrar.
+zotero-preview-lookup-status-empty = Introduzca o pegue una cita
+zotero-preview-lookup-status-searching = Buscando en la biblioteca local...
+zotero-preview-lookup-status-located = Localizado
+zotero-preview-lookup-status-locate-failed = Error al localizar, inténtelo de nuevo
+zotero-preview-lookup-status-unrecognized = Formato de cita no reconocido. Proporcione revista, año, volumen y páginas (o DOI/arXiv).
+zotero-preview-lookup-status-not-found = No se encontraron coincidencias (Analizado: { $journal }, { $year })
+zotero-preview-lookup-status-error = Error en la búsqueda. Vuelva a intentarlo.
+zotero-preview-lookup-status-clipboard-fallback = No se puede leer el portapapeles directamente. Pegue manualmente (Ctrl+V).
+zotero-preview-lookup-state-matched = Referencia coincidente
+zotero-preview-lookup-state-located = Referencia localizada
+zotero-preview-lookup-state-history = Coincidencia del historial de copia; verifique y localice
+zotero-preview-lookup-state-candidate = Referencia candidata; verifique y localice
+zotero-preview-lookup-candidates-heading = Se encontraron { $count } referencias posibles, haga clic para seleccionar:
+zotero-preview-lookup-history-candidates = El historial coincide con { $count } referencias, haga clic para seleccionar:

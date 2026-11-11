@@ -95,6 +95,22 @@ export const previewActions: PreviewActions & ThisType<PreviewFacade> = {
 			writeToXPCOMClipboard(content, state.config!.asHTML);
 			body.querySelector?.('.zotero-preview-copy-status')?.remove();
 			if (button) this._showCopyFeedback(state, button);
+			const rawText = content.text.trim();
+			const canRecord = !asCitations || (rawText.length >= 8 && !/^\[?\d+(?:[,\s\u2010-\u2015-]+\d+)*\]?$/.test(rawText));
+			if (this._citationCache && state.item && ids.length === 1 && canRecord && this.pref('lookupHistoryEnabled') !== false) {
+				try {
+					const rawItem = this._items(state)[0] as unknown as { libraryID?: number; key?: string; id: number; getField?: (n: string) => unknown };
+					const rawCfg = state.config as unknown as { style?: string };
+					this._citationCache.record({
+						text: content.text,
+						libraryID: rawItem.libraryID || 1,
+						itemKey: rawItem.key || '',
+						itemID: rawItem.id,
+						title: String(rawItem.getField?.('title') || ''),
+						style: rawCfg?.style || ''
+					});
+				} catch (_) {}
+			}
 			return true;
 		} catch (error) {
 			this.log(`Clipboard: ${error}`);

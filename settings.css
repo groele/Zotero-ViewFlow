@@ -368,3 +368,7 @@
     grid-template-columns: minmax(0, 1fr) 5.5em;
   }
 }
+.viewflow-cache-tools { display: flex; flex-wrap: wrap; gap: 6px; margin-block: 6px; }
+#zotero-prefpane-zotero-preview #zotero-preview-cache-dir,
+#zotero-prefpane-zotero-preview .viewflow-cache-file { box-sizing: border-box; width: 100%; min-width: 0; }
+#zotero-prefpane-zotero-preview #zotero-preview-cache-status { font-size: 13px; line-height: 1.6; margin-block: 5px; }

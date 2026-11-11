@@ -69,8 +69,76 @@ zotero-preview-settings-missing-style =
     .label = Le style enregistré n’est pas installé — choisissez-en un autre
 zotero-preview-release-heading = Version
 zotero-preview-release-notes-label = Modifications
-zotero-preview-release-notes = Pipeline de compilation renforcé avec vérification de type statique (npm run typecheck) et gardes architecturales ajoutées.
+zotero-preview-release-notes = Ajout de la recherche inversée de citations compactes, d'un panneau latéral dédié, d'un commutateur de préférences et de l'éviction du cache local.
 zotero-preview-release-date = Date de compilation
 zotero-preview-release-download = Installation
-zotero-preview-release-download-link = Télécharger l'installation ViewFlow 16.0.0
+zotero-preview-release-download-link = Télécharger l'installation ViewFlow 16.1.9
 zotero-preview-release-repository = Dépôt
+
+zotero-preview-lookup-pane-title =
+    .label = Zotero ViewFlow — Recherche de citations
+    .tooltiptext = Recherche Inverse de Citation
+
+zotero-preview-card-lookup-heading = Recherche Inverse de Citation & Cache Local
+zotero-preview-settings-lookup-enable-label =
+    .label = Activer la recherche inverse de citations compactes
+zotero-preview-settings-lookup-enable-desc = Enregistre une section dédiée dans le panneau latéral pour localiser des éléments à partir de citations compactes.
+zotero-preview-settings-lookup-history-label =
+    .label = Enregistrer l'historique des copies locales pour une provenance instantanée
+zotero-preview-settings-lookup-history-desc = Enregistre automatiquement les correspondances lors de la copie pour une recherche inverse immédiate.
+zotero-preview-settings-cache-dir-label = Chemin du fichier de cache local
+zotero-preview-settings-cache-dir-desc = Modifiez le chemin complet ou choisissez un dossier. Le nom du fichier est Zotero-citation-history.json.
+zotero-preview-settings-cache-quota-label = Limite Maximale d'Entrées du Cache (LRU)
+zotero-preview-settings-cache-ttl-label = Rétention du Cache TTL (Jours)
+zotero-preview-settings-cache-clear-label = Vider le cache d'historique des citations locales
+zotero-preview-settings-cache-stats-desc = Efface les enregistrements de l'historique des citations mis en cache du disque local et de la mémoire.
+
+zotero-preview-lookup-input =
+    .title = Prend en charge les références compactes, DOI, arXiv avec préfixe ou lien et l'historique de copie local. Entrée pour chercher ; Échap pour effacer.
+    .placeholder = Collez une référence ou un DOI
+    .aria-label = Référence à rechercher
+zotero-preview-lookup-search = Rechercher la référence
+zotero-preview-lookup-clipboard = Lire le presse-papiers
+
+zotero-preview-lookup-locate = Localiser l'élément
+zotero-preview-lookup-open-pdf = Ouvrir le PDF
+
+zotero-preview-cache-choose =
+    .label = Choisir un dossier…
+
+zotero-preview-cache-default =
+    .label = Utiliser le dossier par défaut
+
+zotero-preview-cache-file-label = Fichier de cache actuel (sélectionnez pour copier le chemin complet)
+
+zotero-preview-cache-location-help = Entrez le chemin complet ou un dossier absolu ; laissez vide pour l'emplacement par défaut. L'ancien fichier citation-history.json est lu automatiquement.
+
+zotero-preview-cache-path-saved = Dossier appliqué. L'historique sera enregistré au nouvel emplacement en arrière-plan.
+
+zotero-preview-cache-path-failed = Dossier indisponible. Entrez un chemin absolu accessible en écriture ou choisissez un autre dossier.
+zotero-preview-cache-save-failed = Échec de l'écriture du cache sur le disque. Les entrées restent en mémoire ; cliquez sur Réessayer.
+zotero-preview-cache-retry =
+    .label = Réessayer l'enregistrement du cache
+
+zotero-preview-cache-usage = { $count } correspondances en cache / limite { $limit }
+
+zotero-preview-cache-recommendation = Recommandé : 2 000 entrées et 90 jours. Utilisez 5 000 pour un usage fréquent ou 10 000 pour un usage intensif. Autorisé : 100–100 000.
+
+zotero-preview-cache-recommend =
+    .label = Utiliser les limites recommandées (2 000 / 90 jours)
+
+zotero-preview-lookup-scope = Prend en charge les références compactes, DOI, arXiv avec préfixe ou lien et l'historique de copie local. Entrée pour chercher ; Échap pour effacer.
+zotero-preview-lookup-status-empty = Veuillez saisir ou coller une citation
+zotero-preview-lookup-status-searching = Recherche dans la bibliothèque locale...
+zotero-preview-lookup-status-located = Localisé
+zotero-preview-lookup-status-locate-failed = Échec de la localisation, veuillez réessayer
+zotero-preview-lookup-status-unrecognized = Format de citation non reconnu. Indiquez la revue, l'année, le volume et les pages (ou DOI/arXiv).
+zotero-preview-lookup-status-not-found = Aucun élément correspondant trouvé (Analysé : { $journal }, { $year })
+zotero-preview-lookup-status-error = Échec de la recherche. Veuillez réessayer.
+zotero-preview-lookup-status-clipboard-fallback = Impossible de lire le presse-papiers directement. Collez manuellement (Ctrl+V).
+zotero-preview-lookup-state-matched = Référence correspondante
+zotero-preview-lookup-state-located = Référence localisée
+zotero-preview-lookup-state-history = Correspondance de l'historique ; vérifiez et localisez
+zotero-preview-lookup-state-candidate = Référence candidate ; vérifiez et localisez
+zotero-preview-lookup-candidates-heading = { $count } références possibles trouvées, cliquez pour sélectionner :
+zotero-preview-lookup-history-candidates = L'historique correspond à { $count } références, cliquez pour sélectionner :

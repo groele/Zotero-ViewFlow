@@ -1,4 +1,5 @@
 import type {CacheManager} from './cache.ts';
+import type {CitationCacheManager} from './citation-cache.ts';
 import type {normalizeItem, resolveConfig} from './csl.ts';
 import type {initSection} from './section.ts';
 import type {createPreviewError} from './constants.ts';
@@ -12,7 +13,8 @@ export type PreviewFacade = Plugin & {
  id:string;version:string;rootURI:string;_prefPrefix:string;_cacheLimit:number;_cacheByteLimit:number;_cacheTTL:number;_styleInitTimeout:number;
  _cacheManager:CacheManager;_cache:CacheManager['map'];_prefObservers:symbol[];_prefPaneCleanups:Set<()=>void>;
  _positionTimers:Map<PositionOwner,number>;_positionObservers:Map<PositionOwner,{observer:MutationObserver;count:number}>;_positionRuns:Map<PositionOwner,{dirty:boolean}>;
- _lifecycle:Lifecycle;_sectionID:string|false|null;_notifierID:string|null;
+ _lifecycle:Lifecycle;_sectionID:string|false|null;_lookupSectionID?:string|false|null;_notifierID:string|null;
+ _citationCache:CitationCacheManager;
  init(p:Initial):void; start():void; shutdown():void; log(message:unknown):void; pref(name:string):string|number|boolean|undefined;
  getPosition():string; _observePosition(owner:PositionOwner,state:State):void; _queuePosition(owner:PositionOwner):void; _applyPosition(owner:PositionOwner):Promise<void>; _fitWidth(state:State):void;
  _initSection(props:Parameters<typeof initSection>[1]):void; _normalizeItem(item:Item|null):Item|null;_changeItem(props:Props):void;_items(state:State):Item[];
@@ -21,5 +23,5 @@ export type PreviewFacade = Plugin & {
  _previewKey(items:Item[],config:Config & ReturnType<typeof resolveConfig>):string;_generate(items:Item[],config:Config & ReturnType<typeof resolveConfig>):Payload;
  _cacheGet(key:string):Payload|null;_cachePut(key:string,payload:Payload,ids:number[]):void;_cacheDelete(key:string):void;_cacheClear():void;
  _clipboardIconSVG():string;_successIconSVG():string;_showCopyFeedback(state:State,button:HTMLElement):void;_block(kind:string,content:Content):string;_renderPayload(state:State,payload:Payload,omitted:number):void;_setHTML(state:State,html:string):void;_message(state:State,id:string,fallback:string,error?:boolean):void;
- copyCitation(asCitations:boolean,body:HTMLElement,button:HTMLElement):boolean;notify(event:string,type:string,ids:(number|string)[]):void;_scheduleRefresh(state:State):void;_queueAllPreviews():void;setPref(pref:string,value:string|number|boolean):void;_destroySection(body:HTMLElement):void;_cleanup(action:()=>void):void;
+ copyCitation(asCitations:boolean,body:HTMLElement,button:HTMLElement):boolean;notify(event:string,type:string,ids:(number|string)[]):void;_scheduleRefresh(state:State):void;_queueAllPreviews():void;setPref(pref:string,value:string|number|boolean):void;_destroySection(body:HTMLElement):void;_cleanup(action:()=>void):void;_syncLookupSection():void;_syncCacheConfig():void;
 };

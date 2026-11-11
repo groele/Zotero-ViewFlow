@@ -20,7 +20,7 @@ function setup(clock = {setTimeout, clearTimeout}) {
    unregisterObserver: id => observers.delete(id) },
   Items: { get: id => items.get(id) }, debug() {},
   Notifier: { registerObserver: (o,types) => { for(const type of types) assert.ok(['item','tab'].includes(type)); return 1; }, unregisterObserver: () => {} },
-  ItemPaneManager: { registerSection: o => { Zotero.options = o; return 'native-id'; }, unregisterSection: () => {} },
+  ItemPaneManager: { registerSection: o => { assert.equal(typeof o.onRender, 'function'); if (o.paneID === 'zotero-preview') Zotero.options = o; else Zotero.lookupOptions = o; return o.paneID === 'zotero-preview' ? 'native-id' : 'lookup-id'; }, unregisterSection: () => {} },
   QuickCopy: { getFormatFromURL: url => ({mode:'bibliography',id:url || 'style'}), unserializeSetting: x => x,
    getContentFromItems: (items, format, unused, citation) => {
     calls.push(Array.from(items, i => i.id));
@@ -547,5 +547,37 @@ test('destroying a section aborts all of its DOM listeners', () => {
  assert.deepEqual([...s.listeners.keys()].sort(), ['click', 'keydown']);
  h.plugin._destroySection(s.body);
  assert.equal(s.listeners.size, 0);
+ h.plugin.shutdown();
+});
+
+test('default lookup registers alongside preview without replacing its lifecycle',()=>{
+ const h=setup();
+ assert.equal(h.Zotero.lookupOptions.paneID,'zotero-preview-lookup');
+ assert.equal(h.Zotero.options.paneID,'zotero-preview');
+ assert.equal(typeof h.Zotero.lookupOptions.onRender,'function');
+ h.plugin.shutdown();
+});
+
+test('lookup stays immediately after preview across positions and external reorder',async()=>{
+ const h=setup();
+ const panes=['lookup-id','info','abstract','native-id','other-plugin'].map(pane=>({dataset:{pane}}));
+ const owner={getPanes:()=>panes,changePaneOrder:async(id,index)=>{
+  const target=panes[index],current=panes.findIndex(p=>p.dataset.pane===id);
+  const [pane]=panes.splice(current,1);
+  panes.splice(target?panes.indexOf(target):panes.length,0,pane);
+ }};
+ for(const position of ['zotero-item-pane-header','zotero-editpane-item-box','zotero-editpane-related']){
+  h.prefs.set('extensions.zoteropreview.position',position);
+  await h.plugin._applyPosition(owner);
+  const order=panes.map(p=>p.dataset.pane);
+  assert.equal(order.indexOf('lookup-id'),order.indexOf('native-id')+1);
+  await h.plugin._applyPosition(owner);
+  assert.deepEqual(panes.map(p=>p.dataset.pane),order);
+  const [lookup]=panes.splice(panes.findIndex(p=>p.dataset.pane==='lookup-id'),1);
+  panes.unshift(lookup);
+  await h.plugin._applyPosition(owner);
+  const reordered=panes.map(p=>p.dataset.pane);
+  assert.equal(reordered.indexOf('lookup-id'),reordered.indexOf('native-id')+1);
+ }
  h.plugin.shutdown();
 });

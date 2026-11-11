@@ -7,7 +7,7 @@ export type PositionOwner = Element & {
 };
 export type PositionState = { positionOwner?: PositionOwner | null; body: HTMLElement; doc: Document; payload?: unknown; sizingOwner?: Element | null; destroyed: boolean };
 export type PositionPlugin = {
- initialized: boolean; _lifecycle: symbol | null; _sectionID: string | false | null;
+ initialized: boolean; _lifecycle: symbol | null; _sectionID: string | false | null; _lookupSectionID?: string | false | null;
  _positionObservers: Map<PositionOwner, {observer: MutationObserver; count: number}>;
  _positionTimers: Map<PositionOwner, number>; _positionRuns: Map<PositionOwner, {dirty: boolean}>;
  _states: Map<unknown, PositionState>;
@@ -77,7 +77,7 @@ export function queuePosition(plugin: PositionPlugin, owner: PositionOwner | nul
 /**
  * Orders the Zotero ViewFlow section pane relative to other panes (header, after info, or bottom).
  */
-export async function applyPosition(plugin: PositionPlugin, owner: PositionOwner) {
+async function applyPreviewPosition(plugin: PositionPlugin, owner: PositionOwner) {
 	if (!plugin.initialized) return;
 	const lifecycle = plugin._lifecycle;
 	const sectionID = plugin._sectionID;
@@ -86,6 +86,7 @@ export async function applyPosition(plugin: PositionPlugin, owner: PositionOwner
 	const current = panes.findIndex(pane => pane.dataset.pane === plugin._sectionID);
 	if (current < 0 || owner.skipRender) return;
 	const position = plugin.getPosition();
+	if (position === 'zotero-editpane-related' && current === panes.length - 2 && panes.at(-1)?.dataset.pane === plugin._lookupSectionID) return;
 	let index = position === 'zotero-editpane-related' ? panes.length : 0;
 	if (position === 'zotero-editpane-item-box') {
 		const info = panes.findIndex(pane => pane.dataset.pane === 'info');
@@ -122,6 +123,35 @@ export async function applyPosition(plugin: PositionPlugin, owner: PositionOwner
 			plugin._scheduleRefresh(state);
 		}
 	}
+}
+
+/** Keeps the lookup pane and its navigation button directly after the preview. */
+export async function applyPosition(plugin: PositionPlugin, owner: PositionOwner) {
+    const lifecycle = plugin._lifecycle;
+    await applyPreviewPosition(plugin, owner);
+    if (!plugin.initialized || lifecycle !== plugin._lifecycle || owner.skipRender) return;
+    const lookupID = plugin._lookupSectionID;
+    if (!lookupID) return;
+    const panes = owner.getPanes();
+    const preview = panes.findIndex(pane => pane.dataset.pane === plugin._sectionID);
+    const lookup = panes.findIndex(pane => pane.dataset.pane === lookupID);
+    if (preview < 0 || lookup < 0) return;
+    const sidenav = owner.sidenav;
+    const wrappers = Array.from(sidenav?.querySelectorAll?.('.inherit-flex > .pin-wrapper') || []) as HTMLElement[];
+    const navIDs = wrappers.map(wrapper => wrapper.querySelector<HTMLElement>('.btn[data-pane]')?.dataset.pane);
+    const navPreview = navIDs.indexOf(plugin._sectionID || '');
+    const navLookup = navIDs.indexOf(lookupID);
+    if (lookup === preview + 1 && (navPreview < 0 || navLookup === navPreview + 1)) return;
+    if (sidenav?.container === owner && navPreview >= 0) {
+        await sidenav.changePaneOrder(lookupID, navPreview + 1, {persist: false, render: false});
+    }
+    if (!plugin.initialized || lifecycle !== plugin._lifecycle) return;
+    const updated = owner.getPanes();
+    const eye = updated.findIndex(pane => pane.dataset.pane === plugin._sectionID);
+    const magnifier = updated.findIndex(pane => pane.dataset.pane === lookupID);
+    if (eye >= 0 && magnifier >= 0 && magnifier !== eye + 1) {
+        await owner.changePaneOrder?.(lookupID, eye + 1, {render: false});
+    }
 }
 
 /**

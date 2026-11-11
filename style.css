@@ -143,3 +143,90 @@ collapsible-section:has(> .zotero-preview-root) {
     .zotero-preview-copy { transition: none; }
     .zotero-preview-copy-success { transform: none; }
 }
+
+
+
+/* Compact native styling shared with ViewFlow's citation preview. */
+item-pane-custom-section:has(.zotero-viewflow-lookup-body),
+collapsible-section:has(> .zotero-viewflow-lookup-body) {
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    box-sizing: border-box;
+    contain: inline-size;
+}
+.zotero-viewflow-lookup-body {
+    box-sizing: border-box;
+    min-width: 0;
+    max-width: 100%;
+    color: var(--fill-primary, light-dark(#222, #eee));
+    font: inherit;
+}
+.viewflow-lookup-container {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 4px 5px 6px;
+    min-width: 0;
+    font-size: 13px;
+    line-height: 1.5;
+}
+.viewflow-lookup-input {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    height: 28px;
+    padding: 3px 7px;
+    border: 1px solid var(--material-border, light-dark(#d1d1d1, #555));
+    border-radius: 3px;
+    background: var(--material-background, light-dark(#fff, #242424));
+    color: inherit;
+    font: inherit;
+}
+.viewflow-lookup-input::placeholder { color: var(--fill-secondary, #888); }
+.viewflow-lookup-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.viewflow-lookup-container button {
+    appearance: none;
+    min-height: 25px;
+    margin: 0;
+    padding: 2px 8px;
+    border: 1px solid var(--material-border, light-dark(#d5d5d5, #555));
+    border-radius: 3px;
+    background: color-mix(in srgb, currentColor 3%, transparent);
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+.viewflow-lookup-container button:hover {
+    background: color-mix(in srgb, currentColor 8%, transparent);
+}
+.viewflow-lookup-container button:active {
+    background: color-mix(in srgb, currentColor 13%, transparent);
+}
+.viewflow-lookup-container .viewflow-lookup-search { font-weight: 500; }
+.viewflow-lookup-container :is(button, input):focus-visible {
+    outline: 2px solid var(--accent-blue, #4d90fe);
+    outline-offset: 1px;
+}
+.viewflow-lookup-status {
+    overflow-wrap: anywhere;
+    color: var(--fill-secondary, light-dark(#666, #aaa));
+    font-size: 12px;
+}
+.viewflow-lookup-status:empty { display: none; }
+.viewflow-lookup-card {
+    padding: 6px 0 0;
+    margin-top: 2px;
+    border-top: 1px solid var(--material-border, light-dark(#dedede, #444));
+}
+.viewflow-lookup-result-state { margin-bottom: 3px; font-size: 12px; }
+.viewflow-lookup-card-head {
+    color: var(--fill-primary, light-dark(#222, #eee));
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.5;
+}
+.viewflow-lookup-card-meta { margin: 4px 0 6px; font-size: 12px; }
+.viewflow-lookup-card .viewflow-lookup-actions { color: var(--fill-primary, light-dark(#222, #eee)); }
+.viewflow-lookup-status ul { display: grid; gap: 4px; padding: 0; list-style: none; }
+.viewflow-lookup-status li button { width: 100%; text-align: start; white-space: normal; }
