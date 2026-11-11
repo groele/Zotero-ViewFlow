@@ -72,7 +72,7 @@ zotero-preview-release-notes-label = 版本说明
 zotero-preview-release-notes = 新增紧凑参考文献反向逆查功能、独立侧边栏查询入口、偏好设置开关及本地历史缓存淘汰机制。
 zotero-preview-release-date = 构建日期
 zotero-preview-release-download = 安装包
-zotero-preview-release-download-link = 下载 ViewFlow 16.1.10 安装包
+zotero-preview-release-download-link = 下载 ViewFlow 16.3.0 安装包
 zotero-preview-release-repository = 项目仓库
 
 zotero-preview-lookup-pane-title =
@@ -111,7 +111,7 @@ zotero-preview-cache-default =
 
 zotero-preview-cache-file-label = 当前缓存文件（可选择并复制完整路径）
 
-zotero-preview-cache-location-help = 支持输入完整文件路径或绝对目录，留空恢复默认位置。历史缓存文件会自动兼容读取；切换目录时合并历史，保留原文件。
+zotero-preview-cache-location-help = 仅使用 viewflow-history.json，不读取或迁移旧文件。可输入完整文件路径或绝对目录，留空恢复默认位置。
 
 zotero-preview-cache-path-saved = 目录已应用，历史将在后台保存到新位置。
 
@@ -142,3 +142,5 @@ zotero-preview-lookup-state-history = 复制历史匹配，请核对后定位
 zotero-preview-lookup-state-candidate = 候选文献，请核对后定位
 zotero-preview-lookup-candidates-heading = 找到 { $count } 篇可能匹配的文献，请点击选择：
 zotero-preview-lookup-history-candidates = 复制历史关联到 { $count } 篇文献，请点击选择：
+
+zotero-preview-cache-clear-failed = 缓存文件清空失败，请检查权限并重试。磁盘上的旧历史可能仍存在。

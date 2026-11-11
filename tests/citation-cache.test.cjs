@@ -135,7 +135,7 @@ test('cache directory switch merges destination records and persists reduced quo
   await first.flush();
   fs.mkdirSync(destination,{recursive:true});
   const record={key:'old-format',text:'two',libraryID:1,itemKey:'TWO',itemID:2,title:'Two',style:'test',copiedAt:Date.now(),lastAccessedAt:Date.now(),hitCount:0};
-  fs.writeFileSync(path.join(destination,'Zotero-citation-history.json'),JSON.stringify([record]));
+  fs.writeFileSync(path.join(destination,'viewflow-history.json'),JSON.stringify([record]));
   first.configure({customDir:destination});
   await first.flush();
   assert.equal(first.count,2);
@@ -149,4 +149,28 @@ test('cache directory switch merges destination records and persists reduced quo
   await first.clear();
   const cleared=new CitationCacheManager({customDir:destination});await cleared.init();assert.equal(cleared.count,0);
  } finally {fs.rmSync(tempDir,{recursive:true,force:true});}
+});
+test('failed disk clearing rejects and exposes a retryable error',async()=>{
+ const {CitationCacheManager}=await import('../src/citation-cache.ts');
+ const previous=globalThis.IOUtils;
+ globalThis.IOUtils={exists:async()=>true,remove:async()=>{throw new Error('permission denied')}};
+ try {
+  const manager=new CitationCacheManager({customDir:'test-clear-failure'});
+  await assert.rejects(manager.clear(),/permission denied/);
+  assert.equal(manager.saveFailed,true);
+  assert.equal(manager.dirty,true);
+ }finally{globalThis.IOUtils=previous;}
+});
+test('16.2 only reads and clears viewflow-history.json, leaving legacy files untouched',async()=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'viewflow-no-legacy-'));
+ try {
+  const {CitationCacheManager}=await import('../src/citation-cache.ts');
+  const data=JSON.stringify([{key:'legacy',text:'Old citation',libraryID:1,itemKey:'OLD',itemID:1,title:'Old',style:'test',copiedAt:Date.now(),lastAccessedAt:Date.now(),hitCount:0}]);
+  for(const name of ['citation-history.json','Zotero-citation-history.json'])fs.writeFileSync(path.join(dir,name),data);
+  const manager=new CitationCacheManager({customDir:dir});await manager.init();
+  assert.equal(manager.count,0);
+  assert.equal(manager.lookup('Old citation'),null);
+  await manager.clear();
+  for(const name of ['citation-history.json','Zotero-citation-history.json'])assert.equal(fs.readFileSync(path.join(dir,name),'utf8'),data);
+ } finally {fs.rmSync(dir,{recursive:true,force:true});}
 });

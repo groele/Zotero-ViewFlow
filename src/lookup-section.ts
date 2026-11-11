@@ -1,3 +1,4 @@
+import { setLookupMessage as setL10n, clearLookupResult } from './lookup-feedback.ts';
 import { renderLookupTitle } from './lookup-title.ts';
 /**
  * Zotero ViewFlow - Dedicated Reverse Lookup Sidebar Section
@@ -80,12 +81,12 @@ export function buildLookupSectionDOM(
 	body.appendChild(container);
 
 	let request = 0;
-	const setL10n = (el: Element, id: string, fallback: string, args?: Record<string, unknown>) => {
-		el.setAttribute('data-l10n-id', id);
-		if (args) el.setAttribute('data-l10n-args', JSON.stringify(args));
-		else el.removeAttribute('data-l10n-args');
-		el.textContent = fallback;
+	let pasteTimer: ReturnType<typeof setTimeout> | undefined;
+	const cancelPendingPaste = () => {
+		if (pasteTimer !== undefined) clearTimeout(pasteTimer);
+		pasteTimer = undefined;
 	};
+
 	setL10n(retryBtn, 'zotero-preview-cache-retry', '重试保存缓存');
 	const syncCacheStatus = () => {
 		if (!body.isConnected) return;
@@ -105,14 +106,18 @@ export function buildLookupSectionDOM(
 		syncCacheStatus();
 	};
 	syncCacheStatus();
-	input.oninput = () => { request++; };
-	cleanups.set(body, () => { request++; offCacheStatus?.(); });
+	input.oninput = () => {
+		request++; clearLookupResult(statusDiv);
+		if (!input.value.trim()) cancelPendingPaste();
+	};
+	cleanups.set(body, () => { request++; cancelPendingPaste(); offCacheStatus?.(); });
 	const executeLookup = async (textToSearch: string) => {
 		const current = ++request;
-		const active = () => current === request && body.isConnected;
+		const active = () => current === request && body.isConnected && input.value.trim() === textToSearch.trim();
+		if (!active()) return;
 		try {
 		if (!textToSearch.trim()) {
-			setL10n(statusDiv, 'zotero-preview-lookup-status-empty', '请输入或粘贴引文');
+			clearLookupResult(statusDiv);
 			return;
 		}
 		setL10n(statusDiv, 'zotero-preview-lookup-status-searching', '正在反查本地文献库...');
@@ -222,10 +227,10 @@ export function buildLookupSectionDOM(
 					}
 				}
 				if (liveItems.length === 1) {
-					renderItemResult(liveItems[0], '复制历史匹配，请核对后定位：', 'zotero-preview-lookup-state-history');
+					renderItemResult(liveItems[0], '匹配文献，请核对后定位：');
 					return;
 				} else if (liveItems.length > 1) {
-					renderCandidatesList(liveItems, `复制历史关联到 ${liveItems.length} 篇文献，请点击选择：`, 'zotero-preview-lookup-history-candidates');
+					renderCandidatesList(liveItems, `找到 ${liveItems.length} 篇可能匹配的文献，请点击选择：`);
 					return;
 				}
 			}
@@ -243,8 +248,8 @@ export function buildLookupSectionDOM(
 		})?.ZoteroPane;
 		let libraryID: number | undefined;
 		for (const getLib of [
-			() => pane?.getSelectedLibraryID?.(),
 			() => pane?.getSelectedLibraryIDs?.()?.[0],
+			() => pane?.getSelectedLibraryID?.(),
 			() => (typeof Zotero !== 'undefined' ? Zotero.Libraries?.userLibraryID : undefined)
 		]) {
 			try {
@@ -284,20 +289,22 @@ export function buildLookupSectionDOM(
 
 	searchBtn.onclick = () => executeLookup(input.value);
 	input.onpaste = () => {
-		setTimeout(() => {
+		cancelPendingPaste();
+		pasteTimer = setTimeout(() => {
+			pasteTimer = undefined;
 			if (input.value.trim()) executeLookup(input.value);
 		}, 0);
 	};
 	input.onkeydown = (e: Event) => {
 		const key = (e as KeyboardEvent).key;
 		if (key === 'Enter') {
+			cancelPendingPaste();
 			executeLookup(input.value);
 		} else if (key === 'Escape') {
+			cancelPendingPaste();
 			request++;
 			input.value = '';
-			statusDiv.removeAttribute('data-l10n-id');
-			statusDiv.removeAttribute('data-l10n-args');
-			statusDiv.textContent = '';
+			clearLookupResult(statusDiv);
 		}
 	};
 

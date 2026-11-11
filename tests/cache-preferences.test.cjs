@@ -8,12 +8,13 @@ test('cache preferences show resolved file and validate custom paths without los
  const handlers=new Map();
  const prefs={cacheMaxEntries:2000,cacheTtlDays:90,cacheDirectory:''};
  const dir=()=>prefs.cacheDirectory||'D:\\Library\\viewflow-cache';
- const host={_prefPrefix:'test.',pref:k=>prefs[k],setPref:(k,v)=>prefs[k.slice(5)]=v,_citationCache:{count:12,getDirectoryPath:dir,getFilePath:()=>path.join(dir(),'viewflow-history.json')}};
+ let listeners=0;
+ const host={_prefPrefix:'test.',pref:k=>prefs[k],setPref:(k,v)=>prefs[k.slice(5)]=v,_citationCache:{onStatusChange(){listeners++;return()=>listeners--;},count:12,getDirectoryPath:dir,getFilePath:()=>path.join(dir(),'viewflow-history.json')}};
  globalThis.PathUtils={join:path.join,isAbsolute:path.isAbsolute,parent:path.dirname};
  const writes=[];
  globalThis.IOUtils={makeDirectory:async()=>{},writeUTF8:async(p)=>writes.push(p),remove:async()=>{}};
  try{
-  setupCachePreferences(host,{getElementById:id=>nodes.get(id)},(target,type,fn)=>{if(target)handlers.set(target.value===undefined?type:[...nodes].find(([,n])=>n===target)?.[0]+type,fn);});
+  const dispose=setupCachePreferences(host,{getElementById:id=>nodes.get(id)},(target,type,fn)=>{if(target)handlers.set(target.value===undefined?type:[...nodes].find(([,n])=>n===target)?.[0]+type,fn);});
   assert.equal(nodes.get(ids[0]).value,'D:\\Library\\viewflow-cache\\viewflow-history.json');
   const field=nodes.get(ids[0]);
   field.value='relative';handlers.get(ids[0]+'change')();await new Promise(setImmediate);
@@ -26,5 +27,6 @@ test('cache preferences show resolved file and validate custom paths without los
   assert.equal(prefs.cacheDirectory,'F:\\NewHistory');
   prefs.cacheMaxEntries=9000;handlers.get('zotero-preview-cache-recommendcommand')();
   assert.equal(prefs.cacheMaxEntries,2000);
+  assert.equal(listeners,1);dispose();assert.equal(listeners,0);
  }finally{delete globalThis.PathUtils;delete globalThis.IOUtils;}
 });

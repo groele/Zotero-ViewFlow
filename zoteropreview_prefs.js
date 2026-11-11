@@ -35,7 +35,7 @@
       try {
         let path = value.trim();
         if (/\.json$/i.test(path)) {
-          if (!/(?:^|[\\/])(?:viewflow-history|(?:Zotero-)?citation-history)\.json$/i.test(path)) throw new Error("Unsupported cache filename");
+          if (!/(?:^|[\\/])viewflow-history\.json$/i.test(path)) throw new Error("Unsupported cache filename");
           const parent = PathUtils.parent(path);
           if (!parent) throw new Error("Parent directory required");
           path = parent;
@@ -93,10 +93,13 @@
         refresh();
       }
     });
-    preview._citationCache?.onStatusChange?.(refresh);
+    const unsubscribe = preview._citationCache?.onStatusChange?.(refresh);
     listen(doc, "change", refresh);
     listen(doc, "command", refresh);
     refresh();
+    return () => {
+      unsubscribe?.();
+    };
   }
 
   // src/preferences.ts
@@ -107,6 +110,7 @@
     const initializedRoots = /* @__PURE__ */ new WeakSet();
     const initializingRoots = /* @__PURE__ */ new WeakSet();
     let disposed = false;
+    const cacheCleanups = [];
     const controller = new AbortController();
     const listen = (target, type, handler, capture = false) => {
       if (!target) return;
@@ -213,7 +217,13 @@
           if (clearHistoryBtn) {
             listen(clearHistoryBtn, "command", async () => {
               if (preview._citationCache) {
-                await preview._citationCache.clear();
+                try {
+                  await preview._citationCache.clear();
+                } catch (error) {
+                  document.getElementById("zotero-preview-cache-status")?.setAttribute("data-l10n-id", "zotero-preview-cache-clear-failed");
+                  host.logError(error);
+                  return;
+                }
                 const statsDesc = document.getElementById("zotero-preview-cache-stats");
                 if (statsDesc) {
                   statsDesc.setAttribute("data-l10n-id", "zotero-preview-cache-usage");
@@ -222,7 +232,7 @@
               }
             });
           }
-          setupCachePreferences(preview, document, listen);
+          cacheCleanups.push(setupCachePreferences(preview, document, listen));
           initializedRoots.add(root);
         } catch (error) {
           if (!disposed) host.logError(error);
@@ -237,6 +247,7 @@
     const dispose = () => {
       disposed = true;
       controller.abort();
+      for (const cleanup of cacheCleanups.splice(0)) cleanup();
       preview._prefPaneCleanups.delete(dispose);
     };
     preview._prefPaneCleanups.add(dispose);

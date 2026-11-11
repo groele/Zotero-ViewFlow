@@ -19,7 +19,7 @@ export function setupCachePreferences(
     preview: CachePreferencesHost,
     doc: Document,
     listen: (target: EventTarget | null, type: string, handler: EventListener) => void
-): void {
+): () => void {
     const field = doc.getElementById('zotero-preview-cache-dir') as HTMLInputElement | null;
     const status = doc.getElementById('zotero-preview-cache-status');
     const stats = doc.getElementById('zotero-preview-cache-stats');
@@ -52,7 +52,7 @@ export function setupCachePreferences(
         try {
             let path = value.trim();
             if (/\.json$/i.test(path)) {
-                if (!/(?:^|[\\/])(?:viewflow-history|(?:Zotero-)?citation-history)\.json$/i.test(path)) throw new Error('Unsupported cache filename');
+                if (!/(?:^|[\\/])viewflow-history\.json$/i.test(path)) throw new Error('Unsupported cache filename');
                 const parent = PathUtils.parent(path);
                 if (!parent) throw new Error('Parent directory required');
                 path = parent;
@@ -107,9 +107,10 @@ export function setupCachePreferences(
             refresh();
         }
     });
-    preview._citationCache?.onStatusChange?.(refresh);
+    const unsubscribe = preview._citationCache?.onStatusChange?.(refresh);
     // Observe mutations from this pane after the preference bindings have run.
     listen(doc, 'change', refresh);
     listen(doc, 'command', refresh);
     refresh();
+    return () => { unsubscribe?.(); };
 }

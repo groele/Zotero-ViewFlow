@@ -72,7 +72,7 @@ zotero-preview-release-notes-label = Modifications
 zotero-preview-release-notes = Ajout de la recherche inversée de citations compactes, d'un panneau latéral dédié, d'un commutateur de préférences et de l'éviction du cache local.
 zotero-preview-release-date = Date de compilation
 zotero-preview-release-download = Installation
-zotero-preview-release-download-link = Télécharger l'installation ViewFlow 16.1.10
+zotero-preview-release-download-link = Télécharger l'installation ViewFlow 16.3.0
 zotero-preview-release-repository = Dépôt
 
 zotero-preview-lookup-pane-title =
@@ -111,7 +111,7 @@ zotero-preview-cache-default =
 
 zotero-preview-cache-file-label = Fichier de cache actuel (sélectionnez pour copier le chemin complet)
 
-zotero-preview-cache-location-help = Entrez le chemin complet ou un dossier absolu ; laissez vide pour l'emplacement par défaut. Les anciens fichiers d'historique sont lus automatiquement.
+zotero-preview-cache-location-help = Only viewflow-history.json is used. Older files are not read or migrated. Enter the full file path or an absolute folder; leave blank for the default.
 
 zotero-preview-cache-path-saved = Dossier appliqué. L'historique sera enregistré au nouvel emplacement en arrière-plan.
 
@@ -142,3 +142,5 @@ zotero-preview-lookup-state-history = Correspondance de l'historique ; vérifiez
 zotero-preview-lookup-state-candidate = Référence candidate ; vérifiez et localisez
 zotero-preview-lookup-candidates-heading = { $count } références possibles trouvées, cliquez pour sélectionner :
 zotero-preview-lookup-history-candidates = L'historique correspond à { $count } références, cliquez pour sélectionner :
+
+zotero-preview-cache-clear-failed = Could not clear the cache file. Check permissions and retry; old history may remain on disk.

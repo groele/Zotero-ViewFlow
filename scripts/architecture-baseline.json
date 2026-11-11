@@ -4,16 +4,16 @@
   "capturedAt": "2026-11-06",
   "debtCleared": true,
   "note": "Known §5.9 debt. Listed files may stay at or below the recorded line count, but must never grow; any other source file above 360 lines fails the guard. Remove an entry only after splitting that module below 360 lines. Every entry must still exist and must still exceed the ceiling - stale entries are rejected by the baseline integrity test.",
-  "lastReleasedVersion": "16.1.10",
+  "lastReleasedVersion": "16.3.0",
   "splitHistory": [
     {
-      "version": "16.1.10",
+      "version": "16.3.0",
       "date": "2026-11-11",
       "resolved": [
-        "Release v16.1.10: standardize persistent cache filename to viewflow-history.json with seamless migration",
+        "Release v16.3.0: UI feedback polishing, lookup clear state and paste cancellation, preference lifecycle cleanup",
         "Dedicated sidebar section zotero-preview-lookup and preference toggle",
         "Capacity budget (2000 items/10MB/90 days TTL) with LRU+Hit eviction algorithm",
-        "All 16 TypeScript source files strictly <= 360 lines; zero debt baseline preserved"
+        "All 17 TypeScript source files strictly <= 360 lines; zero debt baseline preserved"
       ]
     },
     {

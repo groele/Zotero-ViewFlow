@@ -199,23 +199,8 @@
     async load(filePath, generation) {
       try {
         if (typeof IOUtils === "undefined") return;
-        const legacyCandidates = [
-          filePath.replace(/viewflow-history\.json$/, "Zotero-citation-history.json"),
-          filePath.replace(/viewflow-history\.json$/, "citation-history.json")
-        ];
-        let activePath = filePath;
-        let migrated = false;
-        if (!await IOUtils.exists(filePath)) {
-          for (const candidate of legacyCandidates) {
-            if (await IOUtils.exists(candidate)) {
-              activePath = candidate;
-              migrated = true;
-              break;
-            }
-          }
-          if (!migrated) return;
-        }
-        const data = JSON.parse(await IOUtils.readUTF8(activePath));
+        if (!await IOUtils.exists(filePath)) return;
+        const data = JSON.parse(await IOUtils.readUTF8(filePath));
         if (generation !== this._generation || !Array.isArray(data)) return;
         const ttlMs = this._config.ttlDays * 864e5;
         for (const r of data) {
@@ -225,7 +210,6 @@
           if (!current || current.lastAccessedAt < r.lastAccessedAt) this._records.set(key, r);
         }
         this._enforceEviction();
-        if (migrated) this.scheduleSave();
       } catch (error) {
         if (typeof Zotero !== "undefined") Zotero.debug("[ViewFlow] Cache load failed: " + error);
       }
@@ -352,27 +336,37 @@
       this._writeTimer = null;
       this._generation++;
       await this._loading;
-      this._records.clear();
-      this._dirty = false;
-      this._lastError = null;
-      this._emitStatus();
       await this._writing;
-      if (typeof IOUtils !== "undefined") {
-        try {
+      this._records.clear();
+      try {
+        if (typeof IOUtils !== "undefined") {
           const filePath = this.getFilePath();
-          const paths = [
-            filePath,
-            filePath.replace(/viewflow-history\.json$/, "Zotero-citation-history.json"),
-            filePath.replace(/viewflow-history\.json$/, "citation-history.json")
-          ];
-          for (const path of paths) {
-            if (await IOUtils.exists(path)) await IOUtils.remove(path);
-          }
-        } catch (_) {
+          if (await IOUtils.exists(filePath)) await IOUtils.remove(filePath);
         }
+        this._dirty = false;
+        this._lastError = null;
+      } catch (error) {
+        this._dirty = true;
+        this._lastError = error instanceof Error ? error : new Error(String(error));
+        throw this._lastError;
+      } finally {
+        this._emitStatus();
       }
     }
   };
+
+  // src/lookup-feedback.ts
+  var setLookupMessage = (el, id, fallback, args) => {
+    el.setAttribute("data-l10n-id", id);
+    if (args) el.setAttribute("data-l10n-args", JSON.stringify(args));
+    else el.removeAttribute("data-l10n-args");
+    el.textContent = fallback;
+  };
+  function clearLookupResult(element) {
+    element.removeAttribute("data-l10n-id");
+    element.removeAttribute("data-l10n-args");
+    element.innerHTML = "";
+  }
 
   // src/lookup-title.ts
   function renderLookupTitle(target, title) {
@@ -684,18 +678,17 @@
     container.appendChild(statusDiv);
     body.appendChild(container);
     let request = 0;
-    const setL10n = (el, id, fallback, args) => {
-      el.setAttribute("data-l10n-id", id);
-      if (args) el.setAttribute("data-l10n-args", JSON.stringify(args));
-      else el.removeAttribute("data-l10n-args");
-      el.textContent = fallback;
+    let pasteTimer;
+    const cancelPendingPaste = () => {
+      if (pasteTimer !== void 0) clearTimeout(pasteTimer);
+      pasteTimer = void 0;
     };
-    setL10n(retryBtn, "zotero-preview-cache-retry", "重试保存缓存");
+    setLookupMessage(retryBtn, "zotero-preview-cache-retry", "重试保存缓存");
     const syncCacheStatus = () => {
       if (!body.isConnected) return;
       if (context.cacheManager?.saveFailed || context.cacheManager?.lastError) {
         cacheNotice.hidden = false;
-        setL10n(cacheMsg, "zotero-preview-cache-save-failed", "历史缓存写入失败，记录暂存于内存，请点击重试保存。");
+        setLookupMessage(cacheMsg, "zotero-preview-cache-save-failed", "历史缓存写入失败，记录暂存于内存，请点击重试保存。");
       } else {
         cacheNotice.hidden = true;
         cacheMsg.textContent = "";
@@ -712,20 +705,24 @@
     syncCacheStatus();
     input.oninput = () => {
       request++;
+      clearLookupResult(statusDiv);
+      if (!input.value.trim()) cancelPendingPaste();
     };
     cleanups.set(body, () => {
       request++;
+      cancelPendingPaste();
       offCacheStatus?.();
     });
     const executeLookup = async (textToSearch) => {
       const current = ++request;
-      const active = () => current === request && body.isConnected;
+      const active = () => current === request && body.isConnected && input.value.trim() === textToSearch.trim();
+      if (!active()) return;
       try {
         if (!textToSearch.trim()) {
-          setL10n(statusDiv, "zotero-preview-lookup-status-empty", "请输入或粘贴引文");
+          clearLookupResult(statusDiv);
           return;
         }
-        setL10n(statusDiv, "zotero-preview-lookup-status-searching", "正在反查本地文献库...");
+        setLookupMessage(statusDiv, "zotero-preview-lookup-status-searching", "正在反查本地文献库...");
         const renderItemResult = (target, labelPrefix, l10nId = "zotero-preview-lookup-state-matched") => {
           statusDiv.removeAttribute("data-l10n-id");
           statusDiv.removeAttribute("data-l10n-args");
@@ -736,7 +733,7 @@
           head.className = "viewflow-lookup-card-head";
           const status = doc.createElementNS("http://www.w3.org/1999/xhtml", "div");
           status.className = "viewflow-lookup-result-state";
-          setL10n(status, l10nId, labelPrefix.replace(/🎯|：/g, "").trim());
+          setLookupMessage(status, l10nId, labelPrefix.replace(/🎯|：/g, "").trim());
           card.appendChild(status);
           renderLookupTitle(head, String(target.getField("title")));
           card.appendChild(head);
@@ -752,7 +749,7 @@
           locateBtn.onclick = async () => {
             const located = await locateItemInZotero(target);
             if (active()) {
-              setL10n(
+              setLookupMessage(
                 status,
                 located ? "zotero-preview-lookup-status-located" : "zotero-preview-lookup-status-locate-failed",
                 located ? "已定位" : "定位失败，请重试"
@@ -778,7 +775,7 @@
           statusDiv.removeAttribute("data-l10n-args");
           statusDiv.innerHTML = "";
           const msg = doc.createElementNS("http://www.w3.org/1999/xhtml", "div");
-          setL10n(msg, l10nId, headingText, { count: items.length });
+          setLookupMessage(msg, l10nId, headingText, { count: items.length });
           statusDiv.appendChild(msg);
           const list = doc.createElementNS("http://www.w3.org/1999/xhtml", "ul");
           for (const m of items) {
@@ -811,24 +808,24 @@
               }
             }
             if (liveItems.length === 1) {
-              renderItemResult(liveItems[0], "复制历史匹配，请核对后定位：", "zotero-preview-lookup-state-history");
+              renderItemResult(liveItems[0], "匹配文献，请核对后定位：");
               return;
             } else if (liveItems.length > 1) {
-              renderCandidatesList(liveItems, `复制历史关联到 ${liveItems.length} 篇文献，请点击选择：`, "zotero-preview-lookup-history-candidates");
+              renderCandidatesList(liveItems, `找到 ${liveItems.length} 篇可能匹配的文献，请点击选择：`);
               return;
             }
           }
         }
         const parsed = parseCompactCitation(textToSearch);
         if (!parsed) {
-          setL10n(statusDiv, "zotero-preview-lookup-status-unrecognized", "无法识别引文结构，请提供包含期刊、年份、卷号与页码（或 DOI/arXiv）的引文。");
+          setLookupMessage(statusDiv, "zotero-preview-lookup-status-unrecognized", "无法识别引文结构，请提供包含期刊、年份、卷号与页码（或 DOI/arXiv）的引文。");
           return;
         }
         const pane = doc.defaultView?.ZoteroPane;
         let libraryID;
         for (const getLib of [
-          () => pane?.getSelectedLibraryID?.(),
           () => pane?.getSelectedLibraryIDs?.()?.[0],
+          () => pane?.getSelectedLibraryID?.(),
           () => typeof Zotero !== "undefined" ? Zotero.Libraries?.userLibraryID : void 0
         ]) {
           try {
@@ -853,7 +850,7 @@
         } else {
           const targetLabel = parsed.journalText || parsed.doi || parsed.arxiv || "-";
           const yearLabel = String(parsed.year || "-");
-          setL10n(
+          setLookupMessage(
             statusDiv,
             "zotero-preview-lookup-status-not-found",
             `未在当前文库中找到匹配项 (解析: ${targetLabel}, ${yearLabel})`,
@@ -861,26 +858,28 @@
           );
         }
       } catch (error) {
-        if (active()) setL10n(statusDiv, "zotero-preview-lookup-status-error", "查询失败，请重试或重新粘贴引文。");
+        if (active()) setLookupMessage(statusDiv, "zotero-preview-lookup-status-error", "查询失败，请重试或重新粘贴引文。");
         context.log(String(error));
       }
     };
     searchBtn.onclick = () => executeLookup(input.value);
     input.onpaste = () => {
-      setTimeout(() => {
+      cancelPendingPaste();
+      pasteTimer = setTimeout(() => {
+        pasteTimer = void 0;
         if (input.value.trim()) executeLookup(input.value);
       }, 0);
     };
     input.onkeydown = (e) => {
       const key = e.key;
       if (key === "Enter") {
+        cancelPendingPaste();
         executeLookup(input.value);
       } else if (key === "Escape") {
+        cancelPendingPaste();
         request++;
         input.value = "";
-        statusDiv.removeAttribute("data-l10n-id");
-        statusDiv.removeAttribute("data-l10n-args");
-        statusDiv.textContent = "";
+        clearLookupResult(statusDiv);
       }
     };
     clipBtn.onclick = () => {
@@ -900,7 +899,7 @@
         }
       } catch (_) {
       }
-      setL10n(statusDiv, "zotero-preview-lookup-status-clipboard-fallback", "无法直接读取剪贴板，请手动在输入框中粘贴 (Ctrl+V)。");
+      setLookupMessage(statusDiv, "zotero-preview-lookup-status-clipboard-fallback", "无法直接读取剪贴板，请手动在输入框中粘贴 (Ctrl+V)。");
       input.focus();
     };
   }

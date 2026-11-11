@@ -27,6 +27,7 @@ const preview = host.zoteropreview;
 const initializedRoots = new WeakSet<Element>();
 const initializingRoots = new WeakSet<Element>();
 let disposed = false;
+const cacheCleanups: Array<() => void> = [];
 const controller = new AbortController();
 const listen = (target: EventTarget | null, type: string, handler: EventListener, capture = false) => {
     if (!target) return;
@@ -137,7 +138,12 @@ const prefs = {
         if (clearHistoryBtn) {
             listen(clearHistoryBtn, 'command', async () => {
                 if (preview._citationCache) {
-                    await preview._citationCache.clear();
+                    try { await preview._citationCache.clear(); }
+                    catch (error) {
+                        document.getElementById('zotero-preview-cache-status')?.setAttribute('data-l10n-id', 'zotero-preview-cache-clear-failed');
+                        host.logError(error);
+                        return;
+                    }
                     const statsDesc = document.getElementById('zotero-preview-cache-stats');
                     if (statsDesc) {
                         statsDesc.setAttribute('data-l10n-id', 'zotero-preview-cache-usage');
@@ -146,7 +152,7 @@ const prefs = {
                 }
             });
         }
-        setupCachePreferences(preview, document, listen);
+        cacheCleanups.push(setupCachePreferences(preview, document, listen));
         initializedRoots.add(root);
         } catch (error) {
             if (!disposed) host.logError(error);
@@ -163,6 +169,7 @@ listen(document, 'load', event => {
 const dispose = () => {
     disposed = true;
     controller.abort();
+    for (const cleanup of cacheCleanups.splice(0)) cleanup();
     preview._prefPaneCleanups.delete(dispose);
 };
 preview._prefPaneCleanups.add(dispose);

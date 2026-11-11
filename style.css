@@ -230,3 +230,9 @@ collapsible-section:has(> .zotero-viewflow-lookup-body) {
 .viewflow-lookup-card .viewflow-lookup-actions { color: var(--fill-primary, light-dark(#222, #eee)); }
 .viewflow-lookup-status ul { display: grid; gap: 4px; padding: 0; list-style: none; }
 .viewflow-lookup-status li button { width: 100%; text-align: start; white-space: normal; }
+
+/* Keep the two ViewFlow headings compact while following Zotero font scaling. */
+collapsible-section:has(.zotero-preview-root) > .head .title,
+collapsible-section:has(.zotero-viewflow-lookup-body) > .head .title {
+    font-size: 0.95em;
+}

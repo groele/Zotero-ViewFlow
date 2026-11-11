@@ -131,23 +131,8 @@ export class CitationCacheManager {
     private async load(filePath: string, generation: number): Promise<void> {
         try {
             if (typeof IOUtils === 'undefined') return;
-            const legacyCandidates = [
-                filePath.replace(/viewflow-history\.json$/, 'Zotero-citation-history.json'),
-                filePath.replace(/viewflow-history\.json$/, 'citation-history.json')
-            ];
-            let activePath = filePath;
-            let migrated = false;
-            if (!await IOUtils.exists(filePath)) {
-                for (const candidate of legacyCandidates) {
-                    if (await IOUtils.exists(candidate)) {
-                        activePath = candidate;
-                        migrated = true;
-                        break;
-                    }
-                }
-                if (!migrated) return;
-            }
-            const data: unknown = JSON.parse(await IOUtils.readUTF8(activePath));
+            if (!await IOUtils.exists(filePath)) return;
+            const data: unknown = JSON.parse(await IOUtils.readUTF8(filePath));
             if (generation !== this._generation || !Array.isArray(data)) return;
             const ttlMs = this._config.ttlDays * 86400000;
             for (const r of data as CitationRecord[]) {
@@ -159,7 +144,6 @@ export class CitationCacheManager {
                 if (!current || current.lastAccessedAt < r.lastAccessedAt) this._records.set(key, r);
             }
             this._enforceEviction();
-            if (migrated) this.scheduleSave();
         } catch (error) {
             if (typeof Zotero !== 'undefined') Zotero.debug('[ViewFlow] Cache load failed: ' + error);
         }
@@ -308,27 +292,23 @@ export class CitationCacheManager {
 	}
 
 	async clear(): Promise<void> {
-		if (this._writeTimer) clearTimeout(this._writeTimer);
-		this._writeTimer = null;
-		this._generation++;
-		await this._loading;
-		this._records.clear();
-		this._dirty = false;
-		this._lastError = null;
-		this._emitStatus();
-		await this._writing;
-		if (typeof IOUtils !== 'undefined') {
-			try {
-				const filePath = this.getFilePath();
-				const paths = [
-					filePath,
-					filePath.replace(/viewflow-history\.json$/, 'Zotero-citation-history.json'),
-					filePath.replace(/viewflow-history\.json$/, 'citation-history.json')
-				];
-				for (const path of paths) {
-					if (await IOUtils.exists(path)) await IOUtils.remove(path);
-				}
-			} catch (_) {}
-		}
-	}
+        if (this._writeTimer) clearTimeout(this._writeTimer);
+        this._writeTimer = null;
+        this._generation++;
+        await this._loading;
+        await this._writing;
+        this._records.clear();
+        try {
+            if (typeof IOUtils !== 'undefined') {
+                const filePath = this.getFilePath();
+                if (await IOUtils.exists(filePath)) await IOUtils.remove(filePath);
+            }
+            this._dirty = false;
+            this._lastError = null;
+        } catch (error) {
+            this._dirty = true;
+            this._lastError = error instanceof Error ? error : new Error(String(error));
+            throw this._lastError;
+        } finally { this._emitStatus(); }
+    }
 }
