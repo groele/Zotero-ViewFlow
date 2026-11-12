@@ -170,8 +170,8 @@ export function buildLookupSectionDOM(
 
 			pdfBtn.onclick = async () => {
 				const opened = await openItemAttachment(target);
-				if (active() && !opened && !meta.textContent?.includes('未找到 PDF 附件')) {
-					meta.textContent += ' (未找到 PDF 附件)';
+				if (active() && !opened) {
+					setL10n(status, 'zotero-preview-lookup-status-no-pdf', 'No PDF attachment found');
 				}
 			};
 			actRow.appendChild(pdfBtn);
@@ -244,12 +244,11 @@ export function buildLookupSectionDOM(
 		}
 
 		const pane = (doc.defaultView as unknown as {
-			ZoteroPane?: { getSelectedLibraryID?: () => number; getSelectedLibraryIDs?: () => number[] };
+			ZoteroPane?: { getSelectedLibraryIDs?: () => number[] };
 		})?.ZoteroPane;
 		let libraryID: number | undefined;
 		for (const getLib of [
 			() => pane?.getSelectedLibraryIDs?.()?.[0],
-			() => pane?.getSelectedLibraryID?.(),
 			() => (typeof Zotero !== 'undefined' ? Zotero.Libraries?.userLibraryID : undefined)
 		]) {
 			try {

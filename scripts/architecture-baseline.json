@@ -4,8 +4,16 @@
   "capturedAt": "2026-11-06",
   "debtCleared": true,
   "note": "Known §5.9 debt. Listed files may stay at or below the recorded line count, but must never grow; any other source file above 360 lines fails the guard. Remove an entry only after splitting that module below 360 lines. Every entry must still exist and must still exceed the ceiling - stale entries are rejected by the baseline integrity test.",
-  "lastReleasedVersion": "16.3.0",
+  "lastReleasedVersion": "16.3.1",
   "splitHistory": [
+    {
+      "version": "16.3.1",
+      "date": "2026-11-12",
+      "resolved": [
+        "Release v16.3.1: XPCOM clipboard UTF-16 byte length & plain-text fix, multi-select setEnabled/collapsed-pane refresh fixes, progressive >20-item QuickCopy rendering, surfaced plain citeproc errors, preference dependency observer & restore-defaults, localized no-PDF status & deprecated getSelectedLibraryID removal",
+        "All TypeScript source files strictly <= 360 lines; zero debt baseline preserved"
+      ]
+    },
     {
       "version": "16.3.0",
       "date": "2026-11-11",

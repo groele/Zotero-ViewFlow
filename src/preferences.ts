@@ -7,9 +7,10 @@ type PreferenceValue = string | number | boolean | undefined;
 type PreferenceControl = HTMLElement & { value: string | number; checked: boolean };
 type PreferencePreview = {
     initialized: boolean;
+    version?: string;
     _prefPrefix: string;
     _prefPaneCleanups: Set<() => void>;
-    _citationCache?: { clear(): Promise<void>; count: number; getFilePath(): string; getDirectoryPath(): string };
+    _citationCache?: { clear(): Promise<void>; count: number; saveFailed?: boolean; lastError?: Error | null; getFilePath(): string; getDirectoryPath(): string };
     pref(name: string): PreferenceValue;
     setPref(name: string, value: PreferenceValue): void;
     getPosition(): string;
@@ -18,6 +19,10 @@ type PreferencePreview = {
 type PreferencesHost = {
     zoteropreview: PreferencePreview;
     Styles: { init(): Promise<unknown>; getVisible(): Array<{styleID: string; title: string}> };
+    Prefs?: {
+        registerObserver?(pref: string, handler: () => void, owns?: boolean): symbol;
+        unregisterObserver?(id: symbol): void;
+    };
     logError(error: unknown): void;
 };
 type XULDocument = Document & { createXULElement(name: string): Element };
@@ -28,6 +33,7 @@ const initializedRoots = new WeakSet<Element>();
 const initializingRoots = new WeakSet<Element>();
 let disposed = false;
 const cacheCleanups: Array<() => void> = [];
+const prefObservers: symbol[] = [];
 const controller = new AbortController();
 const listen = (target: EventTarget | null, type: string, handler: EventListener, capture = false) => {
     if (!target) return;
@@ -43,6 +49,21 @@ const prefs = {
         // Await the host's shared initialization promise before calling getVisible().
         await host.Styles.init();
         if (disposed || !root.isConnected || !preview.initialized) return;
+        if (preview.version) {
+            const badge = document.getElementById('viewflow-version-badge');
+            if (badge) {
+                badge.setAttribute('data-l10n-args', JSON.stringify({ version: preview.version }));
+                badge.textContent = `v${preview.version}`;
+            }
+            const downloadLink = document.getElementById('viewflow-release-download-link');
+            if (downloadLink) {
+                downloadLink.setAttribute('data-l10n-args', JSON.stringify({ version: preview.version }));
+                downloadLink.setAttribute(
+                    'href',
+                    `https://github.com/groele/Zotero-ViewFlow/releases/download/v${preview.version}/Zotero-ViewFlow-${preview.version}.xpi`
+                );
+            }
+        }
         const popup = document.querySelector('#zotero-preview-style-menulist menupopup');
         if (popup) {
             popup.replaceChildren();
@@ -108,9 +129,15 @@ const prefs = {
 
         const updateDependencies = () => {
             const lookupEnabled = preview.pref('lookupEnabled') !== false;
-            const historyEnabled = lookupEnabled && preview.pref('lookupHistoryEnabled') !== false;
-            const histEl = document.getElementById('extensions-zoteropreview-lookupHistoryEnabled') as (HTMLInputElement & { disabled: boolean }) | null;
-            if (histEl) histEl.disabled = !lookupEnabled;
+            const historyPref = preview.pref('lookupHistoryEnabled') !== false;
+            const historyEnabled = lookupEnabled && historyPref;
+            const lookupEl = document.getElementById('extensions-zoteropreview-lookupEnabled') as (HTMLInputElement & { checked: boolean }) | null;
+            if (lookupEl) lookupEl.checked = lookupEnabled;
+            const histEl = document.getElementById('extensions-zoteropreview-lookupHistoryEnabled') as (HTMLInputElement & { checked: boolean; disabled: boolean }) | null;
+            if (histEl) {
+                histEl.checked = historyPref;
+                histEl.disabled = !lookupEnabled;
+            }
             for (const did of [
                 'zotero-preview-cache-dir',
                 'zotero-preview-cache-browse',
@@ -123,6 +150,11 @@ const prefs = {
                 const el = document.getElementById(did) as (HTMLInputElement & { disabled: boolean }) | null;
                 if (el) el.disabled = !historyEnabled;
             }
+            const retryEl = document.getElementById('zotero-preview-cache-retry') as (HTMLInputElement & { disabled: boolean }) | null;
+            if (retryEl) {
+                const failed = !!(preview._citationCache?.saveFailed || preview._citationCache?.lastError);
+                retryEl.disabled = !historyEnabled || !failed;
+            }
         };
         for (const checkId of ['extensions-zoteropreview-lookupEnabled', 'extensions-zoteropreview-lookupHistoryEnabled']) {
             const checkEl = document.getElementById(checkId);
@@ -132,7 +164,53 @@ const prefs = {
                 });
             }
         }
+        for (const name of ['lookupEnabled', 'lookupHistoryEnabled']) {
+            const id = host.Prefs?.registerObserver?.(preview._prefPrefix + name, () => {
+                if (!disposed) updateDependencies();
+            }, true);
+            if (id !== undefined) prefObservers.push(id);
+        }
         updateDependencies();
+
+        const resetBtn = document.getElementById('zotero-preview-reset-defaults-btn');
+        if (resetBtn) {
+            listen(resetBtn, 'command', () => {
+                const defaults: Record<string, string | number | boolean> = {
+                    citationstyle: '',
+                    position: 'zotero-item-pane-header',
+                    whatToShow: 'zpboth',
+                    fontsize: '1',
+                    spacing: '1.5',
+                    debug: false,
+                    maxPreviewItems: 100,
+                    lookupEnabled: true,
+                    lookupHistoryEnabled: true,
+                    cacheDirectory: '',
+                    cacheMaxEntries: 2000,
+                    cacheTtlDays: 90
+                };
+                for (const [name, value] of Object.entries(defaults)) {
+                    preview.setPref(preview._prefPrefix + name, value);
+                }
+                const menu = document.getElementById('zotero-preview-style-menulist') as PreferenceControl | null;
+                if (menu) menu.value = '';
+                if (position) position.value = 'zotero-item-pane-header';
+                if (display) display.value = 'zpboth';
+                if (debug) debug.checked = false;
+                for (const [id, value] of [
+                    ['zotero-preview-fontsize', '1'],
+                    ['zotero-preview-spacing', '1.5'],
+                    ['zotero-preview-max-items', '100'],
+                    ['zotero-preview-cache-quota', '2000'],
+                    ['zotero-preview-cache-ttl', '90']
+                ] as const) {
+                    const input = document.getElementById(id) as PreferenceControl | null;
+                    if (input) input.value = value;
+                }
+                updateDependencies();
+                preview._queueAllPreviews();
+            });
+        }
 
         const clearHistoryBtn = document.getElementById('zotero-preview-clear-history-btn');
         if (clearHistoryBtn) {
@@ -169,6 +247,7 @@ listen(document, 'load', event => {
 const dispose = () => {
     disposed = true;
     controller.abort();
+    for (const id of prefObservers.splice(0)) host.Prefs?.unregisterObserver?.(id);
     for (const cleanup of cacheCleanups.splice(0)) cleanup();
     preview._prefPaneCleanups.delete(dispose);
 };

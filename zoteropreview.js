@@ -762,8 +762,8 @@
           pdfBtn.setAttribute("data-l10n-id", "zotero-preview-lookup-open-pdf");
           pdfBtn.onclick = async () => {
             const opened = await openItemAttachment(target);
-            if (active() && !opened && !meta.textContent?.includes("未找到 PDF 附件")) {
-              meta.textContent += " (未找到 PDF 附件)";
+            if (active() && !opened) {
+              setLookupMessage(status, "zotero-preview-lookup-status-no-pdf", "No PDF attachment found");
             }
           };
           actRow.appendChild(pdfBtn);
@@ -825,7 +825,6 @@
         let libraryID;
         for (const getLib of [
           () => pane?.getSelectedLibraryIDs?.()?.[0],
-          () => pane?.getSelectedLibraryID?.(),
           () => typeof Zotero !== "undefined" ? Zotero.Libraries?.userLibraryID : void 0
         ]) {
           try {
@@ -1222,14 +1221,30 @@
     }
     plugin._fitWidth(state);
   }
-  function renderMessage(plugin, state, id, fallback, error = false) {
-    const html = `<div class="zotero-preview-message${error ? " zotero-preview-message-error" : ""}" role="status" data-l10n-id="${id}">${fallback}</div>` + (error ? '<button type="button" class="zotero-preview-retry" data-preview-retry="" data-l10n-id="zotero-preview-retry">Retry preview</button>' : "");
+  function escapeHTML(value) {
+    return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+  function renderMessage(plugin, state, id, fallback, error = false, detail = "") {
+    const cleanDetail = error ? detail.trim().slice(0, 240) : "";
+    const detailHtml = cleanDetail ? `<div class="zotero-preview-message-detail">${escapeHTML(cleanDetail)}</div>` : "";
+    const html = `<div class="zotero-preview-message${error ? " zotero-preview-message-error" : ""}" role="status" data-l10n-id="${id}">${fallback}</div>` + detailHtml + (error ? '<button type="button" class="zotero-preview-retry" data-preview-retry="" data-l10n-id="zotero-preview-retry">Retry preview</button>' : "");
     if (state.lastHTML === html) return;
     plugin._setHTML(state, html);
     state.lastHTML = html;
   }
 
   // src/section.ts
+  var PROGRESSIVE_BATCH_SIZE = 20;
+  function waitDelay(state, ms) {
+    return new Promise((resolve) => {
+      state.resolve = resolve;
+      state.timer = setTimeout(() => {
+        state.timer = null;
+        state.resolve = null;
+        resolve();
+      }, ms);
+    });
+  }
   function initSection(plugin, { doc, body, refresh }) {
     if (plugin._states.has(body)) return;
     doc.defaultView?.MozXULElement?.insertFTLIfNeeded?.("zotero-preview.ftl");
@@ -1298,6 +1313,10 @@
     if (state.item?.id === normalized?.id && state.tabType === tabType) {
       state.item = normalized;
       state.setEnabled = setEnabled;
+      setEnabled(!!state.item);
+      if (state.item && !state.renderTask && (!state.payload || state.refreshAgain)) {
+        plugin._scheduleRefresh(state);
+      }
       return;
     }
     plugin._cancelRender(state);
@@ -1352,18 +1371,12 @@
       return;
     }
     const generation = state.generation;
-    await new Promise((resolve) => {
-      state.resolve = resolve;
-      state.timer = setTimeout(() => {
-        state.timer = null;
-        state.resolve = null;
-        resolve();
-      }, 40);
-    });
-    if (state.destroyed || generation !== state.generation || !plugin.initialized) return;
+    const stale = () => state.destroyed || generation !== state.generation || !plugin.initialized;
+    await waitDelay(state, 40);
+    if (stale()) return;
     try {
       if (!await plugin._waitForStyles(state)) return;
-      if (state.destroyed || generation !== state.generation || !plugin.initialized) return;
+      if (stale()) return;
       const allItems = plugin._items(state);
       state.ids = allItems.map((item) => item.id);
       if (!allItems.length) {
@@ -1386,7 +1399,25 @@
         plugin._stats.cacheHits++;
       } else {
         const started = Date.now();
-        payload = plugin._generate(items, config);
+        if (items.length > PROGRESSIVE_BATCH_SIZE) {
+          const head = items.slice(0, PROGRESSIVE_BATCH_SIZE);
+          state.config = config;
+          plugin._renderPayload(state, plugin._generate(head, config), allItems.length - head.length);
+          await waitDelay(state, 0);
+          if (stale()) return;
+          if (config.show === "zpboth") {
+            const bib = plugin._generate(items, { ...config, show: "zpbib" });
+            await waitDelay(state, 0);
+            if (stale()) return;
+            payload = { ...bib, ...plugin._generate(items, { ...config, show: "zpintext" }) };
+          } else {
+            payload = plugin._generate(items, config);
+          }
+          await waitDelay(state, 0);
+          if (stale()) return;
+        } else {
+          payload = plugin._generate(items, config);
+        }
         plugin._stats.generations++;
         plugin._cachePut(key, payload, items.map((item) => item.id));
         plugin.log(`CSL ${Date.now() - started}ms, ${items.length} items`);
@@ -1398,12 +1429,15 @@
       state.omitted = omitted;
       plugin._renderPayload(state, payload, omitted);
     } catch (error) {
-      if (state.destroyed || generation !== state.generation || !plugin.initialized) return;
+      if (stale()) return;
       state.payload = null;
       state.failed = true;
       plugin.log(error instanceof Error ? error.stack || error : error);
-      const [id, fallback] = ERROR_MESSAGES[error?.previewCode] || DEFAULT_ERROR_MESSAGE;
-      plugin._message(state, id, fallback, true);
+      const code = error?.previewCode;
+      const mapped = code && code in ERROR_MESSAGES ? ERROR_MESSAGES[code] : null;
+      const [id, fallback] = mapped || DEFAULT_ERROR_MESSAGE;
+      const detail = mapped ? "" : typeof error === "string" ? error : error && typeof error.message === "string" ? error.message : "";
+      plugin._message(state, id, fallback, true, detail);
     }
   }
   function scheduleRefresh(plugin, state) {
@@ -1416,8 +1450,10 @@
       state.refreshTimer = null;
       if (!plugin.initialized || state.destroyed) return;
       if (!state.body.getClientRects().length || state.body.closest("collapsible-section")?.open === false) {
+        state.refreshAgain = true;
         return;
       }
+      state.refreshAgain = false;
       const task = Promise.resolve().then(() => {
         if (plugin.initialized && !state.destroyed) return state.refresh();
       }).catch((error) => plugin.log(error)).finally(() => {
@@ -1504,17 +1540,17 @@
     state.feedbackTimers.add(iconTimer);
     state.copyFeedback.set(button, [scaleTimer, iconTimer]);
   }
-  function writeToXPCOMClipboard(content, asHTML) {
+  function writeToXPCOMClipboard(content, _asHTML = false) {
     const transferable = Cc["@mozilla.org/widget/transferable;1"].createInstance(Ci.nsITransferable);
     transferable.init(null);
     for (const [flavor, value] of [
       ["text/html", content.html],
-      ["text/plain", asHTML ? content.html : content.text]
+      ["text/plain", content.text]
     ]) {
       const str = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
       str.data = value;
       transferable.addDataFlavor(flavor);
-      transferable.setTransferData(flavor, str);
+      transferable.setTransferData(flavor, str, value.length * 2);
     }
     Services.clipboard.setData(transferable, null, Ci.nsIClipboard.kGlobalClipboard);
   }
@@ -1568,8 +1604,8 @@
     _setHTML(state, html) {
       setHTML(state, html);
     },
-    _message(state, id, fallback, error = false) {
-      renderMessage(this, state, id, fallback, error);
+    _message(state, id, fallback, error = false, detail = "") {
+      renderMessage(this, state, id, fallback, error, detail);
     },
     copyCitation(asCitations, body, button) {
       const state = this._states.get(body);
@@ -1700,7 +1736,7 @@
         onAsyncRender: (props) => this._renderSection(props),
         onToggle: ({ body }) => {
           const state = this._states.get(body);
-          if (state && !state.payload) this._scheduleRefresh(state);
+          if (state && (!state.payload || state.refreshAgain)) this._scheduleRefresh(state);
         }
       });
       if (!this._sectionID) throw new Error("Could not register ZoteroPreview section");
@@ -1813,7 +1849,7 @@
       if (this.initialized && type === "tab" && event === "select") {
         for (const state of this._states.values()) {
           this._queuePosition(state.body.closest("item-details"));
-          if (!state.payload) this._scheduleRefresh(state);
+          if (!state.payload || state.refreshAgain) this._scheduleRefresh(state);
         }
         return;
       }

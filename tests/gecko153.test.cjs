@@ -131,3 +131,90 @@ test('shutdown invalidates script and string caches on disable', async () => {
  context.shutdown({}, 2);
  assert.deepEqual(calls, [['unload','test/zoteropreview.js'],['flush'],['notify','startupcache-invalidate']]);
 });
+
+test('preferences sync runtime version, observe lookup/cache dependencies, and restore defaults cleanly', async () => {
+ const nodes = new Map(), handlers = new Map(), prefObservers = new Map(), values = new Map([
+  ['citationstyle', 'apa'],
+  ['position', 'zotero-editpane-related'],
+  ['whatToShow', 'zpintext'],
+  ['fontsize', '1.2'],
+  ['spacing', '1.8'],
+  ['debug', true],
+  ['maxPreviewItems', 50],
+  ['lookupEnabled', true],
+  ['lookupHistoryEnabled', true],
+  ['cacheMaxEntries', 500],
+  ['cacheTtlDays', 30]
+ ]);
+ const target = id => ({ id, value: '', textContent: '', checked: false, disabled: false, isConnected: true, attributes: {}, children: [],
+  addEventListener(type, fn, options) { handlers.set(`${id}:${type}`, fn); options.signal.addEventListener('abort', () => handlers.delete(`${id}:${type}`), {once: true}); },
+  removeEventListener(type) { handlers.delete(`${id}:${type}`); },
+  setAttribute(key, value) { this.attributes[key] = value; }, appendChild(node) { this.children.push(node); }, replaceChildren() { this.children = []; } });
+ const doc = Object.assign(target('document'), {
+  getElementById: id => nodes.get(id),
+  querySelector: () => nodes.get('popup'), createXULElement: () => target('entry')
+ });
+ const win = target('window');
+ let nextObs = 0, refreshed = 0;
+ const preview = {
+  initialized: true, version: '16.3.1', _prefPrefix: 'extensions.zoteropreview.',
+  _prefPaneCleanups: new Set(), _citationCache: { saveFailed: true, count: 0, getFilePath: () => '/mock/viewflow-history.json', getDirectoryPath: () => '/mock' },
+  pref: name => values.get(name), getPosition: () => String(values.get('position') || 'zotero-item-pane-header'),
+  setPref: (key, value) => values.set(key.replace('extensions.zoteropreview.', ''), value),
+  _queueAllPreviews: () => { refreshed++; }
+ };
+ const context = vm.createContext({
+  document: doc, window: win, AbortController, setTimeout, clearTimeout,
+  Zotero: {
+   zoteropreview: preview,
+   logError(error) { throw error; },
+   Styles: { init: () => Promise.resolve(), getVisible: () => [{styleID: 'apa', title: 'APA'}] },
+   Prefs: {
+    registerObserver(key, cb) { const id = ++nextObs; prefObservers.set(id, {key, cb}); return id; },
+    unregisterObserver(id) { prefObservers.delete(id); }
+   }
+  }
+ });
+ for (const id of [
+  'zotero-prefpane-zotero-preview', 'popup', 'zotero-preview-style-menulist',
+  'extensions-zoteropreview-position', 'extensions-zoteropreview-whatToShow',
+  'zotero-preview-fontsize', 'zotero-preview-spacing', 'zotero-preview-max-items',
+  'extensions-zoteropreview-debug', 'zotero-preview-clear-cache-btn',
+  'extensions-zoteropreview-lookupEnabled', 'extensions-zoteropreview-lookupHistoryEnabled',
+  'zotero-preview-cache-dir', 'zotero-preview-cache-browse', 'zotero-preview-cache-default',
+  'zotero-preview-cache-recommend', 'zotero-preview-cache-quota', 'zotero-preview-cache-ttl',
+  'zotero-preview-clear-history-btn', 'zotero-preview-cache-retry', 'zotero-preview-reset-defaults-btn',
+  'viewflow-version-badge', 'viewflow-release-download-link'
+ ]) nodes.set(id, target(id));
+ vm.runInContext(read('zoteropreview_prefs.js'), context);
+ handlers.get('document:load')({ target: nodes.get('zotero-prefpane-zotero-preview') });
+ await new Promise(setImmediate);
+
+ assert.equal(nodes.get('viewflow-version-badge').textContent, 'v16.3.1');
+ assert.equal(nodes.get('viewflow-version-badge').attributes['data-l10n-args'], '{"version":"16.3.1"}');
+ assert.equal(nodes.get('viewflow-release-download-link').attributes.href, 'https://github.com/groele/Zotero-ViewFlow/releases/download/v16.3.1/Zotero-ViewFlow-16.3.1.xpi');
+ assert.equal(nodes.get('zotero-preview-cache-retry').disabled, false);
+
+ // External pref change disables history + retry controls
+ values.set('lookupHistoryEnabled', false);
+ for (const obs of prefObservers.values()) {
+  if (obs.key.endsWith('lookupHistoryEnabled')) obs.cb();
+ }
+ assert.equal(nodes.get('zotero-preview-cache-quota').disabled, true);
+ assert.equal(nodes.get('zotero-preview-cache-retry').disabled, true);
+
+ // Reset defaults restores all prefs, re-enables dependencies, and refreshes previews
+ handlers.get('zotero-preview-reset-defaults-btn:command')();
+ assert.equal(values.get('citationstyle'), '');
+ assert.equal(values.get('position'), 'zotero-item-pane-header');
+ assert.equal(values.get('lookupEnabled'), true);
+ assert.equal(values.get('lookupHistoryEnabled'), true);
+ assert.equal(values.get('cacheMaxEntries'), 2000);
+ assert.equal(nodes.get('zotero-preview-cache-quota').disabled, false);
+ assert.equal(nodes.get('zotero-preview-cache-retry').disabled, false);
+ assert.equal(refreshed, 1);
+
+ handlers.get('document:unload')({ target: nodes.get('zotero-prefpane-zotero-preview') });
+ assert.equal(prefObservers.size, 0);
+ assert.equal(preview._prefPaneCleanups.size, 0);
+});

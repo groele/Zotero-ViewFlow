@@ -7,7 +7,7 @@
     <html:header class="viewflow-settings-header">
         <html:div class="viewflow-settings-title-row">
             <html:h1 data-l10n-id="zotero-preview-settings-heading"></html:h1>
-            <html:span class="viewflow-version-badge">v16.3.0</html:span>
+            <html:span id="viewflow-version-badge" data-l10n-id="zotero-preview-version-badge" data-l10n-args='{"version":"16.3.1"}' class="viewflow-version-badge">v16.3.1</html:span>
         </html:div>
         <html:p data-l10n-id="zotero-preview-settings-intro"></html:p>
     </html:header>
@@ -100,6 +100,14 @@
                     <button id="zotero-preview-clear-cache-btn" native="true" data-l10n-id="zotero-preview-settings-clear-cache-btn"></button>
                 </html:div>
             </html:div>
+
+            <html:div class="viewflow-subgroup">
+                <label class="viewflow-subgroup-title" data-l10n-id="zotero-preview-settings-reset-heading"></label>
+                <description class="viewflow-settings-description" data-l10n-id="zotero-preview-settings-reset-description"></description>
+                <html:div class="viewflow-level3-indent">
+                    <button id="zotero-preview-reset-defaults-btn" native="true" data-l10n-id="zotero-preview-settings-reset-btn"></button>
+                </html:div>
+            </html:div>
         </html:div>
     </html:details>
 
@@ -173,15 +181,15 @@
         </html:div>
         <html:div class="viewflow-release-row">
             <html:span class="viewflow-release-label" data-l10n-id="zotero-preview-release-date"></html:span>
-            <html:time datetime="2026-11-11">2026-11-11</html:time>
+            <html:time id="viewflow-release-date" datetime="2026-11-12" data-l10n-id="zotero-preview-release-date-value" data-l10n-args='{"date":"2026-11-12"}'>2026-11-12</html:time>
         </html:div>
         <html:div class="viewflow-release-row">
             <html:span class="viewflow-release-label" data-l10n-id="zotero-preview-release-download"></html:span>
-            <html:a href="https://github.com/groele/Zotero-ViewFlow/releases/download/v16.3.0/Zotero-ViewFlow-16.3.0.xpi" data-l10n-id="zotero-preview-release-download-link"></html:a>
+            <html:a id="viewflow-release-download-link" href="https://github.com/groele/Zotero-ViewFlow/releases/download/v16.3.1/Zotero-ViewFlow-16.3.1.xpi" data-l10n-id="zotero-preview-release-download-link" data-l10n-args='{"version":"16.3.1"}'></html:a>
         </html:div>
         <html:div class="viewflow-release-row">
             <html:span class="viewflow-release-label" data-l10n-id="zotero-preview-release-repository"></html:span>
-            <html:a href="https://github.com/groele/Zotero-ViewFlow">github.com/groele/Zotero-ViewFlow</html:a>
+            <html:a href="https://github.com/groele/Zotero-ViewFlow" data-l10n-id="zotero-preview-release-repository-link"></html:a>
         </html:div>
     </html:section>
 </vbox>

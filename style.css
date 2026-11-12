@@ -72,6 +72,14 @@ collapsible-section:has(> .zotero-preview-root) {
     color: var(--fill-primary, light-dark(#262626, #eee));
 }
 
+.zotero-preview-message-detail {
+    padding: 0 5px 4px;
+    color: var(--fill-secondary, light-dark(#666, #aaa));
+    font-size: 12px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
 .zotero-preview-root .zotero-preview-retry {
     font: inherit;
     margin: 4px 5px;

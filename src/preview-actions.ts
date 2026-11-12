@@ -55,8 +55,8 @@ export const previewActions: PreviewActions & ThisType<PreviewFacade> = {
 		setHTML(state, html);
 	},
 
-	_message(state, id, fallback, error = false) {
-		renderMessage(this, state, id, fallback, error);
+	_message(state, id, fallback, error = false, detail = '') {
+		renderMessage(this, state, id, fallback, error, detail);
 	},
 
 	copyCitation(asCitations, body, button) {

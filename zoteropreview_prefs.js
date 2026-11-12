@@ -10,6 +10,7 @@
     const refresh = () => {
       const cache = preview._citationCache;
       const failed = !!(cache?.saveFailed || cache?.lastError);
+      const historyEnabled = preview.pref("lookupEnabled") !== false && preview.pref("lookupHistoryEnabled") !== false;
       if (field) {
         field.value = cache?.getFilePath() || "";
         field.placeholder = cache?.getDirectoryPath() || "";
@@ -18,7 +19,7 @@
         message("zotero-preview-cache-save-failed");
       }
       if (retryBtn) {
-        retryBtn.disabled = !failed;
+        retryBtn.disabled = !historyEnabled || !failed;
       }
       if (stats) {
         stats.setAttribute("data-l10n-id", "zotero-preview-cache-usage");
@@ -111,6 +112,7 @@
     const initializingRoots = /* @__PURE__ */ new WeakSet();
     let disposed = false;
     const cacheCleanups = [];
+    const prefObservers = [];
     const controller = new AbortController();
     const listen = (target, type, handler, capture = false) => {
       if (!target) return;
@@ -124,6 +126,21 @@
         try {
           await host.Styles.init();
           if (disposed || !root.isConnected || !preview.initialized) return;
+          if (preview.version) {
+            const badge = document.getElementById("viewflow-version-badge");
+            if (badge) {
+              badge.setAttribute("data-l10n-args", JSON.stringify({ version: preview.version }));
+              badge.textContent = `v${preview.version}`;
+            }
+            const downloadLink = document.getElementById("viewflow-release-download-link");
+            if (downloadLink) {
+              downloadLink.setAttribute("data-l10n-args", JSON.stringify({ version: preview.version }));
+              downloadLink.setAttribute(
+                "href",
+                `https://github.com/groele/Zotero-ViewFlow/releases/download/v${preview.version}/Zotero-ViewFlow-${preview.version}.xpi`
+              );
+            }
+          }
           const popup = document.querySelector("#zotero-preview-style-menulist menupopup");
           if (popup) {
             popup.replaceChildren();
@@ -188,9 +205,15 @@
           }
           const updateDependencies = () => {
             const lookupEnabled = preview.pref("lookupEnabled") !== false;
-            const historyEnabled = lookupEnabled && preview.pref("lookupHistoryEnabled") !== false;
+            const historyPref = preview.pref("lookupHistoryEnabled") !== false;
+            const historyEnabled = lookupEnabled && historyPref;
+            const lookupEl = document.getElementById("extensions-zoteropreview-lookupEnabled");
+            if (lookupEl) lookupEl.checked = lookupEnabled;
             const histEl = document.getElementById("extensions-zoteropreview-lookupHistoryEnabled");
-            if (histEl) histEl.disabled = !lookupEnabled;
+            if (histEl) {
+              histEl.checked = historyPref;
+              histEl.disabled = !lookupEnabled;
+            }
             for (const did of [
               "zotero-preview-cache-dir",
               "zotero-preview-cache-browse",
@@ -203,6 +226,11 @@
               const el = document.getElementById(did);
               if (el) el.disabled = !historyEnabled;
             }
+            const retryEl = document.getElementById("zotero-preview-cache-retry");
+            if (retryEl) {
+              const failed = !!(preview._citationCache?.saveFailed || preview._citationCache?.lastError);
+              retryEl.disabled = !historyEnabled || !failed;
+            }
           };
           for (const checkId of ["extensions-zoteropreview-lookupEnabled", "extensions-zoteropreview-lookupHistoryEnabled"]) {
             const checkEl = document.getElementById(checkId);
@@ -212,7 +240,52 @@
               });
             }
           }
+          for (const name of ["lookupEnabled", "lookupHistoryEnabled"]) {
+            const id = host.Prefs?.registerObserver?.(preview._prefPrefix + name, () => {
+              if (!disposed) updateDependencies();
+            }, true);
+            if (id !== void 0) prefObservers.push(id);
+          }
           updateDependencies();
+          const resetBtn = document.getElementById("zotero-preview-reset-defaults-btn");
+          if (resetBtn) {
+            listen(resetBtn, "command", () => {
+              const defaults = {
+                citationstyle: "",
+                position: "zotero-item-pane-header",
+                whatToShow: "zpboth",
+                fontsize: "1",
+                spacing: "1.5",
+                debug: false,
+                maxPreviewItems: 100,
+                lookupEnabled: true,
+                lookupHistoryEnabled: true,
+                cacheDirectory: "",
+                cacheMaxEntries: 2e3,
+                cacheTtlDays: 90
+              };
+              for (const [name, value] of Object.entries(defaults)) {
+                preview.setPref(preview._prefPrefix + name, value);
+              }
+              const menu = document.getElementById("zotero-preview-style-menulist");
+              if (menu) menu.value = "";
+              if (position) position.value = "zotero-item-pane-header";
+              if (display) display.value = "zpboth";
+              if (debug) debug.checked = false;
+              for (const [id, value] of [
+                ["zotero-preview-fontsize", "1"],
+                ["zotero-preview-spacing", "1.5"],
+                ["zotero-preview-max-items", "100"],
+                ["zotero-preview-cache-quota", "2000"],
+                ["zotero-preview-cache-ttl", "90"]
+              ]) {
+                const input = document.getElementById(id);
+                if (input) input.value = value;
+              }
+              updateDependencies();
+              preview._queueAllPreviews();
+            });
+          }
           const clearHistoryBtn = document.getElementById("zotero-preview-clear-history-btn");
           if (clearHistoryBtn) {
             listen(clearHistoryBtn, "command", async () => {
@@ -247,6 +320,7 @@
     const dispose = () => {
       disposed = true;
       controller.abort();
+      for (const id of prefObservers.splice(0)) host.Prefs?.unregisterObserver?.(id);
       for (const cleanup of cacheCleanups.splice(0)) cleanup();
       preview._prefPaneCleanups.delete(dispose);
     };

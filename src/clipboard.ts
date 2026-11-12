@@ -7,6 +7,9 @@ type FeedbackState = {
 };
 type CopyErrorState = { doc: Document };
 type ClipboardContent = { html: string; text: string };
+type TransferableWithLength = nsITransferable & {
+	setTransferData(aFlavor: string, aData: nsISupports, aDataLen?: number): void;
+};
 
 /**
  * Triggers copy success feedback animation and icon restoration.
@@ -39,19 +42,20 @@ export function showCopyFeedback(
 }
 
 /**
- * Writes HTML and text content to the system clipboard using XPCOM nsITransferable.
+ * Writes HTML and plain-text content to the system clipboard using XPCOM nsITransferable.
  */
-export function writeToXPCOMClipboard(content: ClipboardContent, asHTML: boolean) {
-	const transferable = Cc['@mozilla.org/widget/transferable;1'].createInstance(Ci.nsITransferable) as nsITransferable;
+export function writeToXPCOMClipboard(content: ClipboardContent, _asHTML = false) {
+	const transferable = Cc['@mozilla.org/widget/transferable;1'].createInstance(Ci.nsITransferable) as TransferableWithLength;
 	transferable.init(null as unknown as nsILoadContext);
 	for (const [flavor, value] of [
 		['text/html', content.html],
-		['text/plain', asHTML ? content.html : content.text]
+		['text/plain', content.text]
 	]) {
 		const str = Cc['@mozilla.org/supports-string;1'].createInstance(Ci.nsISupportsString) as nsISupportsString;
 		str.data = value;
 		transferable.addDataFlavor(flavor);
-		transferable.setTransferData(flavor, str);
+		// Pass UTF-16 byte length for 3-arg nsITransferable hosts; extra arg is ignored on 2-arg Gecko 140+.
+		transferable.setTransferData(flavor, str, value.length * 2);
 	}
 	// Gecko permits a null owner, although the bundled host typings do not.
 	Services.clipboard.setData(transferable, null as unknown as nsIClipboardOwner, Ci.nsIClipboard.kGlobalClipboard);

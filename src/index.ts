@@ -75,7 +75,7 @@ const core: Omit<PreviewFacade, keyof typeof previewActions> & ThisType<PreviewF
 			onAsyncRender: props => this._renderSection(props),
 			onToggle: ({ body }) => {
 				const state = this._states.get(body);
-				if (state && !state.payload) this._scheduleRefresh(state);
+				if (state && (!state.payload || state.refreshAgain)) this._scheduleRefresh(state);
 			}
 		});
 		if (!this._sectionID) throw new Error('Could not register ZoteroPreview section');
@@ -158,7 +158,7 @@ const core: Omit<PreviewFacade, keyof typeof previewActions> & ThisType<PreviewF
 		if (this.initialized && type === 'tab' && event === 'select') {
 			for (const state of this._states.values()) {
 				this._queuePosition(state.body.closest('item-details') as PositionOwner | null);
-				if (!state.payload) this._scheduleRefresh(state);
+				if (!state.payload || state.refreshAgain) this._scheduleRefresh(state);
 			}
 			return;
 		}

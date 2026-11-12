@@ -28,6 +28,7 @@ export function setupCachePreferences(
     const refresh = () => {
         const cache = preview._citationCache;
         const failed = !!(cache?.saveFailed || cache?.lastError);
+        const historyEnabled = preview.pref('lookupEnabled') !== false && preview.pref('lookupHistoryEnabled') !== false;
         if (field) {
             field.value = cache?.getFilePath() || '';
             field.placeholder = cache?.getDirectoryPath() || '';
@@ -36,7 +37,7 @@ export function setupCachePreferences(
             message('zotero-preview-cache-save-failed');
         }
         if (retryBtn) {
-            retryBtn.disabled = !failed;
+            retryBtn.disabled = !historyEnabled || !failed;
         }
         if (stats) {
             stats.setAttribute('data-l10n-id', 'zotero-preview-cache-usage');

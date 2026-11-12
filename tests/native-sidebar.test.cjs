@@ -13,7 +13,7 @@ function setup(clock = {setTimeout, clearTimeout}) {
   'export.quickCopy.dragLimit': 100,
  }));
  const items = new Map(); const calls = []; const observers = new Set(), preferenceCallbacks=new Map();
- const copied = [];
+ const copied = []; const copiedLengths = [];
  const Zotero = {
   Prefs: { get: k => prefs.get(k), set: (k,v) => prefs.set(k,v),
    registerObserver: (key,callback) => { const id = Symbol(); observers.add(id); preferenceCallbacks.set(key,callback);return id; },
@@ -27,7 +27,7 @@ function setup(clock = {setTimeout, clearTimeout}) {
     return {html:`<i>${citation ? 'cite' : 'bib'}:${items.map(i=>i.id)}</i>`, text:`plain:${items.map(i=>i.id)}`};
    } }
  };
- const transferable = { init() {}, addDataFlavor() {}, setTransferData: (f,s) => copied.push([f,s.data]) };
+ const transferable = { init() {}, addDataFlavor() {}, setTransferData: (f,s,len) => { copied.push([f,s.data]); copiedLengths.push([f,len]); } };
  const Components = { classes: new Proxy({}, {get: (t,k) => ({createInstance: () => k.includes('transferable') ? transferable : {data:''}})}),
   interfaces: {nsIClipboard:{kGlobalClipboard:1}} };
  const Services={clipboard:{setData(){}}};
@@ -51,7 +51,7 @@ function setup(clock = {setTimeout, clearTimeout}) {
   plugin._changeItem(props); plugin._prepareRender(props);
   return {body,doc,props,listeners,refreshes:()=>refreshes};
  }
- return {plugin,Zotero,item,section,calls,prefs,observers,preferenceCallbacks,copied,Services};
+ return {plugin,Zotero,item,section,calls,prefs,observers,preferenceCallbacks,copied,copiedLengths,Services};
 }
 
 test('successful clipboard retry removes the previous failure instead of retaining a stale error', async()=>{
@@ -460,7 +460,9 @@ test('a dedicated style retains the existing Quick Copy HTML-source copy prefere
  h.prefs.set('extensions.zoteropreview.citationstyle','chosen-style');
  h.Zotero.QuickCopy.getFormatFromURL=()=>({mode:'bibliography',id:'quickcopy-style',contentType:'html'});
  await h.plugin._renderSection(s.props);assert.equal(h.plugin.copyCitation(false,s.body),true);
- assert.deepEqual(h.copied,[['text/html','<i>bib:1</i>'],['text/plain','<i>bib:1</i>']]);h.plugin.shutdown();
+ assert.deepEqual(h.copied,[['text/html','<i>bib:1</i>'],['text/plain','plain:1']]);
+ assert.deepEqual(h.copiedLengths,[['text/html',24],['text/plain',14]]);
+ h.plugin.shutdown();
 });
 
 test('concurrent reader renders share one task and one style waiter',async()=>{
@@ -579,5 +581,100 @@ test('lookup stays immediately after preview across positions and external reord
   const reordered=panes.map(p=>p.dataset.pane);
   assert.equal(reordered.indexOf('lookup-id'),reordered.indexOf('native-id')+1);
  }
+ h.plugin.shutdown();
+});
+
+test('returning from multi-select to the same item re-enables the section and refreshes cleared payload',async()=>{
+ const h=setup(),i1=h.item(1),i2=h.item(2),s=h.section(i1,'library',[i1]);
+ await h.plugin._renderSection(s.props);
+ assert.equal(s.body.enabled,true);
+ // Simulate switching to multi-select (setEnabled(false) without changing item or item=null)
+ s.props.setEnabled(false);
+ s.props.selection=[i1,i2];
+ s.doc.defaultView.ZoteroPane.getSelectedItems=()=>[i1,i2];
+ h.plugin._changeItem({...s.props,item:null});
+ assert.equal(s.body.enabled,false);
+ // Now return to the single item 1
+ s.doc.defaultView.ZoteroPane.getSelectedItems=()=>[i1];
+ const enabledStates=[];
+ const propsSameId={doc:s.doc,body:s.body,item:i1,tabType:'library',setEnabled:v=>{enabledStates.push(v);s.body.enabled=v;}};
+ h.plugin._changeItem(propsSameId);
+ assert.equal(s.body.enabled,true);
+ assert.deepEqual(enabledStates,[true]);
+ // Also verify same item.id returning after setEnabled(false) & queueAllPreviews refreshes
+ s.props.setEnabled(false);
+ h.plugin._queueAllPreviews();
+ h.plugin._changeItem(propsSameId);
+ assert.equal(s.body.enabled,true);
+ assert.ok(h.plugin._states.get(s.body).refreshTimer);
+ h.plugin.shutdown();
+});
+
+test('style change while pane is collapsed or hidden defers refresh until toggled open or tab selected',async()=>{
+ const timers=new Map();let next=0;
+ const h=setup({setTimeout:fn=>{timers.set(++next,fn);return next;},clearTimeout:id=>timers.delete(id)});
+ const fireNext=async()=>{const id=state.refreshTimer,fn=timers.get(id);timers.delete(id);fn();for(let n=0;n<4;n++)await Promise.resolve();};
+ const s=h.section(h.item(1),'library');
+ const state=h.plugin._states.get(s.body);
+ let isOpen=false,isVisible=false;
+ s.body.closest=()=>({open:isOpen});
+ s.body.getClientRects=()=>isVisible?[{}]:[];
+ h.plugin._queueAllPreviews();
+ assert.equal(state.payload,null);
+ assert.notEqual(state.refreshTimer,null);
+ await fireNext();
+ assert.equal(state.refreshTimer,null);
+ assert.equal(state.refreshAgain,true);
+ // Toggle open while visible -> schedules refresh and runs when timer fires
+ isOpen=true;isVisible=true;
+ const beforeToggle=s.refreshes();
+ h.Zotero.options.onToggle({doc:s.doc,body:s.body,item:s.props.item,tabType:'library',pane:{open:true},setEnabled:s.props.setEnabled});
+ assert.notEqual(state.refreshTimer,null);
+ await fireNext();
+ assert.equal(state.refreshAgain,false);
+ assert.equal(s.refreshes(),beforeToggle+1);
+ // Collapse again, queue preview & fire debounce while collapsed, then notify tab selection after becoming visible
+ isOpen=false;isVisible=false;
+ h.plugin._queueAllPreviews();
+ await fireNext();
+ assert.equal(state.refreshAgain,true);
+ assert.equal(s.refreshes(),beforeToggle+1);
+ isOpen=true;isVisible=true;
+ h.plugin.notify('select','tab');
+ assert.notEqual(state.refreshTimer,null);
+ await fireNext();
+ assert.equal(state.refreshAgain,false);
+ assert.equal(s.refreshes(),beforeToggle+2);
+ h.plugin.shutdown();
+});
+
+test('large multi-item selection renders progressive initial batch, yields macrotasks, and supports cancellation',async()=>{
+ const h=setup(),selection=[];
+ for(let n=1;n<=25;n++)selection.push(h.item(n));
+ const s=h.section(selection[0],'library',selection);
+ h.prefs.set('extensions.zoteropreview.whatToShow','zpboth');
+ h.prefs.set('extensions.zoteropreview.maxNumberOfItems',25);
+ await h.plugin._renderSection(s.props);
+ const state=h.plugin._states.get(s.body);
+ assert.ok(state.payload);
+ assert.match(state.payload.bibliography.text,/25/);
+ assert.ok(h.calls[0].length<=20,'first progressive batch should be bounded');
+ // Cancellation mid-batch settles cleanly without committing payload
+ const s2=h.section(selection[0],'library',selection);
+ const pending=h.plugin._renderSection(s2.props);
+ h.plugin._destroySection(s2.body);
+ await pending;
+ assert.equal(h.plugin._states.has(s2.body),false);
+ h.plugin.shutdown();
+});
+
+test('plain Error from QuickCopy surfaces escaped diagnostic message in UI',async()=>{
+ const h=setup(),s=h.section(h.item(1));
+ h.Zotero.QuickCopy.getContentFromItems=()=>{throw new Error('CSL <syntax> error & details');};
+ await h.plugin._renderSection(s.props);
+ assert.match(s.body.innerHTML,/zotero-preview-unavailable/);
+ assert.match(s.body.innerHTML,/zotero-preview-message-detail/);
+ assert.match(s.body.innerHTML,/CSL &lt;syntax&gt; error &amp; details/);
+ assert.doesNotMatch(s.body.innerHTML,/<syntax>/);
  h.plugin.shutdown();
 });

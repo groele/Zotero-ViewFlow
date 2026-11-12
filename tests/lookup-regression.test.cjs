@@ -68,7 +68,7 @@ test('lookup section falls back to getSelectedLibraryIDs when getSelectedLibrary
   },
   Items:{
    getAsync:async()=>[{
-    id:101,deleted:false,isRegularItem:()=>true,
+    id:101,deleted:false,isRegularItem:()=>true,getAttachments:()=>[],
     getField:f=>({title:'Test Paper',publicationTitle:'Nature',year:'2024',volume:'628',pages:'512-518'}[f]||'')
    }]
   }
@@ -103,6 +103,18 @@ test('lookup section falls back to getSelectedLibraryIDs when getSelectedLibrary
   assert.equal(searchCalls,1);
   assert.equal(lastLibraryID,7);
   assert.equal(statusDiv.children.length,1);
+
+  const card=statusDiv.children[0];
+  const [cardStatus,,cardMeta,actRow]=card.children;
+  const [,pdfBtn]=actRow.children;
+  await pdfBtn.onclick();
+  assert.equal(cardStatus.attrs['data-l10n-id'],'zotero-preview-lookup-status-no-pdf');
+  assert.doesNotMatch(cardMeta.textContent,/未找到 PDF 附件/);
+
+  doc.defaultView.ZoteroPane.getSelectedLibraryIDs=()=>[];
+  await searchBtn.onclick();
+  assert.equal(lastLibraryID,1,'empty getSelectedLibraryIDs falls back to userLibraryID without calling deprecated getSelectedLibraryID');
+  doc.defaultView.ZoteroPane.getSelectedLibraryIDs=()=>[7];
 
   cacheManager.record({text:'Nature, 2024, 628, 512-518',libraryID:7,itemKey:'K1',itemID:101,title:'Test Paper',style:'apa'});
   await assert.rejects(()=>cacheManager.flush(),/Disk full/);

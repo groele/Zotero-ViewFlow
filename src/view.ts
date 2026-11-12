@@ -69,12 +69,26 @@ export function renderPayload(plugin: ViewPlugin, state: ViewState, payload: Rec
 	plugin._fitWidth(state);
 }
 
+function escapeHTML(value: string) {
+	return value
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&#39;');
+}
+
 /**
  * Displays a status or error message inside the section body.
  */
-export function renderMessage(plugin: ViewPlugin, state: ViewState, id: string, fallback: string, error = false) {
+export function renderMessage(plugin: ViewPlugin, state: ViewState, id: string, fallback: string, error = false, detail = '') {
+	const cleanDetail = error ? detail.trim().slice(0, 240) : '';
+	const detailHtml = cleanDetail
+		? `<div class="zotero-preview-message-detail">${escapeHTML(cleanDetail)}</div>`
+		: '';
 	const html =
 		`<div class="zotero-preview-message${error ? ' zotero-preview-message-error' : ''}" role="status" data-l10n-id="${id}">${fallback}</div>` +
+		detailHtml +
 		(error
 			? '<button type="button" class="zotero-preview-retry" data-preview-retry="" data-l10n-id="zotero-preview-retry">Retry preview</button>'
 			: '');

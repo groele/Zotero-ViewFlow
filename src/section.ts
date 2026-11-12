@@ -6,8 +6,20 @@ export type Payload = Record<string,{html:string;text:string}>;
 export type Config = PreviewConfig & {limit:number;font:number;spacing:number;asHTML:boolean};
 export type State = {doc:Document;body:HTMLElement;refresh:()=>void|Promise<void>;item:Item|null;tabType:string|null;ids:number[];generation:number;key:string|null;payload:Payload|null;timer:number|null;resolve:(()=>void)|null;refreshTimer:number|null;feedbackTimers:Set<number>;copyFeedback:Map<HTMLElement,number[]>;destroyed:boolean;controller:AbortController;handler?:EventListener;sizingOwner?:Element|null;widthObserver?:ResizeObserver;setEnabled?:(b:boolean)=>void;lastHTML?:string|null;failed?:boolean;renderTask?:Promise<void>|null;cancelStyles?:(()=>void)|null;config?:Config;omitted?:number;refreshTask?:Promise<void>|null;refreshAgain?:boolean;positionOwner?:PositionOwner|null};
 export type Props = {body:HTMLElement;item:Item|null;tabType:string;setEnabled:(b:boolean)=>void};
-export type Plugin = {initialized:boolean;rootURI:string;_states:Map<HTMLElement,State>;_stylesheets:Map<Document,{link:Element;count:number}>;_positionObservers:Map<PositionOwner,{observer:MutationObserver;count:number}>;_positionTimers:Map<PositionOwner,number>;_cacheBytes:number;_cache?:Map<unknown,unknown>;_cacheManager?:{get(k:string):unknown;clear():void};_stats:{cacheHits:number;generations:number};_ensureSectionHeader(b:HTMLElement):void;_cancelRender(s:State):void;_message(s:State,id:string,f:string,e?:boolean):void;_scheduleRefresh(s:State):void;copyCitation(c:boolean,b:HTMLElement,button:HTMLElement):void;_observePosition(o:PositionOwner|null,s:State):void;_queuePosition(o:PositionOwner|null):void;_fitWidth(s:State):void;_normalizeItem(i:Item|null):Item|null;_changeItem(p:Props):void;_runRender(s:State):Promise<void>;_waitForStyles(s:State):Promise<boolean>;_items(s:State):Item[];_config(i:Item):Config;_previewKey(i:Item[],c:Config):string;_cacheGet?(k:string):Payload|null;_cachePut(k:string,p:Payload,ids:number[]):void;_generate(i:Item[],c:Config):Payload;log(e:unknown):void;_renderPayload(s:State,p:Payload,n:number):void;_cleanup(a:()=>void):void;_cacheClear?():void;_layoutConfig():{font:number;spacing:number}};
+export type Plugin = {initialized:boolean;rootURI:string;_states:Map<HTMLElement,State>;_stylesheets:Map<Document,{link:Element;count:number}>;_positionObservers:Map<PositionOwner,{observer:MutationObserver;count:number}>;_positionTimers:Map<PositionOwner,number>;_cacheBytes:number;_cache?:Map<unknown,unknown>;_cacheManager?:{get(k:string):unknown;clear():void};_stats:{cacheHits:number;generations:number};_ensureSectionHeader(b:HTMLElement):void;_cancelRender(s:State):void;_message(s:State,id:string,f:string,e?:boolean,d?:string):void;_scheduleRefresh(s:State):void;copyCitation(c:boolean,b:HTMLElement,button:HTMLElement):void;_observePosition(o:PositionOwner|null,s:State):void;_queuePosition(o:PositionOwner|null):void;_fitWidth(s:State):void;_normalizeItem(i:Item|null):Item|null;_changeItem(p:Props):void;_runRender(s:State):Promise<void>;_waitForStyles(s:State):Promise<boolean>;_items(s:State):Item[];_config(i:Item):Config;_previewKey(i:Item[],c:Config):string;_cacheGet?(k:string):Payload|null;_cachePut(k:string,p:Payload,ids:number[]):void;_generate(i:Item[],c:Config):Payload;log(e:unknown):void;_renderPayload(s:State,p:Payload,n:number):void;_cleanup(a:()=>void):void;_cacheClear?():void;_layoutConfig():{font:number;spacing:number}};
 
+const PROGRESSIVE_BATCH_SIZE = 20;
+
+function waitDelay(state: State, ms: number) {
+	return new Promise<void>(resolve => {
+		state.resolve = resolve;
+		state.timer = setTimeout(() => {
+			state.timer = null;
+			state.resolve = null;
+			resolve();
+		}, ms);
+	});
+}
 
 /**
  * Initializes a new ItemPane section instance for a document and body.
@@ -29,26 +41,14 @@ export function initSection(plugin: Plugin, { doc, body, refresh }: {doc:Documen
 
 	body.classList.add('zotero-preview-root');
 	const state: State = {
-		doc,
-		body,
-		refresh,
-		item: null,
-		tabType: null,
-		ids: [],
-		generation: 0,
-		key: null,
-		payload: null,
-		timer: null,
-		resolve: null,
-		refreshTimer: null,
-		feedbackTimers: new Set(),
-		copyFeedback: new Map(),
-		destroyed: false,
+		doc, body, refresh, item: null, tabType: null, ids: [], generation: 0,
+		key: null, payload: null, timer: null, resolve: null, refreshTimer: null,
+		feedbackTimers: new Set(), copyFeedback: new Map(), destroyed: false,
 		controller: new (doc.defaultView?.AbortController || AbortController)()
 	};
 
 	state.handler = (event: Event) => {
-        const keyboard = event as KeyboardEvent;
+		const keyboard = event as KeyboardEvent;
 		const button = (event.target as Element | null)?.closest?.('[data-copy-citation], [data-preview-retry]') as HTMLElement | null;
 		if (!button || !body.contains(button)) return;
 		if (event.type === 'keydown' && !['Enter', ' '].includes(keyboard.key)) return;
@@ -89,6 +89,10 @@ export function changeItem(plugin: Plugin, { body, item, tabType, setEnabled }: 
 	if (state.item?.id === normalized?.id && state.tabType === tabType) {
 		state.item = normalized;
 		state.setEnabled = setEnabled;
+		setEnabled(!!state.item);
+		if (state.item && !state.renderTask && (!state.payload || state.refreshAgain)) {
+			plugin._scheduleRefresh(state);
+		}
 		return;
 	}
 	plugin._cancelRender(state);
@@ -162,20 +166,14 @@ export async function runRender(plugin: Plugin, state: State) {
 		return;
 	}
 	const generation = state.generation;
+	const stale = () => state.destroyed || generation !== state.generation || !plugin.initialized;
 
-	await new Promise<void>(resolve => {
-		state.resolve = resolve;
-		state.timer = setTimeout(() => {
-			state.timer = null;
-			state.resolve = null;
-			resolve();
-		}, 40);
-	});
-	if (state.destroyed || generation !== state.generation || !plugin.initialized) return;
+	await waitDelay(state, 40);
+	if (stale()) return;
 
 	try {
 		if (!(await plugin._waitForStyles(state))) return;
-		if (state.destroyed || generation !== state.generation || !plugin.initialized) return;
+		if (stale()) return;
 
 		const allItems = plugin._items(state);
 		state.ids = allItems.map(item => item.id);
@@ -203,7 +201,25 @@ export async function runRender(plugin: Plugin, state: State) {
 			plugin._stats.cacheHits++;
 		} else {
 			const started = Date.now();
-			payload = plugin._generate(items, config);
+			if (items.length > PROGRESSIVE_BATCH_SIZE) {
+				const head = items.slice(0, PROGRESSIVE_BATCH_SIZE);
+				state.config = config;
+				plugin._renderPayload(state, plugin._generate(head, config), allItems.length - head.length);
+				await waitDelay(state, 0);
+				if (stale()) return;
+				if (config.show === 'zpboth') {
+					const bib = plugin._generate(items, { ...config, show: 'zpbib' });
+					await waitDelay(state, 0);
+					if (stale()) return;
+					payload = { ...bib, ...plugin._generate(items, { ...config, show: 'zpintext' }) };
+				} else {
+					payload = plugin._generate(items, config);
+				}
+				await waitDelay(state, 0);
+				if (stale()) return;
+			} else {
+				payload = plugin._generate(items, config);
+			}
 			plugin._stats.generations++;
 			plugin._cachePut(key, payload, items.map(item => item.id));
 			plugin.log(`CSL ${Date.now() - started}ms, ${items.length} items`);
@@ -216,12 +232,21 @@ export async function runRender(plugin: Plugin, state: State) {
 		state.omitted = omitted;
 		plugin._renderPayload(state, payload, omitted);
 	} catch (error) {
-		if (state.destroyed || generation !== state.generation || !plugin.initialized) return;
+		if (stale()) return;
 		state.payload = null;
 		state.failed = true;
 		plugin.log(error instanceof Error ? error.stack || error : error);
-		const [id, fallback] = ERROR_MESSAGES[(error as {previewCode?: keyof typeof ERROR_MESSAGES})?.previewCode as keyof typeof ERROR_MESSAGES] || DEFAULT_ERROR_MESSAGE;
-		plugin._message(state, id, fallback, true);
+		const code = (error as {previewCode?: keyof typeof ERROR_MESSAGES})?.previewCode;
+		const mapped = code && code in ERROR_MESSAGES ? ERROR_MESSAGES[code] : null;
+		const [id, fallback] = mapped || DEFAULT_ERROR_MESSAGE;
+		const detail = mapped
+			? ''
+			: typeof error === 'string'
+				? error
+				: error && typeof (error as { message?: unknown }).message === 'string'
+					? (error as { message: string }).message
+					: '';
+		plugin._message(state, id, fallback, true, detail);
 	}
 }
 
@@ -238,8 +263,10 @@ export function scheduleRefresh(plugin: Plugin, state: State) {
 		state.refreshTimer = null;
 		if (!plugin.initialized || state.destroyed) return;
 		if (!state.body.getClientRects().length || (state.body.closest('collapsible-section') as (Element & {open?:boolean}) | null)?.open === false) {
+			state.refreshAgain = true;
 			return;
 		}
+		state.refreshAgain = false;
 		const task = Promise.resolve()
 			.then(() => {
 				if (plugin.initialized && !state.destroyed) return state.refresh();
