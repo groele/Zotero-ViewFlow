@@ -1,4 +1,4 @@
-> Current version: **16.3.1**. Added compact citation reverse lookup, dedicated sidebar panel, preference toggle, and local history cache eviction, ensuring Zotero 10 ~ 12 modern compatibility.
+> Current version: **16.4.0**. Redesigned the ViewFlow settings pane with structured micro-card grids, nested cache path and health dashboard subcards, strict 40px baseline alignment, and visual disabled-state feedback, ensuring Zotero 10 ~ 12 modern compatibility.
 
 # Zotero ViewFlow
 

@@ -1,9 +1,9 @@
 /* Zotero ViewFlow - Standardized Preferences Visual Language
-   Aligned with Workspace AGENTS.md 4.2 Standard (2026-11-02 Unified Baseline):
+   Aligned with Workspace AGENTS.md 4.2 Standard (2026-11-13 Redesigned Baseline):
    - Container Base: Card Outer Border x=0, padding-inline: 16px
    - Level 1: Card Heading summary margin: -16px; padding: 12px 16px;
    - Level 2: Primary Control Icon at 16px, Label text at 40px (16px icon + 8px gap)
-   - Level 3: Subordinate Description & Inputs indented at 24px (aligned with 40px Golden Line)
+   - Level 3: Subordinate Description & Subcards indented at 24px (aligned with 40px Golden Line)
 */
 
 #zotero-prefpane-zotero-preview.viewflow-settings {
@@ -152,10 +152,14 @@
 /* Subgroup layout inside card */
 #zotero-prefpane-zotero-preview .viewflow-subgroup {
   margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--flow-pref-divider);
 }
 
 #zotero-prefpane-zotero-preview .viewflow-subgroup:last-child {
   margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: 0;
 }
 
 /* Level 2 Subgroup Title */
@@ -170,7 +174,7 @@
 
 /* Level 1 Intro / Level 2 Sub-description */
 #zotero-prefpane-zotero-preview .viewflow-settings-description {
-  margin: 0 0 10px;
+  margin: 0 0 8px;
   color: var(--flow-pref-muted);
   font-size: 13px;
   line-height: 1.6;
@@ -180,6 +184,15 @@
 #zotero-prefpane-zotero-preview .viewflow-indented-desc,
 #zotero-prefpane-zotero-preview .viewflow-level3-indent {
   margin-inline-start: 24px;
+}
+
+#zotero-prefpane-zotero-preview .viewflow-control-row,
+#zotero-prefpane-zotero-preview .viewflow-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
 }
 
 /* Level 2: Primary Radio Group & Options */
@@ -251,15 +264,26 @@
   min-height: 30px;
   padding: 5px 12px;
   border: 1px solid var(--flow-pref-border);
-  border-radius: 4px;
-  font-size: 14px;
-  color: inherit;
-  background: var(--flow-pref-surface);
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--flow-pref-text);
+  background: color-mix(in srgb, currentColor 3%, transparent);
   cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
-#zotero-prefpane-zotero-preview .viewflow-settings-card button:hover {
-  background: var(--flow-pref-hover);
+#zotero-prefpane-zotero-preview .viewflow-settings-card button:hover:not(:disabled) {
+  background: color-mix(in srgb, currentColor 7%, transparent);
+  border-color: color-mix(in srgb, currentColor 30%, transparent);
+}
+
+#zotero-prefpane-zotero-preview .viewflow-settings-card button:disabled,
+#zotero-prefpane-zotero-preview .viewflow-settings-card input:disabled,
+#zotero-prefpane-zotero-preview .viewflow-settings-card checkbox[disabled],
+#zotero-prefpane-zotero-preview .viewflow-field-card:has(:disabled) {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 #zotero-prefpane-zotero-preview .viewflow-settings-card button:focus-visible {
@@ -267,37 +291,160 @@
   outline-offset: 2px;
 }
 
-/* Level 3: Layout Settings Grid - 24px Indent to Align with 40px Line */
-#zotero-prefpane-zotero-preview .viewflow-settings-fields {
+/* Structured Field Grids & Micro-Cards */
+#zotero-prefpane-zotero-preview .viewflow-field-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 8px 16px;
+  gap: 8px 12px;
   min-width: 0;
   margin-top: 8px;
-  margin-inline-start: 24px;
 }
 
-#zotero-prefpane-zotero-preview .viewflow-settings-field {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 5.5em;
-  align-items: center;
-  gap: 8px;
+#zotero-prefpane-zotero-preview .viewflow-field-grid-3col {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+#zotero-prefpane-zotero-preview .viewflow-field-grid-2col {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+#zotero-prefpane-zotero-preview .viewflow-field-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 6px;
   min-width: 0;
-  padding-block: 4px;
-  border-bottom: 1px solid var(--flow-pref-divider);
+  padding: 8px 12px;
+  border-radius: 7px;
+  border: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  background-color: color-mix(in srgb, currentColor 2.5%, transparent);
+  transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
-#zotero-prefpane-zotero-preview .viewflow-settings-field label {
+#zotero-prefpane-zotero-preview .viewflow-field-card:hover {
+  background-color: color-mix(in srgb, currentColor 4.5%, transparent);
+  border-color: color-mix(in srgb, currentColor 22%, transparent);
+}
+
+#zotero-prefpane-zotero-preview .viewflow-field-card:focus-within {
+  border-color: var(--flow-pref-accent);
+}
+
+#zotero-prefpane-zotero-preview .viewflow-field-card label {
+  margin: 0;
   min-width: 0;
   font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
   color: var(--flow-pref-text);
   overflow-wrap: anywhere;
 }
 
-#zotero-prefpane-zotero-preview .viewflow-settings-field input {
+#zotero-prefpane-zotero-preview .viewflow-field-card input[type="number"] {
   width: 100%;
+  min-height: 28px;
   margin: 0;
+  padding: 3px 8px;
   text-align: end;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Nested Subcards for Cache & Health Dashboard */
+#zotero-prefpane-zotero-preview .viewflow-subcard {
+  margin-block: 10px 12px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  background-color: color-mix(in srgb, currentColor 1.8%, transparent);
+}
+
+#zotero-prefpane-zotero-preview .viewflow-subcard:last-child {
+  margin-bottom: 0;
+}
+
+#zotero-prefpane-zotero-preview .viewflow-subcard-title {
+  display: block;
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--flow-pref-text);
+}
+
+#zotero-prefpane-zotero-preview .viewflow-subcard-desc,
+#zotero-prefpane-zotero-preview .viewflow-subcard-help {
+  margin: 0 0 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--flow-pref-muted);
+}
+
+#zotero-prefpane-zotero-preview .viewflow-subcard-help {
+  margin: 6px 0 0;
+}
+
+#zotero-prefpane-zotero-preview .viewflow-path-row {
+  display: flex;
+  min-width: 0;
+  margin-bottom: 8px;
+}
+
+#zotero-prefpane-zotero-preview #zotero-preview-cache-dir {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: 12px;
+}
+
+#zotero-prefpane-zotero-preview .viewflow-cache-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+#zotero-prefpane-zotero-preview .viewflow-cache-status {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--flow-pref-accent);
+}
+
+#zotero-prefpane-zotero-preview .viewflow-recommend-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--flow-pref-divider);
+}
+
+#zotero-prefpane-zotero-preview .viewflow-recommend-bar > .viewflow-subcard-desc {
+  flex: 1 1 220px;
+  margin: 0;
+}
+
+#zotero-prefpane-zotero-preview .viewflow-status-dashboard {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 7px;
+  border: 1px solid color-mix(in srgb, var(--flow-pref-accent) 25%, transparent);
+  background-color: color-mix(in srgb, var(--flow-pref-accent) 3.5%, transparent);
+}
+
+#zotero-prefpane-zotero-preview .viewflow-dashboard-stats {
+  margin: 0 0 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--flow-pref-text);
+}
+
+#zotero-prefpane-zotero-preview .viewflow-dashboard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 /* Release Info Card: 16px padding */
@@ -319,8 +466,8 @@
   grid-template-columns: minmax(6em, 8em) minmax(0, 1fr);
   gap: 8px;
   min-width: 0;
-  font-size: 13px;
   padding-block: 3px;
+  font-size: 13px;
   line-height: 1.6;
   color: var(--flow-pref-muted);
 }
@@ -358,17 +505,8 @@
 }
 
 @container viewflow-settings (max-width: 560px) {
-  #zotero-prefpane-zotero-preview .viewflow-settings-fields {
+  #zotero-prefpane-zotero-preview .viewflow-field-grid-3col,
+  #zotero-prefpane-zotero-preview .viewflow-field-grid-2col {
     grid-template-columns: minmax(0, 1fr);
-    gap: 4px;
-    margin-inline-start: 0;
-  }
-
-  #zotero-prefpane-zotero-preview .viewflow-settings-field {
-    grid-template-columns: minmax(0, 1fr) 5.5em;
   }
 }
-.viewflow-cache-tools { display: flex; flex-wrap: wrap; gap: 6px; margin-block: 6px; }
-#zotero-prefpane-zotero-preview #zotero-preview-cache-dir,
-#zotero-prefpane-zotero-preview .viewflow-cache-file { box-sizing: border-box; width: 100%; min-width: 0; }
-#zotero-prefpane-zotero-preview #zotero-preview-cache-status { font-size: 13px; line-height: 1.6; margin-block: 5px; }
