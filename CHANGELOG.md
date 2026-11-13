@@ -1,5 +1,11 @@
 # Changelog
 
+## 17.0.0 — 2026-11-13
+
+- Unified Major Release `v17.0.0` across the Zotero Flow suite with synchronized manifest, package, baseline, UI badges, release feed, and SHA-512 checksums.
+- Audited all 17 TypeScript source modules under `src/` (all <= 360 lines, zero debt, zero `@ts-ignore`/`@ts-nocheck`, zero bare `console.log`, `AbortController` listener cleanup verified).
+- Verified 100% pass across `tsc --noEmit`, 14 architecture guards, script syntax checks, and 95 unit tests.
+
 ## 13.1.4 — 2026-11-06
 
 - Build Pipeline Hardening: upgraded `package.json` `build` script to enforce mandatory static type checking (`npm run typecheck && npm run build:xpi`) across all build entrypoints.

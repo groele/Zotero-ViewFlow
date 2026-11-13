@@ -1,4 +1,4 @@
-> 当前版本：**16.4.1**。全面重新设计 ViewFlow 设置面板：引入结构化微卡片网格、嵌套缓存路径与健康仪表盘子卡片，严格对齐 40px 黄金基准线与禁用态视觉反馈，持续加固 Zotero 10 ~ 12 现代架构稳定性。
+> 当前版本：**17.0.0**。与 Zotero Flow 全家桶同步发布 `v17.0.0` 统一大版本，持续强化结构化微卡片设置面板（40px 黄金基准对齐）、紧凑引文反向逆查、本地历史缓存及 Zotero 10 ~ 12 现代 Gecko 架构稳定性。
 
 # Zotero ViewFlow
 
@@ -11,7 +11,7 @@
 
 [简体中文](README.md) · [English](README.en.md)
 
-[![当前版本](https://img.shields.io/badge/version-16.3.1-245ac7?style=flat-square)](https://github.com/groele/Zotero-ViewFlow/releases/tag/v16.3.1) · [下载 XPI](https://github.com/groele/Zotero-ViewFlow/releases/download/v16.3.1/Zotero-ViewFlow-16.3.1.xpi) · [问题反馈](https://github.com/groele/Zotero-ViewFlow/issues)
+[![当前版本](https://img.shields.io/badge/version-17.0.0-245ac7?style=flat-square)](https://github.com/groele/Zotero-ViewFlow/releases/tag/v17.0.0) · [下载 XPI](https://github.com/groele/Zotero-ViewFlow/releases/download/v17.0.0/Zotero-ViewFlow-17.0.0.xpi) · [问题反馈](https://github.com/groele/Zotero-ViewFlow/issues)
 
 [产品定位](#overview) · [安装与更新](#installation) · [快速开始](#quick-start) · [核心功能](#features) · [设置与使用](#settings) · [数据、同步与外部服务](#data) · [兼容性与验证范围](#compatibility) · [常见问题](#troubleshooting) · [开发与详细文档](#development) · [系列产品](#series) · [项目来源与许可](#license)
 
@@ -27,7 +27,7 @@
 
 ## 安装与更新
 
-1. 下载 [Zotero-ViewFlow-16.3.1.xpi](https://github.com/groele/Zotero-ViewFlow/releases/download/v16.3.1/Zotero-ViewFlow-16.3.1.xpi)（插件版本 **16.3.1**），不要安装 Source code ZIP。
+1. 下载 [Zotero-ViewFlow-17.0.0.xpi](https://github.com/groele/Zotero-ViewFlow/releases/download/v17.0.0/Zotero-ViewFlow-17.0.0.xpi)（插件版本 **17.0.0**），不要安装 Source code ZIP。
 2. 在 Zotero 打开 **工具 → 插件／附加组件**，从齿轮菜单选择 **从文件安装插件**。
 3. 选择 XPI，完成安装；按提示重启 Zotero。
 
@@ -82,7 +82,7 @@
 
 | 项目 | 范围 |
 |---|---|
-| 当前插件版本 | 16.3.1 |
+| 当前插件版本 | 17.0.0 |
 | 清单声明的 Zotero 范围 | `10.0` 至 `12.*` |
 | 当前说明 | 95 项全套单元测试与 14 项架构合规守卫 100% 通过；深度解耦为 src/ 模块化架构（全量 17 个模块 <= 360 行，0 债务），全面兼容 Zotero 10、11 及 12 现代 Gecko 架构。 |
 
