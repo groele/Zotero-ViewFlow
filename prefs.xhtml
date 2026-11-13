@@ -7,7 +7,7 @@
     <html:header class="viewflow-settings-header">
         <html:div class="viewflow-settings-title-row">
             <html:h1 data-l10n-id="zotero-preview-settings-heading"></html:h1>
-            <html:span id="viewflow-version-badge" data-l10n-id="zotero-preview-version-badge" data-l10n-args='{"version":"16.4.0"}' class="viewflow-version-badge">v16.4.0</html:span>
+            <html:span id="viewflow-version-badge" data-l10n-id="zotero-preview-version-badge" data-l10n-args='{"version":"16.4.1"}' class="viewflow-version-badge">v16.4.1</html:span>
         </html:div>
         <html:p data-l10n-id="zotero-preview-settings-intro"></html:p>
     </html:header>
@@ -93,18 +93,22 @@
                 <description class="viewflow-settings-description viewflow-indented-desc" data-l10n-id="zotero-preview-settings-debug-description"></description>
             </html:div>
 
-            <html:div class="viewflow-subgroup">
-                <label class="viewflow-subgroup-title" data-l10n-id="zotero-preview-settings-cache-heading"></label>
-                <description class="viewflow-settings-description" data-l10n-id="zotero-preview-settings-cache-description"></description>
-                <html:div class="viewflow-action-row">
+            <html:div class="viewflow-subgroup viewflow-action-split">
+                <html:div class="viewflow-action-copy">
+                    <label class="viewflow-subgroup-title" data-l10n-id="zotero-preview-settings-cache-heading"></label>
+                    <description class="viewflow-settings-description" data-l10n-id="zotero-preview-settings-cache-description"></description>
+                </html:div>
+                <html:div class="viewflow-action-side">
                     <button id="zotero-preview-clear-cache-btn" native="true" data-l10n-id="zotero-preview-settings-clear-cache-btn"></button>
                 </html:div>
             </html:div>
 
-            <html:div class="viewflow-subgroup">
-                <label class="viewflow-subgroup-title" data-l10n-id="zotero-preview-settings-reset-heading"></label>
-                <description class="viewflow-settings-description" data-l10n-id="zotero-preview-settings-reset-description"></description>
-                <html:div class="viewflow-action-row">
+            <html:div class="viewflow-subgroup viewflow-action-split">
+                <html:div class="viewflow-action-copy">
+                    <label class="viewflow-subgroup-title" data-l10n-id="zotero-preview-settings-reset-heading"></label>
+                    <description class="viewflow-settings-description" data-l10n-id="zotero-preview-settings-reset-description"></description>
+                </html:div>
+                <html:div class="viewflow-action-side">
                     <button id="zotero-preview-reset-defaults-btn" native="true" data-l10n-id="zotero-preview-settings-reset-btn"></button>
                 </html:div>
             </html:div>
@@ -123,7 +127,6 @@
                     native="true"
                     data-l10n-id="zotero-preview-settings-lookup-enable-label"/>
                 <description class="viewflow-settings-description viewflow-indented-desc" data-l10n-id="zotero-preview-settings-lookup-enable-desc"></description>
-                <description class="viewflow-settings-description viewflow-indented-desc" data-l10n-id="zotero-preview-lookup-scope"></description>
             </html:div>
 
             <html:div class="viewflow-subgroup viewflow-level3-indent">
@@ -134,24 +137,25 @@
                 <description class="viewflow-settings-description viewflow-indented-desc" data-l10n-id="zotero-preview-settings-lookup-history-desc"></description>
             </html:div>
 
-            <!-- 嵌套子卡片 1：本地缓存路径与目录控制 -->
-            <html:div class="viewflow-subcard viewflow-level3-indent">
-                <label class="viewflow-subcard-title" data-l10n-id="zotero-preview-settings-cache-dir-label"></label>
-                <description class="viewflow-subcard-desc" data-l10n-id="zotero-preview-settings-cache-dir-desc"></description>
-                <html:div class="viewflow-path-row">
+            <!-- 三级区块 1：本地缓存路径与目录控制 -->
+            <html:div class="viewflow-subgroup viewflow-level3-indent">
+                <html:div class="viewflow-label-status-row">
+                    <label class="viewflow-subcard-title" data-l10n-id="zotero-preview-settings-cache-dir-label"></label>
+                    <html:div id="zotero-preview-cache-status" class="viewflow-cache-status" role="status" aria-live="polite"/>
+                </html:div>
+                <html:div class="viewflow-path-combo">
                     <html:input class="html-input" id="zotero-preview-cache-dir" type="text" data-preference="extensions.zoteropreview.cacheDirectory" size="30"/>
+                    <html:div class="viewflow-cache-tools">
+                        <button id="zotero-preview-cache-browse" native="true" data-l10n-id="zotero-preview-cache-choose"/>
+                        <button id="zotero-preview-cache-default" native="true" data-l10n-id="zotero-preview-cache-default"/>
+                        <button id="zotero-preview-cache-retry" native="true" data-l10n-id="zotero-preview-cache-retry"/>
+                    </html:div>
                 </html:div>
-                <html:div class="viewflow-cache-tools">
-                    <button id="zotero-preview-cache-browse" native="true" data-l10n-id="zotero-preview-cache-choose"/>
-                    <button id="zotero-preview-cache-default" native="true" data-l10n-id="zotero-preview-cache-default"/>
-                    <button id="zotero-preview-cache-retry" native="true" data-l10n-id="zotero-preview-cache-retry"/>
-                </html:div>
-                <html:div id="zotero-preview-cache-status" class="viewflow-cache-status" role="status" aria-live="polite"/>
                 <description class="viewflow-subcard-help" data-l10n-id="zotero-preview-cache-location-help"/>
             </html:div>
 
-            <!-- 嵌套子卡片 2：缓存配额与健康仪表盘 -->
-            <html:div class="viewflow-subcard viewflow-level3-indent">
+            <!-- 三级区块 2：缓存配额与健康仪表盘 -->
+            <html:div class="viewflow-subgroup viewflow-level3-indent">
                 <html:div class="viewflow-field-grid viewflow-field-grid-2col">
                     <html:div class="viewflow-field-card">
                         <label data-l10n-id="zotero-preview-settings-cache-quota-label" control="zotero-preview-cache-quota"></label>
@@ -191,7 +195,7 @@
         </html:div>
         <html:div class="viewflow-release-row">
             <html:span class="viewflow-release-label" data-l10n-id="zotero-preview-release-download"></html:span>
-            <html:a id="viewflow-release-download-link" href="https://github.com/groele/Zotero-ViewFlow/releases/download/v16.4.0/Zotero-ViewFlow-16.4.0.xpi" data-l10n-id="zotero-preview-release-download-link" data-l10n-args='{"version":"16.4.0"}'></html:a>
+            <html:a id="viewflow-release-download-link" href="https://github.com/groele/Zotero-ViewFlow/releases/download/v16.4.1/Zotero-ViewFlow-16.4.1.xpi" data-l10n-id="zotero-preview-release-download-link" data-l10n-args='{"version":"16.4.1"}'></html:a>
         </html:div>
         <html:div class="viewflow-release-row">
             <html:span class="viewflow-release-label" data-l10n-id="zotero-preview-release-repository"></html:span>
